@@ -1,47 +1,73 @@
 const { supabase } = require('../services/supabaseClient');
-
 const jwt = require('jsonwebtoken');
+const jwksClient = require('jwks-rsa');
+
+// Initialize JWKS Client (Keys are cached)
+const client = jwksClient({
+    jwksUri: process.env.SUPABASE_JWT_URL || `${process.env.SUPABASE_URL}/auth/v1/.well-known/jwks.json`,
+    cache: true,
+    rateLimit: true,
+});
+
+// Helper to get signing key from JWKS
+function getKey(header, callback) {
+    client.getSigningKey(header.kid, function (err, key) {
+        if (err) {
+            console.error('[Auth] JWKS Error:', err.message);
+            return callback(err, null);
+        }
+        const signingKey = key.getPublicKey();
+        callback(null, signingKey);
+    });
+}
 
 const authMiddleware = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        // console.warn('[Auth] No token provided'); // Reduce log spam
         return res.status(401).json({ error: 'Unauthorized: No token provided.' });
     }
 
     const token = authHeader.split(' ')[1];
-    const jwtSecret = process.env.SUPABASE_JWT_SECRET; // Must be in .env
+    const jwtSecret = process.env.SUPABASE_JWT_SECRET;
 
     try {
         let user;
 
-        if (jwtSecret) {
-            // FAST PATH: Local Verification
-            // Note: Supabase tokens are signed with HS256 and the project specific JWT Secret.
+        // 1. Decode Header to check Algorithm
+        const decodedToken = jwt.decode(token, { complete: true });
+        if (!decodedToken) throw new Error('Malformed token');
+
+        const { alg } = decodedToken.header;
+        // console.log(`[Auth] Verifying Token Alg: ${alg}`);
+
+        // 2. Choose Verification Strategy
+        if (alg === 'HS256' && jwtSecret) {
+            // STRATEGY A: Symmetric Secret (Fastest Local)
             const decoded = jwt.verify(token, jwtSecret);
+            user = mapJwtToUser(decoded);
 
-            // Map Supabase JWT structure to req.user
-            user = {
-                id: decoded.sub,
-                email: decoded.email,
-                role: decoded.role || 'user', // 'authenticated' usually
-                user_metadata: decoded.user_metadata
-            };
-
-            // console.log(`[Auth-Local] ✓ ${user.email}`);
+        } else if (alg === 'RS256' || alg === 'ES256') {
+            // STRATEGY B: Asymmetric JWKS (Cached Public Key)
+            const decoded = await new Promise((resolve, reject) => {
+                jwt.verify(token, getKey, { algorithms: ['RS256', 'ES256'] }, (err, decoded) => {
+                    if (err) return reject(err);
+                    resolve(decoded);
+                });
+            });
+            user = mapJwtToUser(decoded);
 
         } else {
-            // SLOW PATH: Remote Verification (Fallback)
-            console.warn('[Auth] SUPABASE_JWT_SECRET missing. Falling back to remote auth (SLOW).');
+            // STRATEGY C: Remote Fallback (Slowest but safest fallback)
+            console.warn(`[Auth] Fallback for alg '${alg}'. Checking remote Supabase...`);
             const { data: { user: remoteUser }, error } = await supabase.auth.getUser(token);
-
             if (error || !remoteUser) throw new Error(error?.message || 'Invalid Token');
-
             user = {
                 id: remoteUser.id,
                 email: remoteUser.email,
-                role: remoteUser.role
+                role: remoteUser.role,
+                app_metadata: remoteUser.app_metadata,
+                user_metadata: remoteUser.user_metadata
             };
         }
 
@@ -49,7 +75,7 @@ const authMiddleware = async (req, res, next) => {
         next();
 
     } catch (error) {
-        // console.error('[Auth] Validation failed:', error.message);
+        console.error('[Auth] Verification failed:', error.message);
         return res.status(401).json({
             error: 'Unauthorized: Invalid or expired token.',
             details: error.message
@@ -57,5 +83,15 @@ const authMiddleware = async (req, res, next) => {
     }
 };
 
+// Helper: Standardize User structure
+function mapJwtToUser(decoded) {
+    return {
+        id: decoded.sub,
+        email: decoded.email,
+        role: decoded.role || decoded.app_metadata?.role || 'user',
+        app_metadata: decoded.app_metadata,
+        user_metadata: decoded.user_metadata
+    };
+}
 
 module.exports = { authMiddleware };

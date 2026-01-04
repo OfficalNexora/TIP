@@ -193,42 +193,53 @@ app.post('/api/analysis', async (req, res) => {
     }
 });
 
-// 3. Get Analysis History (Paginated)
-app.get('/api/analyses', async (req, res) => {
+
+// PHASE 3: STREAMING UPLOAD HANDSHAKE
+
+// 2.2 Direct File Upload (Chunked / Multipart)
+// NEW: 3-Step Flow (Init -> Client Upload -> Complete)
+app.post('/api/analyses/:id/upload/init', async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const from = (page - 1) * limit;
-        const to = from + limit - 1;
+        const { id } = req.params;
+        const { filename } = req.body;
 
-        console.log(`[History] Fetching page ${page} (limit ${limit}) for user ${req.user.id}`);
+        if (!filename) return res.status(400).json({ error: 'Filename is required.' });
 
-        const { data: analyses, error, count } = await supabase
-            .from('analyses')
-            .select('*', { count: 'exact' })
-            .eq('user_id', req.user.id)
-            .order('created_at', { ascending: false })
-            .range(from, to);
+        console.log(`[Handshake 1] Init upload for ${id} / ${filename}`);
+
+        // Generate Signed URL for client-side upload
+        const { signedUrl, path, token, error } = await storageService.getSignedUploadUrl(filename);
 
         if (error) throw error;
 
+        // Reserve the path in DB (Optional, but good for tracking)
+        // We'll finalize it in /complete step.
+        const { error: dbError } = await supabase
+            .from('uploaded_documents')
+            .insert({
+                analysis_id: id,
+                filename: filename,
+                storage_path: path, // Temporary path reservation
+                file_type: req.body.fileType || 'application/octet-stream'
+            });
+
+        if (dbError) throw dbError;
+
         res.json({
-            data: analyses,
-            page: page,
-            limit: limit,
-            total: count,
-            hasMore: (from + analyses.length) < count
+            uploadUrl: signedUrl,
+            storagePath: path,
+            token: token
         });
+
     } catch (error) {
-        console.error('[History] Fetch failed:', error.message);
+        console.error('[Upload Init] Failed:', error);
         res.status(500).json({ error: error.message });
     }
 });
 
-// PHASE 3: STREAMING UPLOAD HANDSHAKE
 
-// 2.1 Initialize Upload (Handshake 1)
-app.post('/api/analyses/:id/upload/init', async (req, res) => {
+
+app.put('/api/analyses/:id/upload', async (req, res) => {
     try {
         const { id } = req.params;
         const { filename, fileType, fileSize } = req.body;
@@ -364,13 +375,20 @@ app.post('/api/analyses/:id/upload/complete', async (req, res) => {
         console.log(`[Handshake 3] Completing upload for: ${id}`);
 
         // 1. Validate document exists
-        const { data: doc, error: docError } = await supabase
+        const { data: docs, error: docError } = await supabase
             .from('uploaded_documents')
             .select('*')
             .eq('analysis_id', id)
-            .single();
+            .order('created_at', { ascending: false })
+            .limit(1);
 
-        if (docError || !doc) return res.status(400).json({ error: 'No document found for this analysis.' });
+        if (docError) {
+            console.error('[Handshake 3] DB Error:', docError);
+            return res.status(500).json({ error: 'Database error fetching document.' });
+        }
+
+        const doc = docs?.[0];
+        if (!doc) return res.status(400).json({ error: 'No document found for this analysis.' });
 
         console.log(`[DEBUG] Document ready for processing:`, {
             analysis_id: id,
@@ -460,12 +478,14 @@ app.get('/api/analyses/:id/status', async (req, res) => {
 app.get('/api/analyses/:id/result', async (req, res) => {
     try {
         const { id } = req.params;
-        const { data, error } = await supabase
+        const { data: results, error } = await supabase
             .from('analysis_results')
             .select('*')
             .eq('analysis_id', id)
-            .single();
+            .order('created_at', { ascending: false })
+            .limit(1);
 
+        const data = results?.[0];
         if (error || !data) return res.status(404).json({ error: 'Result not ready or not found.' });
 
         // Return with 'result' key for frontend compatibility (mapping result_json)
@@ -576,32 +596,77 @@ app.delete('/api/analyses/:id', async (req, res) => {
 });
 
 // 4. List Analyses (User History Retrieval - Paginated)
+// 4. List Analyses (User History Retrieval - Paginated)
 app.get('/api/analyses', async (req, res) => {
     try {
+        console.log(`[History] Fetching page for user ${req.user.id}...`);
         const limit = parseInt(req.query.limit) || 20;
         const offset = parseInt(req.query.offset) || 0;
 
-        const { data, error, count } = await supabase
+        // Step 1: Fetch core analyses records (Pagination applied here)
+        const { data: analyses, error: analysisError, count } = await supabase
             .from('analyses')
-            .select(`
-                *,
-                uploaded_documents(filename),
-                analysis_results(result_json)
-            `, { count: 'exact' })
+            .select('*', { count: 'exact' })
             .eq('user_id', req.user.id)
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);
 
-        if (error) throw error;
+        if (analysisError) throw analysisError;
+
+        if (!analyses || analyses.length === 0) {
+            return res.json({
+                data: [],
+                meta: { global_integrity_avg: 0, total_audits: 0 },
+                pagination: { total: 0, limit, offset }
+            });
+        }
+
+        const analysisIds = analyses.map(a => a.id);
+
+        // Step 2: Manually fetch related data (Manual Join)
+        // This is required because Foreign Keys might be missing in the user's legacy DB schema.
+        const [docsResponse, resultsResponse] = await Promise.all([
+            supabase.from('uploaded_documents').select('analysis_id, filename').in('analysis_id', analysisIds),
+            supabase.from('analysis_results').select('analysis_id, result_json').in('analysis_id', analysisIds)
+        ]);
+
+        if (docsResponse.error) console.warn("[History] Failed to fetch docs:", docsResponse.error);
+        if (resultsResponse.error) console.warn("[History] Failed to fetch results:", resultsResponse.error);
+
+        const docsMap = {};
+        (docsResponse.data || []).forEach(doc => {
+            if (!docsMap[doc.analysis_id]) docsMap[doc.analysis_id] = [];
+            docsMap[doc.analysis_id].push(doc);
+        });
+
+        const resultsMap = {};
+        (resultsResponse.data || []).forEach(res => {
+            if (!resultsMap[res.analysis_id]) resultsMap[res.analysis_id] = [];
+            resultsMap[res.analysis_id].push(res);
+        });
+
+        // Step 3: Stitch data together
+        const joinedData = analyses.map(analysis => ({
+            ...analysis,
+            uploaded_documents: docsMap[analysis.id] || [],
+            analysis_results: resultsMap[analysis.id] || []
+        }));
 
         // Compute dynamic integrity average
-        const globalAvg = data.length > 0 ? scoringService.computeAverage(data) : 0;
+        const globalAvg = scoringService.computeAverage(joinedData);
+
+        // DEBUG: Inspect joined data
+        if (joinedData.length > 0) {
+            console.log('[History-ManualJoin] Total:', joinedData.length);
+            console.log('[History-ManualJoin] Item 0 Docs:', JSON.stringify(joinedData[0].uploaded_documents));
+            console.log('[History-ManualJoin] Item 0 Results:', JSON.stringify(joinedData[0].analysis_results));
+        }
 
         res.json({
-            data,
+            data: joinedData,
             meta: {
                 global_integrity_avg: globalAvg,
-                total_audits: count || data.length
+                total_audits: count || joinedData.length
             },
             pagination: {
                 total: count,
@@ -609,6 +674,7 @@ app.get('/api/analyses', async (req, res) => {
                 offset
             }
         });
+
     } catch (error) {
         console.error('Fetch history failed:', error);
         res.status(500).json({ error: 'Internal server error during history retrieval.' });

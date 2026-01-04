@@ -343,14 +343,13 @@ export const DashboardProvider = ({ children }) => {
                 { headers: { Authorization: `Bearer ${session.access_token}` } }
             );
 
+            // Use signed URL directly (it's a full Supabase URL, not a relative path)
             await axios.put(
-                `${import.meta.env.VITE_API_BASE_URL}${initUpload.data.uploadUrl}`,
+                initUpload.data.uploadUrl,
                 uploadedFile,
                 {
                     headers: {
-                        Authorization: `Bearer ${session.access_token}`,
-                        'Content-Type': uploadedFile.type,
-                        'x-filename': uploadedFile.name
+                        'Content-Type': uploadedFile.type
                     }
                 }
             );

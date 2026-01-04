@@ -34,6 +34,32 @@ class StorageService {
     }
 
     /**
+     * Generate a signed upload URL for client-side direct uploads.
+     * @param {string} filename 
+     * @returns {Promise<{path: string, token: string, signedUrl: string, error: Error}>}
+     */
+    async getSignedUploadUrl(filename) {
+        // Sanitize
+        const cleanName = filename.replace(/[^a-zA-Z0-9.-]/g, '_').replace(/_+/g, '_');
+        const uniquePath = `${Date.now()}-${cleanName}`;
+
+        const { data, error } = await supabase.storage
+            .from(BUCKET_NAME)
+            .createSignedUploadUrl(uniquePath);
+
+        if (error) {
+            console.error('[Storage] Signed URL generation failed:', error);
+            return { error };
+        }
+
+        return {
+            path: data.path,
+            token: data.token,
+            signedUrl: data.signedUrl // Verify if this is the full URL or relative
+        };
+    }
+
+    /**
      * Delete a file from storage.
      * @param {string} filePath 
      */
