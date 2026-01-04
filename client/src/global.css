@@ -1,0 +1,182 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+    /* --- INSTITUTIONAL PALETTE --- */
+    --color-tip-primary: #002147;
+    /* Oxford Blue */
+    --color-tip-accent: #C9A227;
+    /* Academic Gold */
+
+    --color-tip-bg: #F8F9FC;
+    --color-tip-surface: #FFFFFF;
+    --color-tip-border: #E2E8F0;
+
+    --color-tip-text-main: #0F172A;
+    --color-tip-text-secondary: #475569;
+    --color-tip-text-muted: #64748B;
+
+    /* --- SHADOWS --- */
+    --shadow-soft: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-float: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+    --color-tip-bg: #0F172A;
+    --color-tip-surface: #1E293B;
+    --color-tip-border: #334155;
+    --color-tip-text-main: #F8FAFC;
+    --color-tip-text-secondary: #CBD5E1;
+    --color-tip-text-muted: #94A3B8;
+}
+
+body {
+    font-family: var(--font-sans);
+    @apply bg-tip-bg text-tip-text-main antialiased selection:bg-tip-primary/20 selection:text-tip-primary;
+}
+
+/* --- TYPOGRAPHY --- */
+h1,
+h2,
+h3,
+h4 {
+    @apply font-bold tracking-tight text-tip-primary dark:text-tip-text-main;
+}
+
+/* --- INSTITUTIONAL UTILITIES --- */
+
+/* Standard Card */
+@utility card-institutional {
+    @apply bg-tip-surface border border-tip-border rounded-lg shadow-soft overflow-hidden;
+}
+
+/* Primary Institutional Button */
+@utility btn-institutional {
+    @apply bg-tip-primary text-white font-semibold px-6 py-2.5 rounded-md transition-all active:scale-[0.98] hover:bg-tip-primary/90 flex items-center justify-center gap-2;
+}
+
+/* Secondary Institutional Button */
+@utility btn-outline {
+    @apply bg-transparent border border-tip-border text-tip-text-secondary font-semibold px-6 py-2.5 rounded-md transition-all hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-tip-primary;
+}
+
+/* Metadata Field (Monospaced for IDs) */
+@utility text-metadata {
+    @apply font-mono text-xs text-tip-text-muted tracking-tighter;
+}
+
+/* Form Input */
+@utility input-institutional {
+    @apply bg-tip-surface border border-tip-border px-4 py-2.5 rounded-md text-tip-text-main text-sm outline-none transition-all placeholder:text-slate-400 focus:border-tip-primary focus:ring-1 focus:ring-tip-primary/50;
+}
+
+/* --- ANIMATIONS (SUBTLE) --- */
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@utility animate-fade-in {
+    animation: fade-in 0.4s ease-out forwards;
+}
+
+/* --- LAYOUT HELPERS --- */
+.container-institutional {
+    @apply max-w-6xl mx-auto px-6;
+}
+
+/* Video Overlay for Contrast */
+.overlay-institutional {
+    @apply absolute inset-0 bg-black/40 z-0;
+}
+
+/* --- TECH ANIMATIONS --- */
+@keyframes scanline {
+    0% {
+        top: 0;
+        opacity: 0;
+    }
+
+    5% {
+        opacity: 0.5;
+    }
+
+    95% {
+        opacity: 0.5;
+    }
+
+    100% {
+        top: 100%;
+        opacity: 0;
+    }
+}
+
+@utility animate-scanline {
+    animation: scanline 4s linear infinite;
+}
+
+@keyframes typing-deleting {
+
+    0%,
+    10% {
+        width: 0;
+    }
+
+    45%,
+    55% {
+        width: 100%;
+    }
+
+    90%,
+    100% {
+        width: 0;
+    }
+}
+
+@keyframes blink-caret {
+
+    from,
+    to {
+        border-color: transparent
+    }
+
+    50% {
+        border-color: currentColor;
+    }
+}
+
+@utility animate-typing-loop {
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 2px solid;
+    animation:
+        typing-deleting 5s steps(40, end) infinite,
+        blink-caret .75s step-end infinite;
+}
+
+/* Refined Progress Loading for full width travel */
+@keyframes progress-loading {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    /* Disappear behind left edge */
+    100% {
+        transform: translateX(200%);
+    }
+
+    /* Disappear behind right edge (for w-1/2 element) */
+}
+
+@utility animate-progress-loading {
+    animation: progress-loading 2s infinite linear;
+}
