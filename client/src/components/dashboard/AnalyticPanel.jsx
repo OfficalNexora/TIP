@@ -82,6 +82,10 @@ const AnalyticPanel = ({ activeFile, isOpen, onClose }) => {
         setFocusedIssue(issue);
     };
 
+    const patternList = activeFile.forensic_analysis?.pattern_list
+        || activeFile.forensic_analysis?.patterns?.detected_patterns
+        || [];
+
     return (
         <div
             className="fixed inset-y-0 right-0 bg-tip-surface border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col font-sans text-slate-800 dark:text-tip-text-main transition-colors duration-300"
@@ -185,17 +189,17 @@ const AnalyticPanel = ({ activeFile, isOpen, onClose }) => {
 
                         {/* Explanations Row - Distinct Cards */}
                         <div className="space-y-3">
-                            {showPatterns && (activeFile.forensic_analysis?.pattern_list?.length || 0) > 0 && (
+                            {showPatterns && patternList.length > 0 && (
                                 <div className="bg-tip-surface border border-blue-100 dark:border-blue-900/40 p-3 rounded-lg shadow-sm">
                                     <div className="flex items-center gap-2 text-blue-600 dark:text-blue-300 mb-2">
                                         <Icons.List size={14} />
                                         <h5 className="text-[11px] font-bold uppercase tracking-wide">Detected AI Word Patterns</h5>
                                     </div>
                                     <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                                        {activeFile.forensic_analysis.pattern_list.map((p, idx) => (
+                                        {patternList.map((p, idx) => (
                                             <div key={idx} className="flex items-start justify-between text-xs text-slate-700 dark:text-slate-200">
-                                                <span className="mr-2 leading-snug">"{p.pattern}"</span>
-                                                <span className="text-[10px] text-slate-500">x{p.count || 1}</span>
+                                                <span className="mr-2 leading-snug">"{p.pattern || p.text || p}"</span>
+                                                <span className="text-[10px] text-slate-500">x{p.count || p.hits || 1}</span>
                                             </div>
                                         ))}
                                     </div>
