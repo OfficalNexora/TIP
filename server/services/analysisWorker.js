@@ -70,6 +70,7 @@ class AnalysisWorker {
                 // Prioritize heuristics for raw counts (Pattern Hits/Omissions)
                 pattern_hits: forensicData.details?.patterns?.detected_patterns?.length || auditData.forensic_analysis?.pattern_hits || 0,
                 omission_count: forensicData.details?.omissions?.count || auditData.forensic_analysis?.omission_count || 0,
+                pattern_list: forensicData.details?.patterns?.detected_patterns || [],
                 risk_breakdown: forensicData.risk_breakdown
             };
 

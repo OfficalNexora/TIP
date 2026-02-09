@@ -9,6 +9,7 @@ const AnalyticPanel = ({ activeFile, isOpen, onClose }) => {
     // State for panel width (default 450px - standard sidebar width)
     const [width, setWidth] = useState(450);
     const [isResizing, setIsResizing] = useState(false);
+    const [showPatterns, setShowPatterns] = useState(false);
 
     const startResizing = useCallback((mouseDownEvent) => {
         mouseDownEvent.preventDefault();
@@ -163,12 +164,17 @@ const AnalyticPanel = ({ activeFile, isOpen, onClose }) => {
 
                         {/* Metrics Row - Completely Separated */}
                         <div className="grid grid-cols-2 gap-3 mb-3">
-                            <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pattern Hits</span>
+                            <button
+                                type="button"
+                                onClick={() => setShowPatterns((prev) => !prev)}
+                                className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center transition hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                            >
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">AI Word Patterns</span>
                                 <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
                                     {activeFile.forensic_analysis ? (activeFile.forensic_analysis.pattern_hits || 0) : '-'}
                                 </span>
-                            </div>
+                                <span className="text-[10px] text-blue-500 mt-1">{showPatterns ? 'Hide list' : 'Show list'}</span>
+                            </button>
                             <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center">
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Omission Flags</span>
                                 <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
@@ -179,6 +185,23 @@ const AnalyticPanel = ({ activeFile, isOpen, onClose }) => {
 
                         {/* Explanations Row - Distinct Cards */}
                         <div className="space-y-3">
+                            {showPatterns && (activeFile.forensic_analysis?.pattern_list?.length || 0) > 0 && (
+                                <div className="bg-tip-surface border border-blue-100 dark:border-blue-900/40 p-3 rounded-lg shadow-sm">
+                                    <div className="flex items-center gap-2 text-blue-600 dark:text-blue-300 mb-2">
+                                        <Icons.List size={14} />
+                                        <h5 className="text-[11px] font-bold uppercase tracking-wide">Detected AI Word Patterns</h5>
+                                    </div>
+                                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                        {activeFile.forensic_analysis.pattern_list.map((p, idx) => (
+                                            <div key={idx} className="flex items-start justify-between text-xs text-slate-700 dark:text-slate-200">
+                                                <span className="mr-2 leading-snug">"{p.pattern}"</span>
+                                                <span className="text-[10px] text-slate-500">x{p.count || 1}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             {activeFile.forensic_analysis?.pattern_explanation && (
                                 <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg relative overflow-hidden">
                                     <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400/50"></div>
