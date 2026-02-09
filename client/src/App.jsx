@@ -5,7 +5,7 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 
 // Assets & Global CSS
-import earthVideo from './assets/earth video.mp4';
+import earthVideo from './assets/earth-video-small.mp4';
 import './global.css';
 
 // Components
