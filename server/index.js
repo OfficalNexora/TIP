@@ -14,6 +14,38 @@ const scoringService = require('./services/scoringService');
 const analysisQueue = require('./services/analysisQueue');
 require('./services/analysisProcessor'); // Start the Worker/Processor
 
+/**
+ * Ensures the pattern list is correctly extracted and formatted for the frontend.
+ * Handles legacy data formats where patterns may be nested under different keys.
+ */
+function hydratePatternList(result) {
+    if (!result) return result;
+
+    // Deep clone to avoid mutating original
+    const morphed = JSON.parse(JSON.stringify(result));
+
+    if (morphed.forensic_analysis) {
+        // If pattern_list is missing or empty, try to extract from various nested paths
+        if (!morphed.forensic_analysis.pattern_list || morphed.forensic_analysis.pattern_list.length === 0) {
+            // Try multiple paths where pattern data might be stored
+            const possiblePatterns =
+                morphed.forensic_analysis.details?.patterns?.detected_patterns || // Standard heuristics path
+                morphed.forensic_analysis.patterns?.detected_patterns ||           // Fallback nested path
+                morphed.details?.patterns?.detected_patterns ||                    // Root details path
+                morphed.heuristic_analysis?.details?.patterns?.detected_patterns || // Alternative heuristic key
+                [];
+
+            if (possiblePatterns.length > 0) {
+                morphed.forensic_analysis.pattern_list = possiblePatterns;
+                console.log(`[hydratePatternList] Hydrated ${possiblePatterns.length} patterns from nested path`);
+            }
+        }
+    }
+
+    return morphed;
+}
+
+
 
 
 const getClientIP = (req) => {
@@ -115,7 +147,7 @@ app.post('/api/analysis', async (req, res) => {
             }
         }
 
-        // 0.5. ENFORCE SUBSCRIPTION LIMITS (5 Scans / Month for Basic)
+        // 0.5. ENFORCE SUBSCRIPTION LIMITS (Raised to 20 Scans / Month for Basic)
         const { data: userSub } = await supabase
             .from('users')
             .select('subscription_status')
@@ -137,11 +169,13 @@ app.post('/api/analysis', async (req, res) => {
 
             if (countError) throw countError;
 
-            if (count >= 5) {
-                console.warn(`[Limit Reached] User ${req.user.id} has used ${count}/5 free scans.`);
+            const BASIC_LIMIT = 20;
+
+            if (count >= BASIC_LIMIT) {
+                console.warn(`[Limit Reached] User ${req.user.id} has used ${count}/${BASIC_LIMIT} free scans.`);
                 return res.status(403).json({
                     error: 'Monthly scan limit reached.',
-                    message: 'You have used all 5 free scans for this month. Upgrade to Pro for unlimited access.'
+                    message: `You have used all ${BASIC_LIMIT} free scans for this month. Upgrade to Pro for unlimited access.`
                 });
             }
 
@@ -453,9 +487,18 @@ app.get('/api/analyses/:id', async (req, res) => {
         if (error || !data) return res.status(404).json({ error: 'Analysis not found.' });
         if (data.user_id !== req.user.id) return res.status(403).json({ error: 'Forbidden.' });
 
+        // Hydrate pattern list in analysis_results to ensure frontend receives it
+        if (data.analysis_results && data.analysis_results.length > 0) {
+            data.analysis_results = data.analysis_results.map(result => ({
+                ...result,
+                result_json: hydratePatternList(result.result_json)
+            }));
+        }
+
         res.json(data);
     } catch (error) {
         res.status(500).json({ error: error.message });
+
     }
 });
 
