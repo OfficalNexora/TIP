@@ -4,6 +4,7 @@ const ethicsService = require('./ethicsService');
 const heuristicsService = require('./heuristicsService');
 const textService = require('./textService');
 const scoringService = require('./scoringService');
+const plagiarismService = require('./plagiarismService');
 
 class AnalysisWorker {
     /**
@@ -38,9 +39,10 @@ class AnalysisWorker {
             console.log(`[Worker] Phase 3: Running AI audit (ethics + heuristics in parallel)...`);
             const aiStartTime = Date.now();
 
-            const [auditData, forensicData] = await Promise.all([
+            const [auditData, forensicData, plagiarismData] = await Promise.all([
                 ethicsService.analyzeEthics(text),
-                heuristicsService.analyze(text)
+                heuristicsService.analyze(text),
+                plagiarismService.detect(text, analysisId)
             ]);
 
             const aiDuration = Date.now() - aiStartTime;
@@ -78,6 +80,7 @@ class AnalysisWorker {
             const combinedResult = {
                 ...auditData,
                 forensic_analysis: combinedForensics,
+                plagiarism: plagiarismData,
                 confidence_score: numericConfidence, // Explicitly save the numeric score
                 full_text: text
             };
