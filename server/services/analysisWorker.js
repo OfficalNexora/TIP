@@ -5,6 +5,7 @@ const heuristicsService = require('./heuristicsService');
 const textService = require('./textService');
 const scoringService = require('./scoringService');
 const plagiarismService = require('./plagiarismService');
+const plagiarismWebService = require('./plagiarismWebService');
 
 class AnalysisWorker {
     /**
@@ -39,7 +40,7 @@ class AnalysisWorker {
             console.log(`[Worker] Phase 3: Running AI audit (ethics + heuristics in parallel)...`);
             const aiStartTime = Date.now();
 
-            const [auditData, forensicData, plagiarismData] = await Promise.all([
+            const [auditData, forensicData, plagiarismData, plagiarismWebData] = await Promise.all([
                 ethicsService.analyzeEthics(text),
                 heuristicsService.analyze(text),
                 plagiarismService.detect(text, analysisId)
@@ -56,6 +57,8 @@ class AnalysisWorker {
             console.log(`[Worker] Dimensions count:`, Object.keys(auditData?.dimensions || {}).length);
             console.log(`[Worker] Flags count:`, (auditData?.flags || []).length);
             console.log(`[Worker] Forensic risk:`, forensicData?.ai_risk_node);
+            console.log(`[Worker] Plagiarism (local) similarity: ${plagiarismData?.similarity || 0}, matchId: ${plagiarismData?.matchId || 'none'}`);
+            console.log(`[Worker] Plagiarism (web demo) similarity: ${plagiarismWebData?.similarity || 0}, sources: ${plagiarismWebData?.matched_count || 0}`);
 
             // Merge Heuristics into Audit Data (Don't overwrite LLM forensics)
             const combinedForensics = {
@@ -80,6 +83,7 @@ class AnalysisWorker {
             const combinedResult = {
                 ...auditData,
                 forensic_analysis: combinedForensics,
+                plagiarism_web: plagiarismWebData,
                 plagiarism: plagiarismData,
                 confidence_score: numericConfidence, // Explicitly save the numeric score
                 full_text: text
