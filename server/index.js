@@ -11,6 +11,7 @@ const analysisWorker = require('./services/analysisWorker');
 const busboy = require('busboy');
 const { getIPLocation, parseUA } = require('./services/geoService');
 const scoringService = require('./services/scoringService');
+const chatService = require('./services/chatService');
 const analysisQueue = require('./services/analysisQueue');
 require('./services/analysisProcessor'); // Start the Worker/Processor
 
@@ -540,6 +541,18 @@ app.get('/api/analyses/:id/result', async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+});
+
+// 3.5 Chat Assistant (demo, non-LLM)
+app.post('/api/chat', authMiddleware, async (req, res) => {
+    try {
+        const { message, analysisId } = req.body || {};
+        const reply = await chatService.generate(message, req.user.id, analysisId);
+        res.json(reply);
+    } catch (error) {
+        console.error('[Chat] failed:', error);
+        res.status(500).json({ error: 'Chat service unavailable.' });
     }
 });
 
