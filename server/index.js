@@ -489,9 +489,11 @@ app.get('/api/analyses/:id/result', async (req, res) => {
         if (error || !data) return res.status(404).json({ error: 'Result not ready or not found.' });
 
         // Return with 'result' key for frontend compatibility (mapping result_json)
+        const hydratedResult = hydratePatternList(data.result_json || data.result);
+
         res.json({
             ...data,
-            result: data.result_json || data.result // fallback for older records
+            result: hydratedResult
         });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -641,8 +643,12 @@ app.get('/api/analyses', async (req, res) => {
 
         const resultsMap = {};
         (resultsResponse.data || []).forEach(res => {
+            const hydrated = {
+                ...res,
+                result_json: hydratePatternList(res.result_json || res.result)
+            };
             if (!resultsMap[res.analysis_id]) resultsMap[res.analysis_id] = [];
-            resultsMap[res.analysis_id].push(res);
+            resultsMap[res.analysis_id].push(hydrated);
         });
 
         // Step 3: Stitch data together
