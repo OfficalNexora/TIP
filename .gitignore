@@ -1,16 +1,58 @@
-node_modules
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+save/node_modules/
 
+# Build outputs
+dist/
+client/dist/
+server/dist/
+save/dist/
+client/.vite/
+dist-ssr/
+coverage/
+
+# Env & secrets
 .env
+*.env
+.env.*local
+client/.env*
+server/.env*
+save/.env*
+
+# OS / editor
+/.vscode
+.idea/
 .DS_Store
-dist
-coverage
-npm-debug.log
-yarn-debug.log
-yarn-error.log
-.idea
-.vscode
 *.suo
-*.ntvs
+*.ntvs*
 *.njsproj
 *.sln
-*.swp
+*.sw?
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Backend data
+server/dump.rdb
+server/temp-*.rdb
+server/redis_bin/
+server/redis_data/
+server/storage/uploads/
+
+# Project-specific
+supabase/
+save/
+.vercel/
+
+# Large local documents (avoid long path issues)
+client/src/assets/*.docx
+client/src/assets/*.doc
+client/src/assets/*.rtf
+client/src/assets/*.xlsx
