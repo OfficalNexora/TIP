@@ -12,7 +12,6 @@ router.post('/subscription/upgrade', BillingController.upgradePlan);
 // Payment Methods
 router.get('/payment-methods', BillingController.getPaymentMethods);
 router.post('/payment-methods', BillingController.addPaymentMethod);
-router.delete('/payment-methods/:id', BillingController.removePaymentMethod);
 
 // Invoices
 router.get('/invoices', BillingController.getInvoices);
@@ -20,7 +19,7 @@ router.get('/invoices', BillingController.getInvoices);
 // Manual Payment
 router.post('/manual-payment', BillingController.submitManualPayment);
 
-// Setup Intent (for adding cards) - STUBBED IN CONTROLLER
-router.post('/setup-intent', BillingController.createSetupIntent);
+// Setup Intent (Stripe leftover) - Replaced with generic stub
+router.post('/setup-intent', (req, res) => res.status(400).json({ error: 'Automated card setup is disabled. Please use manual payments.' }));
 
 module.exports = router;

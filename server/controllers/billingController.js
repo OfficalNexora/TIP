@@ -82,12 +82,10 @@ const BillingController = {
 
     // POST /api/billing/payment-methods
     addPaymentMethod: async (req, res) => {
-        res.status(400).json({ error: 'Automated card linking is disabled. Please use manual payments.' });
-    },
-
-    // Setup Intent (for adding cards) - STUBBED
-    createSetupIntent: async (req, res) => {
-        res.status(400).json({ error: 'Stripe functionality is disabled.' });
+        res.status(400).json({
+            error: 'Automated card linking is disabled.',
+            message: 'To maintain security and support localized payments, please use the GCash or PayPal options.'
+        });
     }
 };
 
