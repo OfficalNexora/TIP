@@ -80,33 +80,32 @@ const getClientIP = (req) => {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Low-level Health Check (Before all middleware/auth)
-app.get('/health', (req, res) => {
-    res.json({
-        status: 'ok',
-        uptime: process.uptime(),
-        timestamp: new Date().toISOString(),
-        env: process.env.NODE_ENV || 'development'
-    });
-});
-
+// --- CORS CONFIGURATION (MUST BE FIRST) ---
 app.use(cors({
     origin: (origin, callback) => {
-        const allowed = (process.env.CLIENT_URL || 'https://tip-xi.vercel.app').replace(/\/$/, '');
-        // Permissive logic for TIP production - allow Vercel, Local, and explicit CLIENT_URL
-        if (!origin || origin === allowed || origin === 'https://tip-xi.vercel.app' || origin.includes('localhost') || origin.includes('127.0.0.1')) {
+        const allowed = [
+            'https://tip-xi.vercel.app',
+            'http://localhost:5173',
+            'http://localhost:3000'
+        ];
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        if (allowed.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
             callback(null, true);
         } else {
-            console.warn(`[CORS] Origin mismatch: ${origin} vs ${allowed}`);
-            // Still allow but log for visibility during debug
-            callback(null, true);
+            console.warn(`[CORS] Blocked origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
         }
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-public-ip', 'x-filename', 'Accept', 'X-Requested-With'],
     credentials: true,
     optionsSuccessStatus: 200
 }));
+
+// Explicit OPTIONS handling for preflight
+app.options('*', cors());
 
 // Middleware
 app.use((req, res, next) => {
