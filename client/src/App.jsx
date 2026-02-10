@@ -109,8 +109,8 @@ function AppContent() {
   return (
     <div className="h-screen w-full bg-tip-bg text-tip-text-main relative overflow-hidden font-sans transition-colors duration-300">
 
-      {/* GLOBAL BACKGROUND */}
-      <div className="fixed inset-0 z-0 bg-tip-bg">
+      {/* GLOBAL BACKGROUND - Decorative only, hidden from screen readers */}
+      <div className="fixed inset-0 z-0 bg-tip-bg" aria-hidden="true">
         {(appState === 'LANDING' || appState === 'AUTH') ? (
           <>
             <video
@@ -132,16 +132,20 @@ function AppContent() {
 
       {/* 1. LANDING */}
       {appState === 'LANDING' && (
-        <Landing
-          videoLoaded={videoLoaded}
-          randomText={randomText}
-          onStart={() => setAppState('AUTH')}
-        />
+        <main className="contents">
+          <Landing
+            videoLoaded={videoLoaded}
+            randomText={randomText}
+            onStart={() => setAppState('AUTH')}
+          />
+        </main>
       )}
 
       {/* 2. AUTH */}
       {appState === 'AUTH' && (
-        <Auth />
+        <main className="contents">
+          <Auth />
+        </main>
       )}
 
       {/* 2.5 EMAIL CONFIRMED */}
