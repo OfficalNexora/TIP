@@ -6,3 +6,4 @@ RUN npm install -g pnpm && pnpm install
 COPY . .
 EXPOSE 3000
 CMD ["node", "index.js"]
+# Validated build context
