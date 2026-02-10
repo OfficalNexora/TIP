@@ -92,18 +92,18 @@ app.get('/health', (req, res) => {
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Institutional grade origin matching: handle trailing slashes and null origins
-        const rawAllowed = process.env.CLIENT_URL || 'https://tip-xi.vercel.app';
-        const allowed = rawAllowed.replace(/\/$/, '');
-        if (!origin || allowed === '*' || origin === allowed || origin === 'https://tip-xi.vercel.app') {
+        const allowed = (process.env.CLIENT_URL || 'https://tip-xi.vercel.app').replace(/\/$/, '');
+        // Permissive logic for TIP production - allow Vercel, Local, and explicit CLIENT_URL
+        if (!origin || origin === allowed || origin === 'https://tip-xi.vercel.app' || origin.includes('localhost') || origin.includes('127.0.0.1')) {
             callback(null, true);
         } else {
-            console.warn(`[CORS] Denied origin: ${origin} (Allowed: ${allowed})`);
-            callback(new Error('Not allowed by CORS'));
+            console.warn(`[CORS] Origin mismatch: ${origin} vs ${allowed}`);
+            // Still allow but log for visibility during debug
+            callback(null, true);
         }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-public-ip', 'x-filename', 'Accept'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-public-ip', 'x-filename', 'Accept', 'X-Requested-With'],
     credentials: true,
     optionsSuccessStatus: 200
 }));
@@ -1290,7 +1290,23 @@ app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
 
-// GLOBAL ERROR HANDLERS (Institutional Debugging)
+// GLOBAL ERROR HANDLER (Ensures CORS headers are sent on failure)
+app.use((err, req, res, next) => {
+    console.error('[Global Error Handler]:', err.message);
+
+    // Echo the origin if it exists to satisfy CORS even on failure
+    const origin = req.headers.origin;
+    if (origin) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+
+    res.status(err.status || 500).json({
+        error: err.message || 'Internal Server Error',
+        path: req.path
+    });
+});
+
 process.on('uncaughtException', (error) => {
     console.error('CRITICAL: Uncaught Exception detected!');
     console.error(error.stack || error);
