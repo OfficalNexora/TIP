@@ -2,5 +2,10 @@
     "build": {
         "builder": "dockerfile",
         "dockerfile": "server/Dockerfile"
+    },
+    "services": {
+        "tip-upsise": {
+            "root": "server"
+        }
     }
 }
