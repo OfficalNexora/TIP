@@ -86,6 +86,16 @@ const BillingController = {
             error: 'Automated card linking is disabled.',
             message: 'To maintain security and support localized payments, please use the GCash or PayPal options.'
         });
+    },
+
+    // GET /api/billing/invoices
+    getInvoices: async (req, res) => {
+        try {
+            // Return empty for now as we transition to manual
+            res.json([]);
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to fetch invoices' });
+        }
     }
 };
 
