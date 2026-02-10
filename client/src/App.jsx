@@ -5,7 +5,6 @@ import { NotificationProvider } from './contexts/NotificationContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 
 // Assets & Global CSS
-import earthVideo from './assets/earth-video-small.mp4';
 import './global.css';
 
 // Components
@@ -122,7 +121,7 @@ function AppContent() {
               onLoadedData={() => setVideoLoaded(true)}
               className={`absolute inset-0 object-cover w-full h-full transition-opacity duration-1000 ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
             >
-              <source src={earthVideo} type="video/mp4" />
+              <source src="/earth-video.mp4" type="video/mp4" />
             </video>
             <div className="overlay-institutional"></div>
           </>
