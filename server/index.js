@@ -98,8 +98,8 @@ app.use((req, res, next) => {
 
 app.use(cors({
     origin: (origin, callback) => {
-        const allowed = process.env.CLIENT_URL;
-        if (!allowed || allowed === '*' || origin === allowed || !origin) {
+        const allowed = process.env.CLIENT_URL || 'https://tip-xi.vercel.app';
+        if (!allowed || allowed === '*' || origin === allowed || !origin || origin === 'https://tip-xi.vercel.app') {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
