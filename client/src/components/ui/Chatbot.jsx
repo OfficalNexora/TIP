@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useRef } from "react";
+ï»¿import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Icons from "./Icons";
 import { useAuth } from "../../contexts/AuthContext";
 
-const Chatbot = ({ analysisId, hidden }) => {
+const Chatbot = ({ analysisId, isOpen, setIsOpen }) => {
   const { session } = useAuth();
-  const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([
     {
       from: "bot",
-      text: "Hi! I\'m your TIP AI assistant. Ask me about this analysis, risk scores, or next steps."
+      text: "Kumusta! Ako ang TIP AI Assistant. Magtanong ka tungkol sa pagsusuri, risk scores, o mga susunod na hakbang."
     }
   ]);
   const listRef = useRef(null);
@@ -20,25 +19,33 @@ const Chatbot = ({ analysisId, hidden }) => {
     if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
-  }, [messages, open]);
+  }, [messages, isOpen]);
 
   const sendMessage = async () => {
     if (!input.trim() || !session?.access_token) return;
     const userMsg = { from: "user", text: input.trim() };
-    setMessages((m) => [...m, userMsg]);
+    setMessages(prev => [...prev, userMsg]);
     setInput("");
     setLoading(true);
+
+    const history = [...messages, userMsg]
+      .filter((m) => m.from !== "system")
+      .map((m) => ({
+        role: m.from === "user" ? "user" : "assistant",
+        content: m.text
+      }));
+
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/api/chat`,
-        { message: userMsg.text, analysisId },
-        { headers: { Authorization: `Bearer ${session.access_token}` } }
+        (import.meta.env.VITE_API_BASE_URL || "") + "/api/chat",
+        { message: userMsg.text, analysisId, history },
+        { headers: { Authorization: "Bearer " + session.access_token } }
       );
-      setMessages((m) => [...m, { from: "bot", text: res.data.reply || "(no reply)" }]);
+      setMessages((m) => [...m, { from: "bot", text: res.data.reply || "(walang sagot)" }]);
     } catch (e) {
       setMessages((m) => [
         ...m,
-        { from: "bot", text: "Sorry, I couldn\'t reach the assistant right now." }
+        { from: "bot", text: "Paumanhin, hindi ko maabot ang assistant ngayon. Subukan ulit mamaya." }
       ]);
     } finally {
       setLoading(false);
@@ -52,64 +59,84 @@ const Chatbot = ({ analysisId, hidden }) => {
     }
   };
 
-  if (hidden) return null;
+  // If not open, don't render anything (or could animate out)
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 text-slate-800 dark:text-slate-100">
-      {open ? (
-        <div className="w-80 h-96 bg-tip-surface border border-slate-200 dark:border-slate-800 shadow-xl rounded-2xl flex flex-col overflow-hidden">
-          <div className="px-3 py-2 bg-blue-600 text-white flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <Icons.MessageCircle size={16} /> TIP AI Chat
+    <div className="fixed inset-y-0 right-0 w-[450px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-[100] flex flex-col font-sans antialiased animate-in slide-in-from-right duration-300">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-10">
+         <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center border border-blue-100 dark:border-blue-800/30 text-blue-600 dark:text-blue-400 shadow-sm">
+               <Icons.MessageCircle size={18} className="stroke-[2.5]" />
             </div>
-            <button onClick={() => setOpen(false)} className="hover:opacity-80">
-              <Icons.X size={16} />
-            </button>
+            <div>
+               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-none tracking-tight">AI Assistant</h3>
+               <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">Powered by Llama 3</p>
+            </div>
+         </div>
+         <button 
+            onClick={() => setIsOpen(false)} 
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full p-2 transition-colors"
+         >
+            <Icons.X size={18} />
+         </button>
+      </div>
+
+      {/* Messages */}
+      <div ref={listRef} className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 dark:bg-slate-950/50 custom-scrollbar scroll-smooth">
+         {messages.map((m, idx) => (
+           <div key={idx} className={"flex flex-col gap-1.5 " + (m.from === "user" ? "items-end" : "items-start")}>
+             {m.from === 'bot' && (
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">AI Assistant</span>
+             )}
+             <div className={"max-w-[90%] px-5 py-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap shadow-sm " +
+                (m.from === "user"
+                  ? "bg-blue-600 text-white rounded-br-sm" 
+                  : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-bl-sm"
+                )
+              }>
+              {m.text}
+             </div>
+           </div>
+         ))}
+         
+         {loading && (
+           <div className="flex flex-col gap-1.5 items-start">
+             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">AI Assistant</span>
+             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl rounded-bl-sm px-5 py-4 shadow-sm">
+               <div className="flex items-center gap-1.5">
+                 <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></span>
+                 <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></span>
+                 <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></span>
+               </div>
+             </div>
+           </div>
+         )}
+      </div>
+
+       {/* Input */}
+       <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+          <div className="relative flex items-end gap-2 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-2 focus-within:ring-2 focus-within:ring-blue-500/10 focus-within:border-blue-500/50 transition-all">
+             <textarea
+                rows={1}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKey}
+                className="flex-1 bg-transparent text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none resize-none max-h-32 py-2 px-2"
+                placeholder="Type your message..."
+                style={{minHeight: '40px'}}
+             />
+             <button
+                onClick={sendMessage}
+                disabled={loading || !input.trim()}
+                className="bg-blue-600 text-white rounded-lg p-2 w-10 h-10 flex items-center justify-center hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600 transition-colors shadow-sm mb-0.5"
+             >
+                {loading ? <Icons.Loader size={18} className="animate-spin" /> : <Icons.Send size={18} className="ml-0.5" />}
+             </button>
           </div>
-          <div ref={listRef} className="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50 dark:bg-slate-900/60">
-            {messages.map((m, idx) => (
-              <div
-                key={idx}
-                className={`max-w-[90%] px-3 py-2 rounded-lg text-sm whitespace-pre-wrap ${
-                  m.from === "user"
-                    ? "bg-blue-600 text-white ml-auto"
-                    : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
-                }`}
-              >
-                {m.text}
-              </div>
-            ))}
-            {loading && (
-              <div className="text-[11px] text-slate-500">Assistant is typing…</div>
-            )}
-          </div>
-          <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-tip-surface flex items-center gap-2">
-            <textarea
-              rows={1}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKey}
-              className="flex-1 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              placeholder="Ask about this report…"
-            />
-            <button
-              onClick={sendMessage}
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
-            >
-              Send
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button
-          onClick={() => setOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg w-12 h-12 flex items-center justify-center"
-          title="Open AI Chat"
-        >
-          <Icons.MessageCircle size={20} />
-        </button>
-      )}
+       </div>
     </div>
   );
 };

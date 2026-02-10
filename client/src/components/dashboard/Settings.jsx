@@ -12,8 +12,8 @@ import BillingPage from './billing/BillingPage';
 const SECTIONS = [
     { id: 'profile', label: 'Profile', icon: Icons.User },
     { id: 'security', label: 'Security', icon: Icons.Lock },
-    { id: 'billing', label: 'Subscription & Billing', icon: Icons.CreditCard },
     { id: 'preferences', label: 'Preferences', icon: Icons.Settings },
+    { id: 'billing', label: 'Subscription & Billing', icon: Icons.CreditCard },
     { id: 'privacy', label: 'Privacy & Data', icon: Icons.Shield },
     { id: 'integrations', label: 'Integrations', icon: Icons.Grid },
 ];
@@ -1426,21 +1426,6 @@ const Settings = () => {
         }
     };
 
-    const handleUpgradeSubscription = async (plan) => {
-        setIsSaving(true);
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/user/subscription`,
-                { plan },
-                { headers: { Authorization: `Bearer ${session?.access_token}` } }
-            );
-            setUserProfile(prev => ({ ...prev, subscription: plan }));
-        } catch (error) {
-            console.error('Upgrade failed:', error);
-        } finally {
-            setIsSaving(false);
-        }
-    };
 
     const handleUpdateProfile = (field, value) => {
         setUserProfile(prev => ({ ...prev, [field]: value }));
@@ -1467,6 +1452,11 @@ const Settings = () => {
 
     const [isSubModalOpen, setIsSubModalOpen] = useState(false);
     const [isBackupCodesOpen, setIsBackupCodesOpen] = useState(false);
+
+    const handleUpgradeSubscription = (planId) => {
+        setActiveSection('billing');
+        setIsSubModalOpen(false);
+    };
 
     if (loading) return <div className="p-8 text-tip-text-main">Loading institutional configurations...</div>;
 

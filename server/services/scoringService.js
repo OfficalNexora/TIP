@@ -36,9 +36,9 @@ class ScoringService {
         if (this.scoreMap[cleanRate]) return this.scoreMap[cleanRate];
 
         // Language specific mapping for UNESCO Mirror (Filipino)
-        if (cleanRate === 'MATAAS') return this.scoreMap['EXEMPLARY'] || 90;
-        if (cleanRate === 'KATAMTAMAN') return this.scoreMap['REFLECT'] || 60;
-        if (cleanRate === 'MABABA') return this.scoreMap['FLAGGED'] || 30;
+        if (cleanRate === 'MATAAS') return this.scoreMap['EXEMPLARY'] || 10; // Low Risk (Excellent)
+        if (cleanRate === 'KATAMTAMAN') return this.scoreMap['REFLECT'] || 50; // Moderate Risk
+        if (cleanRate === 'MABABA') return this.scoreMap['FLAGGED'] || 90; // High Risk (Poor)
 
         // Fallback for numeric strings
         const parsed = parseInt(cleanRate);

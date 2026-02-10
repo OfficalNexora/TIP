@@ -329,7 +329,7 @@ const Results = ({ activeFile }) => {
                         <Icons.Shield size={20} />
                     </div>
                     <div className="min-w-0 flex-1">
-                        <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight break-words">{activeFile.title}</h1>
+                        <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight line-clamp-2 break-words" title={activeFile.title}>{activeFile.title}</h1>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest mt-1">
                             <span>{activeFile.date}</span>
                             <span className="text-slate-300 dark:text-slate-700 hidden sm:inline">•</span>
@@ -356,7 +356,7 @@ const Results = ({ activeFile }) => {
                         <div className="flex items-center gap-3">
                             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <span className={`w-1.5 h-1.5 rounded-full ${isDocxRendered || !isDocx ? 'bg-emerald-500' : 'bg-blue-500 animate-pulse'}`} />
-                                Institutional Grade View
+                                Institusyonal na Pagsusuri
                             </span>
                         </div>
                     </div>
@@ -411,7 +411,7 @@ const Results = ({ activeFile }) => {
                                 </div>
                             ) : isImage && activeFile.fileUrl ? (
                                 <div className={`p-4 sm:p-8 rounded shadow-2xl border border-slate-200 dark:border-slate-800 flex justify-center animate-zoom-in ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white'}`}>
-                                    <img src={activeFile.fileUrl} alt="Document Evidence" className={`max-w-full h-auto rounded shadow-lg ${isDark ? 'filter brightness-90' : ''}`} />
+                                    <img src={activeFile.fileUrl} alt="Ebidensya ng Dokumento" className={`max-w-full h-auto rounded shadow-lg ${isDark ? 'filter brightness-90' : ''}`} />
                                 </div>
                             ) : (
                                 <div className={`w-full p-8 sm:p-20 shadow-2xl rounded border text-lg leading-relaxed font-serif whitespace-pre-wrap break-words min-h-[1000px] transition-colors duration-500 ${isDark ? 'bg-slate-900 border-slate-800 text-slate-300' : 'bg-white border-slate-100 text-slate-800'}`}>
@@ -435,7 +435,7 @@ const Results = ({ activeFile }) => {
                                             } catch (e) { }
                                             return text;
                                         })()
-                                    ) : (activeFile.fullText || "Analysis content is being indexed...")}
+                                    ) : (activeFile.fullText || "Kasalukuyang ini-index ang nilalaman...")}
                                 </div>
                             )}
                         </div>

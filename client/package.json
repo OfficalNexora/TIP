@@ -12,8 +12,6 @@
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@lottiefiles/dotlottie-react": "^0.17.10",
-    "@stripe/react-stripe-js": "^5.4.1",
-    "@stripe/stripe-js": "^8.6.0",
     "@supabase/supabase-js": "^2.89.0",
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.2",

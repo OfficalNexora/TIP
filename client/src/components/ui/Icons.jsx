@@ -73,6 +73,9 @@ export const Minimize = (props) => <Icon {...props}><path d="M8 3v3a2 2 0 0 1-2 
 
 const PayPal = (props) => <Icon {...props}><path d="M7.076 21.337l.886-5.617h3.111c3.55 0 5.485-1.748 6.008-5.074.22-.128.423-.293.606-.492.203.11.41.206.621.286.732.277 1.393.18 1.964-.32.062-.516.27-1.46.208-2.617-.678 2.064-2.158 3.235-4.484 3.235h-3.41l1.503-9.524H8.76L6.2 21.337h.876z"></path></Icon>;
 const GCash = (props) => <Icon {...props}><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="M12 8v8"></path><path d="M8 12h8"></path><circle cx="12" cy="12" r="3"></circle></Icon>;
+export const Send = (props) => <Icon {...props}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></Icon>;
+export const MessageCircle = (props) => <Icon {...props}><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></Icon>;
+export const LayoutDashboard = (props) => <Icon {...props}><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></Icon>;
 
 const Icons = {
     Grid,
@@ -126,7 +129,10 @@ const Icons = {
     Maximize,
     Minimize,
     PayPal,
-    GCash
+    GCash,
+    Send,
+    MessageCircle,
+    LayoutDashboard
 };
 
 export default Icons;

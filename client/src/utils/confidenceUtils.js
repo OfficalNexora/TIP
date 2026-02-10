@@ -12,15 +12,16 @@ export const normalizeConfidence = (rating) => {
     const normalized = rating.toString().toLowerCase().trim();
 
     // Institutional Mapping (Synced with backend SCORING_MAP)
+    // INVERTED LOGIC: 0 = Low Risk (Good), 100 = High Risk (Bad)
     const map = {
-        'exemplary': 98,
-        'mataas': 95,
-        'compliant': 90,
-        'katamtaman': 85,
-        'observed': 75,
-        'mababa': 60,
-        'reflect': 50,
-        'flagged': 20
+        'exemplary': 5,
+        'mataas': 10,  // Low Risk (High Integrity)
+        'compliant': 20,
+        'katamtaman': 50,
+        'observed': 60,
+        'mababa': 90,  // High Risk (Low Integrity)
+        'reflect': 80,
+        'flagged': 95
     };
 
     return map[normalized] || 0;
@@ -31,7 +32,7 @@ export const normalizeConfidence = (rating) => {
  */
 export const getComplianceLabel = (confidence) => {
     const score = normalizeConfidence(confidence);
-    if (score >= 90) return 'Verified_Compliant';
-    if (score >= 75) return 'Review_Required';
-    return 'Action_Recommended';
+    if (score >= 70) return 'High_Risk_Detected';
+    if (score >= 40) return 'Moderate_Risk';
+    return 'Low_Risk_Safe';
 };

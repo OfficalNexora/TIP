@@ -141,10 +141,7 @@ const PaymentMethods = ({ methods, onAdd, onRemove, isLoading }) => {
 
             {/* Removed the separate "Add Method Section" div entirely */}
 
-            <div className="mt-4 flex items-center gap-2 justify-center text-[10px] text-slate-500">
-                <Icons.Lock size={10} />
-                <span>Securely processed by Stripe. Your details are never stored on our servers.</span>
-            </div>
+            <span>Securely processed via GCash & PayPal. Your details are handled by your provider.</span>
         </div>
     );
 };

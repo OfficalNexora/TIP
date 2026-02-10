@@ -14,7 +14,6 @@
     "mammoth": "^1.11.0",
     "multer": "^2.0.2",
     "pdf-parse": "^1.1.4",
-    "stripe": "^20.1.0",
     "tesseract.js": "^7.0.0"
   },
   "main": "index.js",

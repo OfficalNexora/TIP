@@ -25,6 +25,7 @@ import SubscriptionModal from './components/dashboard/SubscriptionModal';
 
 import Loader from './components/ui/Loader';
 import LagNotifier from './components/ui/LagNotifier';
+import Chatbot from './components/ui/Chatbot';
 
 // Check for email confirmation redirect BEFORE any effects clear the URL
 const initialUrl = window.location.href;
@@ -33,6 +34,7 @@ const isEmailConfirmationRedirect = initialUrl.includes('type=email_change') || 
 function AppContent() {
   const { session, loading: authLoading } = useAuth();
   const {
+    isHandshaking: handshakeActive, loadingHistory,
     dashboardState, setDashboardState,
     activeFile, setActiveFile, loadFile,
     files,
@@ -41,9 +43,13 @@ function AppContent() {
     isSubscriptionOpen, setSubscriptionOpen,
     integrityAvg, totalAudits,
     scanStatus, startScan,
-    loadingHistory,
-    isHandshaking
+    // Interactive Audit
+    focusedIssue, setFocusedIssue,
+    // Chatbot
+    isChatOpen, setIsChatOpen
   } = useDashboard();
+
+  console.log("AppContent Handshake Status:", handshakeActive);
 
   // Initialize appState based on whether this is an email confirmation redirect
   const [appState, setAppState] = useState(isEmailConfirmationRedirect ? 'EMAIL_CONFIRMED' : 'LANDING');
@@ -92,7 +98,7 @@ function AppContent() {
   }, [session, authLoading, appState]);
 
   // COMBINED LOADING GUARD (Session check + Institutional Handshake)
-  if (authLoading || (session && isHandshaking)) return (
+  if (authLoading || (session && handshakeActive)) return (
     <div className="h-screen w-full bg-slate-950 flex flex-col items-center justify-center transition-colors">
       <Loader />
       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-8 animate-pulse">
@@ -178,6 +184,10 @@ function AppContent() {
             loadFile={loadFile}
             setActiveFile={setActiveFile}
             onUpgrade={() => setSubscriptionOpen(true)}
+            isChatOpen={isChatOpen}
+            setIsChatOpen={setIsChatOpen}
+            rightPanelOpen={rightPanelOpen}
+            setRightPanelOpen={setRightPanelOpen}
           />
 
           <main className="flex-1 flex flex-col relative min-w-0 bg-transparent">
@@ -186,7 +196,7 @@ function AppContent() {
               activeFile={activeFile}
               rightPanelOpen={rightPanelOpen}
               setRightPanelOpen={setRightPanelOpen}
-              setAppState={setAppState} // Used for 'Sign Out' which mimics setAppState('LANDING') but AuthContext handles real logout
+              setAppState={setAppState}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               setDashboardState={setDashboardState}
@@ -267,7 +277,17 @@ function AppContent() {
           <LagNotifier />
         </div>
       )}
+
+      {/* AI Chat Assistant — rendered outside dashboard flex to avoid z-index stacking issues */}
+      {appState === 'DASHBOARD' && (
+        <Chatbot
+          analysisId={activeFile?.id}
+          isOpen={isChatOpen}
+          setIsOpen={setIsChatOpen}
+        />
+      )}
     </div>
+
   );
 }
 

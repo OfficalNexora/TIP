@@ -147,14 +147,7 @@ const Header = ({
                     </div>
                 )}
 
-                {activeFile && !rightPanelOpen && dashboardState !== 'SCANNING' && (
-                    <button
-                        onClick={() => setRightPanelOpen(true)}
-                        className="bg-[#002147] dark:bg-blue-600 hover:bg-[#003366] dark:hover:bg-blue-700 text-white transition-all active:scale-95 text-xs py-1.5 px-4 h-9 rounded-lg font-medium shadow-sm"
-                    >
-                        Tingnan ang Analysis
-                    </button>
-                )}
+                {/* Active Analysis Button moved to Sidebar */}
 
                 <div className="relative">
                     <button

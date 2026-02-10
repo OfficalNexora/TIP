@@ -17,7 +17,10 @@ router.delete('/payment-methods/:id', BillingController.removePaymentMethod);
 // Invoices
 router.get('/invoices', BillingController.getInvoices);
 
-// Setup Intent (for adding cards)
+// Manual Payment
+router.post('/manual-payment', BillingController.submitManualPayment);
+
+// Setup Intent (for adding cards) - STUBBED IN CONTROLLER
 router.post('/setup-intent', BillingController.createSetupIntent);
 
 module.exports = router;

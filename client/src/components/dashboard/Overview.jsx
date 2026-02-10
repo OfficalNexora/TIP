@@ -113,7 +113,7 @@ const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handl
                         {/* HUD Badge - Only for Analyzed - Matches Screenshot Style */}
                         {!isScanning && (
                             <div className="absolute -bottom-2 -right-3 w-8 h-8 bg-slate-900 dark:bg-slate-950/80 backdrop-blur-sm border border-slate-700 rounded-full flex items-center justify-center shadow-lg z-10">
-                                <span className={`text-[9px] font-bold ${confidenceScore > 80 ? 'text-emerald-400' : 'text-amber-500'}`}>
+                                <span className={`text-[9px] font-bold ${confidenceScore > 70 ? 'text-rose-400' : 'text-emerald-400'}`}>
                                     {confidenceScore}%
                                 </span>
                             </div>
@@ -147,14 +147,14 @@ const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handl
                             ${isScanning
                                 ? 'text-blue-600 dark:text-blue-400 border-blue-600/20 dark:border-blue-400/20 animate-pulse'
                                 : 'text-slate-400 dark:text-slate-500 border-slate-200 dark:border-slate-700'}`}>
-                            {isScanning ? 'SCANNING' : 'ANALYSIS'}
+                            {isScanning ? 'NAG-I-SCAN' : 'PAGSUSURI'}
                         </span>
                     </div>
 
                     <div className="flex items-center justify-between mt-1 h-3">
                         {isScanning ? (
                             <span className="text-[10px] font-mono text-blue-600 dark:text-blue-400 animate-typing-loop inline-block w-fit">
-                                Scanning in Progress...
+                                Kasalukuyang Nag-i-scan...
                             </span>
                         ) : (
                             <>
@@ -163,7 +163,7 @@ const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handl
                                 </p>
                                 <div className="w-16 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                     <div
-                                        className={`h-full transition-all duration-1000 ease-out ${confidenceScore > 80 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                        className={`h-full transition-all duration-1000 ease-out ${confidenceScore > 70 ? 'bg-rose-500' : 'bg-emerald-500'}`}
                                         style={{ width: `${confidenceScore}%` }}
                                     ></div>
                                 </div>

@@ -351,6 +351,8 @@ class HeuristicsService {
 
         return {
             ...scores,
+            // Explicitly expose patterns at top level to fix hydration issues
+            pattern_list: patterns.detected_patterns || [],
             details: {
                 norm_text_length: cleanText.length,
                 typography,
@@ -500,9 +502,9 @@ class HeuristicsService {
             (styleRisk * 0.25) +
             (structureRisk * 0.15);
 
-        let confidenceNode = 'Mababa'; // Risk
-        if (finalScore > 75) confidenceNode = 'Mataas';
-        else if (finalScore > 40) confidenceNode = 'Katamtaman';
+        let confidenceNode = 'Mataas'; // Default to High Integrity (Low Risk)
+        if (finalScore > 75) confidenceNode = 'Mababa'; // High Risk = Low Integrity
+        else if (finalScore > 40) confidenceNode = 'Katamtaman'; // Moderate Risk = Moderate Integrity
 
         return {
             ai_probability_score: Math.round(finalScore), // 0-100

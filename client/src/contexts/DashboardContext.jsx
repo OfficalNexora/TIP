@@ -19,6 +19,8 @@ export const DashboardProvider = ({ children }) => {
     const [isSubscriptionOpen, setSubscriptionOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [focusedIssue, setFocusedIssue] = useState(null); // { id, label, snippet, suggestion, explanation }
+    const [isChatOpen, setIsChatOpen] = useState(false);
+
 
     // Data State
     const [files, setFiles] = useState([]);
@@ -252,6 +254,7 @@ export const DashboardProvider = ({ children }) => {
             setActiveFile({ ...file, isFileLoading: true });
             setDashboardState('RESULTS');
             setRightPanelOpen(true);
+            setIsChatOpen(false);
 
             // Fetch full analysis detail
             const response = await axios.get(
@@ -491,7 +494,9 @@ export const DashboardProvider = ({ children }) => {
             // Lag detection metrics
             lagMetrics,
             // Interactive Audit
-            focusedIssue, setFocusedIssue
+            focusedIssue, setFocusedIssue,
+            // Chatbot
+            isChatOpen, setIsChatOpen
         }}>
             {children}
         </DashboardContext.Provider>

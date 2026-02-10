@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Icons from '../ui/Icons';
 import InsightCard from '../ui/InsightCard';
 import { useDashboard } from '../../contexts/DashboardContext';
+import { normalizeConfidence } from '../../utils/confidenceUtils';
 
 const AnalyticPanel = ({ activeFile, isOpen, onClose }) => {
     const { focusedIssue, setFocusedIssue } = useDashboard();
@@ -73,10 +74,10 @@ const AnalyticPanel = ({ activeFile, isOpen, onClose }) => {
     const dimensionKeys = Object.keys(dimensions);
 
     // Confidence Logic
-    const confidenceScore = parseInt(activeFile.confidence) || 0;
-    let confidenceColor = "bg-red-500";
-    if (confidenceScore > 70) confidenceColor = "bg-emerald-500";
-    else if (confidenceScore > 40) confidenceColor = "bg-amber-500";
+    const confidenceScore = activeFile.confidence_score || normalizeConfidence(activeFile.confidence);
+    let confidenceColor = "bg-emerald-500"; // Default nice green (Low Risk)
+    if (confidenceScore > 70) confidenceColor = "bg-rose-500"; // High Risk
+    else if (confidenceScore > 40) confidenceColor = "bg-amber-500"; // Moderate Risk
 
     const handleIssueClick = (issue) => {
         setFocusedIssue(issue);
@@ -84,7 +85,13 @@ const AnalyticPanel = ({ activeFile, isOpen, onClose }) => {
 
     const patternList = activeFile.forensic_analysis?.pattern_list
         || activeFile.forensic_analysis?.patterns?.detected_patterns
+        || activeFile.forensic_analysis?.details?.patterns?.detected_patterns
         || [];
+
+    // Debug: Log what we have
+    console.log('[AnalyticPanel] forensic_analysis:', activeFile.forensic_analysis);
+    console.log('[AnalyticPanel] pattern_list:', patternList);
+
 
     return (
         <div
@@ -120,14 +127,14 @@ const AnalyticPanel = ({ activeFile, isOpen, onClose }) => {
                 <InsightCard>
                     <div className="flex items-start justify-between mb-4">
                         <div>
-                            <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 transition-colors">Overall Confidence</h4>
+                            <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 transition-colors">Panganib ng AI Pattern (Posibilidad)</h4>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-4xl font-bold text-slate-900 dark:text-tip-text-main transition-colors">{activeFile.confidence}</span>
-                                <span className="text-sm text-slate-500 dark:text-slate-400 font-medium transition-colors">/ 100</span>
+                                <span className="text-4xl font-bold text-slate-900 dark:text-tip-text-main transition-colors">{confidenceScore}</span>
+                                <span className="text-sm text-slate-500 dark:text-slate-400 font-medium transition-colors">% Panganib</span>
                             </div>
                         </div>
-                        <div className={`px-2 py-1 rounded text-xs font-bold uppercase transition-colors ${confidenceScore > 70 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'}`}>
-                            {confidenceScore > 70 ? 'High Integrity' : 'Review Needed'}
+                        <div className={`px-2 py-1 rounded text-xs font-bold uppercase transition-colors ${confidenceScore > 70 ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400' : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'}`}>
+                            {confidenceScore > 70 ? 'Mataas na Panganib' : 'Mababang Panganib / Ligtas'}
                         </div>
                     </div>
                     <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden transition-colors">
@@ -138,7 +145,7 @@ const AnalyticPanel = ({ activeFile, isOpen, onClose }) => {
                     </div>
 
                     <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 transition-colors">
-                        <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 transition-colors">AI Assistance Likelihood</h4>
+                        <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 transition-colors">Posibilidad ng AI Detection</h4>
                         <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium transition-colors">
                             <Icons.Cpu size={16} className="text-slate-400 dark:text-slate-500" />
                             {activeFile.ai_usage || "Processing..."}
@@ -205,6 +212,15 @@ const AnalyticPanel = ({ activeFile, isOpen, onClose }) => {
                                     </div>
                                 </div>
                             )}
+                            {showPatterns && patternList.length === 0 && (
+                                <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm">
+                                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                                        <Icons.CheckCircle size={14} />
+                                        <span className="text-xs">Walang nakitang AI patterns sa dokumentong ito.</span>
+                                    </div>
+                                </div>
+                            )}
+
 
                             {activeFile.forensic_analysis?.pattern_explanation && (
                                 <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg relative overflow-hidden">

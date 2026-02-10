@@ -112,23 +112,20 @@ const BillingPage = () => {
         }
     };
 
-    const handlePaymentSuccess = async (paymentMethodId) => {
+    const handlePaymentSuccess = async (method, referenceNumber) => {
         try {
             const token = session?.access_token;
-            // Persist the new method to our DB
-            const res = await axios.post('/api/billing/payment-methods', {
-                type: 'card',
-                details: { paymentMethodId }
+            // Persist the manual payment record
+            const res = await axios.post('/api/billing/manual-payment', {
+                method,
+                referenceNumber
             }, { headers: { Authorization: `Bearer ${token}` } });
 
-            // Update local state
-            setPaymentMethods(prev => [res.data, ...(prev || [])]);
+            alert('Payment submitted for manual verification!');
             setIsPaymentModalOpen(false);
-            alert('Payment method added successfully!');
         } catch (err) {
-            console.error('Failed to save payment method:', err);
-            alert('Payment method saved to Stripe but failed to sync to profile.');
-            setIsPaymentModalOpen(false); // Close anyway since Stripe part succeeded
+            console.error('Failed to submit payment:', err);
+            alert('Submission failed.');
         }
     };
 
