@@ -22,6 +22,11 @@ function getKey(header, callback) {
 }
 
 const authMiddleware = async (req, res, next) => {
+    // Explicitly allow OPTIONS for CORS preflight
+    if (req.method === 'OPTIONS') {
+        return next();
+    }
+
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

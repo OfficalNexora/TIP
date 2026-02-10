@@ -90,24 +90,30 @@ app.get('/health', (req, res) => {
     });
 });
 
+app.use(cors({
+    origin: (origin, callback) => {
+        // Institutional grade origin matching: handle trailing slashes and null origins
+        const rawAllowed = process.env.CLIENT_URL || 'https://tip-xi.vercel.app';
+        const allowed = rawAllowed.replace(/\/$/, '');
+        if (!origin || allowed === '*' || origin === allowed || origin === 'https://tip-xi.vercel.app') {
+            callback(null, true);
+        } else {
+            console.warn(`[CORS] Denied origin: ${origin} (Allowed: ${allowed})`);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-public-ip', 'x-filename', 'Accept'],
+    credentials: true,
+    optionsSuccessStatus: 200
+}));
+
 // Middleware
 app.use((req, res, next) => {
     console.log(`[Request] ${req.method} ${req.url}`);
     next();
 });
 
-app.use(cors({
-    origin: (origin, callback) => {
-        const allowed = process.env.CLIENT_URL || 'https://tip-xi.vercel.app';
-        if (!allowed || allowed === '*' || origin === allowed || !origin || origin === 'https://tip-xi.vercel.app') {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-public-ip', 'x-filename']
-}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
