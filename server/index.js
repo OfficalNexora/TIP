@@ -13,7 +13,38 @@ const { getIPLocation, parseUA } = require('./services/geoService');
 const scoringService = require('./services/scoringService');
 const chatService = require('./services/chatService');
 const analysisQueue = require('./services/analysisQueue');
+const analysisQueue = require('./services/analysisQueue');
 const billingRoutes = require('./routes/billingRoutes');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// --- CORS CONFIGURATION (MUST BE FIRST) ---
+app.use(cors({
+    origin: (origin, callback) => {
+        const allowed = [
+            'https://tip-xi.vercel.app',
+            'http://localhost:5173',
+            'http://localhost:3000'
+        ];
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+
+        if (allowed.indexOf(origin) !== -1 || origin.endsWith('.vercel.app')) {
+            callback(null, true);
+        } else {
+            console.warn(`[CORS] Blocked origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-public-ip', 'x-filename', 'Accept', 'X-Requested-With'],
+    credentials: true,
+    optionsSuccessStatus: 200
+}));
+
+// Explicit OPTIONS handling for preflight
+app.options('*', cors());
 
 // --- STARTUP DIAGNOSTICS ---
 console.log('[Startup] Node Environment:', process.env.NODE_ENV);
