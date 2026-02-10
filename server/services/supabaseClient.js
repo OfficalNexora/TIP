@@ -6,7 +6,9 @@ const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabaseServiceKey = rawKey.replace(/[^a-zA-Z0-9\-_.]/g, '');
 
 if (!supabaseUrl || !supabaseServiceKey) {
-    console.error('[Security] Missing Supabase configuration. Please check your .env file.');
+    const errorMsg = '[Security] Missing Supabase configuration (SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY). Deployment will fail.';
+    console.error(errorMsg);
+    throw new Error(errorMsg);
 }
 
 // 1. PUBLIC CLIENT: Used for RLS-scoped operations (with user token)

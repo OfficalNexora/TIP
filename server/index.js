@@ -14,7 +14,24 @@ const scoringService = require('./services/scoringService');
 const chatService = require('./services/chatService');
 const analysisQueue = require('./services/analysisQueue');
 const billingRoutes = require('./routes/billingRoutes');
-require('./services/analysisProcessor'); // Start the Worker/Processor
+
+// --- STARTUP DIAGNOSTICS ---
+console.log('[Startup] Node Environment:', process.env.NODE_ENV);
+console.log('[Startup] Critical ENV check:');
+const criticalVars = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'GROQ_API_KEY', 'CLIENT_URL'];
+criticalVars.forEach(v => {
+    console.log(`  - ${v}: ${process.env[v] ? 'LOADED ✅' : 'MISSING ❌'}`);
+});
+
+try {
+    console.log('[Startup] Initializing Analysis Processor...');
+    require('./services/analysisProcessor');
+    console.log('[Startup] Analysis Processor required successfully.');
+} catch (err) {
+    console.error('[Startup] FATAL: Failed to load Analysis Processor:', err.message);
+    console.error(err.stack);
+}
+// ---------------------------
 
 /**
  * Ensures the pattern list is correctly extracted and formatted for the frontend.
@@ -62,6 +79,16 @@ const getClientIP = (req) => {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Low-level Health Check (Before all middleware/auth)
+app.get('/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+        env: process.env.NODE_ENV || 'development'
+    });
+});
 
 // Middleware
 app.use((req, res, next) => {
