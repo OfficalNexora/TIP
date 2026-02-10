@@ -2,19 +2,12 @@ import { useState } from 'react';
 import Icons from '../ui/Icons';
 import InsightCard from '../ui/InsightCard';
 import { useAuth } from '../../contexts/AuthContext';
+import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 
-const Header = ({
-    dashboardState,
-    activeFile,
-    rightPanelOpen,
-    setRightPanelOpen,
-    setAppState,
-    searchTerm,
-    setSearchTerm,
-    setDashboardState,
-    files = [],
-    loadFile
-}) => {
+const Header = ({ setAppState }) => {
+    const { dashboardState, rightPanelOpen } = useUI();
+    const { activeFile, searchTerm, files = [] } = useData();
+    const { setDashboardState, setRightPanelOpen, setSearchTerm, loadFile } = useActions();
     const { userProfile, session, signOut } = useAuth();
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);

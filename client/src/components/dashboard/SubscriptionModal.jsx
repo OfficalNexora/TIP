@@ -2,8 +2,15 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import Icons from '../ui/Icons';
 import InsightCard from '../ui/InsightCard';
+import { useUI, useActions } from '../../contexts/DashboardContext';
 
-const SubscriptionModal = ({ isOpen, onClose, currentPlan = "Audit Basic", onUpgrade }) => {
+const SubscriptionModal = () => {
+    const { isSubscriptionOpen: isOpen } = useUI();
+    const { setSubscriptionOpen } = useActions();
+
+    const onClose = () => setSubscriptionOpen(false);
+    const onUpgrade = () => alert("Contact Sales for Institutional Access.");
+    const currentPlan = "Audit Basic";
     const [isUpgrading, setIsUpgrading] = React.useState(false);
 
     if (!isOpen) return null;

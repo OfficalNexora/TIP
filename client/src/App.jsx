@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { DashboardProvider, useDashboard } from './contexts/DashboardContext';
+import { DashboardProvider, useUI, useData, useActions, useScan } from './contexts/DashboardContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 
@@ -32,21 +32,12 @@ const isEmailConfirmationRedirect = initialUrl.includes('type=email_change') || 
 
 function AppContent() {
   const { session, loading: authLoading } = useAuth();
-  const {
-    isHandshaking: handshakeActive, loadingHistory,
-    dashboardState, setDashboardState,
-    activeFile, setActiveFile, loadFile,
-    files,
-    searchTerm, setSearchTerm,
-    rightPanelOpen, setRightPanelOpen,
-    isSubscriptionOpen, setSubscriptionOpen,
-    integrityAvg, totalAudits,
-    scanStatus, startScan,
-    // Interactive Audit
-    focusedIssue, setFocusedIssue,
-    // Chatbot
-    isChatOpen, setIsChatOpen
-  } = useDashboard();
+  const { dashboardState, rightPanelOpen, isHandshaking, lagMetrics, isChatOpen } = useUI();
+  const { files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory } = useData();
+  const { setDashboardState, setRightPanelOpen, setSubscriptionOpen, setIsChatOpen, loadFile, setSearchTerm, startScan } = useActions();
+  const { scanStatus } = useScan();
+
+  const handshakeActive = isHandshaking;
 
   console.log("AppContent Handshake Status:", handshakeActive);
 
@@ -179,81 +170,40 @@ function AppContent() {
       {appState === 'DASHBOARD' && (
         <div className="fixed inset-0 z-30 flex animate-fade-in">
 
-          <Sidebar
-            dashboardState={dashboardState}
-            setDashboardState={setDashboardState}
-            activeFile={activeFile}
-            files={files}
-            loadFile={loadFile}
-            setActiveFile={setActiveFile}
-            onUpgrade={() => setSubscriptionOpen(true)}
-            isChatOpen={isChatOpen}
-            setIsChatOpen={setIsChatOpen}
-            rightPanelOpen={rightPanelOpen}
-            setRightPanelOpen={setRightPanelOpen}
-          />
+          <Sidebar />
 
           <main className="flex-1 flex flex-col relative min-w-0 bg-transparent">
-            <Header
-              dashboardState={dashboardState}
-              activeFile={activeFile}
-              rightPanelOpen={rightPanelOpen}
-              setRightPanelOpen={setRightPanelOpen}
-              setAppState={setAppState}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              setDashboardState={setDashboardState}
-              files={files}
-              loadFile={loadFile}
-            />
+            <Header setAppState={setAppState} />
 
             <div className={`flex-1 ${['SCANNING', 'UPLOAD', 'OVERVIEW', 'SETTINGS', 'HISTORY'].includes(dashboardState) ? 'overflow-hidden' : 'overflow-y-auto'} ${['OVERVIEW', 'SETTINGS', 'HISTORY'].includes(dashboardState) ? 'p-0' : 'p-8 md:p-12'} custom-scrollbar`}>
               <div className={`h-full flex flex-col ${['RESULTS', 'OVERVIEW', 'SETTINGS', 'HISTORY'].includes(dashboardState) ? 'w-full' : 'max-w-5xl mx-auto'} ${['UPLOAD', 'SCANNING', 'RESULTS', 'OVERVIEW', 'SETTINGS', 'HISTORY'].includes(dashboardState) ? '' : 'pb-20'}`}>
 
                 {dashboardState === 'OVERVIEW' && (
-                  <Overview
-                    files={files}
-                    setDashboardState={setDashboardState}
-                    setActiveFile={setActiveFile}
-                    loadFile={loadFile}
-                    searchTerm={searchTerm}
-                    integrityAvg={integrityAvg}
-                    totalAudits={totalAudits}
-                    loading={loadingHistory}
-                  />
+                  <Overview />
                 )}
 
                 {dashboardState === 'HISTORY' && (
-                  <ScanHistory
-                    files={files}
-                    loadFile={loadFile}
-                  />
+                  <ScanHistory />
                 )}
 
                 {dashboardState === 'UPLOAD' && (
-                  <Upload onStartScan={startScan} />
+                  <Upload />
                 )}
 
                 {dashboardState === 'SCANNING' && (
-                  <Scanning filename={activeFile?.filename} status={scanStatus} />
+                  <Scanning />
                 )}
 
                 {dashboardState === 'RESULTS' && activeFile && (
-                  <Results activeFile={activeFile} />
+                  <Results />
                 )}
 
                 {dashboardState === 'PROFILE' && (
-                  <ComplianceProfile
-                    integrityAvg={integrityAvg}
-                    totalAudits={totalAudits}
-                  />
+                  <ComplianceProfile />
                 )}
 
                 {dashboardState === 'COMPLIANCE' && (
-                  <ComplianceProfile
-                    integrityAvg={integrityAvg}
-                    totalAudits={totalAudits}
-                  />
+                  <ComplianceProfile />
                 )}
 
                 {dashboardState === 'SETTINGS' && (
@@ -264,17 +214,9 @@ function AppContent() {
             </div>
           </main>
 
-          <AnalyticPanel
-            activeFile={activeFile}
-            isOpen={rightPanelOpen}
-            onClose={() => setRightPanelOpen(false)}
-          />
+          <AnalyticPanel />
 
-          <SubscriptionModal
-            isOpen={isSubscriptionOpen}
-            onClose={() => setSubscriptionOpen(false)}
-            onUpgrade={() => alert("Contact Sales for Institutional Access.")}
-          />
+          <SubscriptionModal />
 
           {/* Lag Detection Notifier */}
           <LagNotifier />
@@ -283,11 +225,7 @@ function AppContent() {
 
       {/* AI Chat Assistant — rendered outside dashboard flex to avoid z-index stacking issues */}
       {appState === 'DASHBOARD' && (
-        <Chatbot
-          analysisId={activeFile?.id}
-          isOpen={isChatOpen}
-          setIsOpen={setIsChatOpen}
-        />
+        <Chatbot />
       )}
     </div>
 

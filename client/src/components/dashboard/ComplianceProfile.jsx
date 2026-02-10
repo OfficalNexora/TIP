@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
-import { useDashboard } from '../../contexts/DashboardContext';
 import Icons from '../ui/Icons';
 import InsightCard from '../ui/InsightCard';
+import { useData } from '../../contexts/DashboardContext';
 
 const ComplianceProfile = () => {
-    const { prefetchedData, integrityAvg, totalAudits, loadingHistory } = useDashboard();
+    const { prefetchedData, integrityAvg, totalAudits, loadingHistory } = useData();
 
     // Fallback to local profile if fetch is still warming up, or use empty default
     const profile = useMemo(() => {

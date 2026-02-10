@@ -22,7 +22,10 @@ const Auth = () => {
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,
-                    options: { data: { full_name: email.split('@')[0] } } // Mock full name from email
+                    options: {
+                        data: { full_name: email.split('@')[0] },
+                        emailRedirectTo: window.location.origin
+                    }
                 });
                 if (error) throw error;
                 alert('Registration successful! Please check your email or proceed to login.');

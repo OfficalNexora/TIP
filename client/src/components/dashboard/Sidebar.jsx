@@ -3,8 +3,14 @@ import tipLogo from '../../assets/no background logo fnl.png';
 import Icons from '../ui/Icons';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 
-const Sidebar = ({ dashboardState, setDashboardState, activeFile, files, loadFile, setActiveFile, onUpgrade, isChatOpen, setIsChatOpen, rightPanelOpen, setRightPanelOpen }) => {
+const Sidebar = React.memo(() => {
+    const { dashboardState, isChatOpen, rightPanelOpen } = useUI();
+    const { activeFile, files } = useData();
+    const { setDashboardState, setIsChatOpen, setRightPanelOpen, loadFile, setActiveFile, setSubscriptionOpen } = useActions();
+
+    const onUpgrade = () => setSubscriptionOpen(true);
     const aiSectionRef = React.useRef(null);
     const lastAnimatedFileId = React.useRef(null);
 
@@ -202,6 +208,6 @@ const Sidebar = ({ dashboardState, setDashboardState, activeFile, files, loadFil
             </div>
         </aside>
     );
-};
+});
 
 export default Sidebar;

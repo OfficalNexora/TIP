@@ -5,8 +5,7 @@ import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import InsightCard from '../ui/InsightCard';
-import { useDashboard } from '../../contexts/DashboardContext';
-
+import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 import { normalizeConfidence } from '../../utils/confidenceUtils';
 
 const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handleDeleteClick }) => {
@@ -176,8 +175,11 @@ const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handl
     );
 });
 
-const Overview = ({ files = [], setDashboardState, setActiveFile, loadFile, searchTerm, integrityAvg, totalAudits, loading }) => {
-    const { deleteAnalysis } = useDashboard();
+const Overview = () => {
+    const { files, searchTerm, integrityAvg, totalAudits, loadingHistory } = useData();
+    const { setDashboardState, loadFile, deleteAnalysis } = useActions();
+    const loading = loadingHistory;
+
     const [openMenuId, setOpenMenuId] = useState(null);
     const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 

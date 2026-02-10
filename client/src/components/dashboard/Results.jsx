@@ -2,13 +2,15 @@ import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import Icons from '../ui/Icons';
 import { renderAsync } from 'docx-preview';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useDashboard } from '../../contexts/DashboardContext';
+import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 
-const Results = ({ activeFile }) => {
+const Results = () => {
     const docxContainerRef = useRef(null);
     const wrapperRef = useRef(null);
     const { theme } = useTheme();
-    const { focusedIssue, setFocusedIssue } = useDashboard();
+    const { activeFile } = useData();
+    const { focusedIssue } = useUI();
+    const { setFocusedIssue } = useActions();
 
     const [isDocxRendered, setIsDocxRendered] = useState(false);
     const [isMaximized, setIsMaximized] = useState(false);

@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import Icons from '../ui/Icons';
+import { useActions } from '../../contexts/DashboardContext';
 
-const Upload = ({ onStartScan }) => {
+const Upload = () => {
+    const { startScan } = useActions();
     const [isDragging, setIsDragging] = useState(false);
+
+    const onStartScan = startScan;
 
     const handleFileChange = (e) => {
         if (e.target.files && e.target.files[0]) {

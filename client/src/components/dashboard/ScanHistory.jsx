@@ -5,10 +5,13 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { normalizeConfidence, getComplianceLabel } from '../../utils/confidenceUtils';
 
-import { useDashboard } from '../../contexts/DashboardContext';
+import { useUI, useData, useActions, useScan } from '../../contexts/DashboardContext';
 
 const ScanHistory = () => {
-    const { files, loadFile, loadingHistory, hasMore, loadMore, loadingMore } = useDashboard();
+    const { loadingHistory } = useData();
+    const { files } = useData();
+    const { loadFile, loadMore } = useActions();
+    const { hasMore, loadingMore } = useScan();
     const [searchTerm, setSearchTerm] = useState("");
     const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
 

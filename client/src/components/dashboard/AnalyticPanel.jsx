@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Icons from '../ui/Icons';
 import InsightCard from '../ui/InsightCard';
-import { useDashboard } from '../../contexts/DashboardContext';
+import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 import { normalizeConfidence } from '../../utils/confidenceUtils';
 
-const AnalyticPanel = ({ activeFile, isOpen, onClose }) => {
-    const { focusedIssue, setFocusedIssue } = useDashboard();
+const AnalyticPanel = () => {
+    const { activeFile } = useData();
+    const { focusedIssue, rightPanelOpen: isOpen } = useUI();
+    const { setFocusedIssue, setRightPanelOpen } = useActions();
+
+    const onClose = () => setRightPanelOpen(false);
 
     // State for panel width (default 450px - standard sidebar width)
     const [width, setWidth] = useState(450);

@@ -1,7 +1,13 @@
 import React from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { useData, useScan } from '../../contexts/DashboardContext';
 
-const Scanning = ({ filename, status }) => {
+const Scanning = () => {
+    const { activeFile } = useData();
+    const { scanStatus } = useScan();
+
+    const filename = activeFile?.filename;
+    const status = scanStatus;
     const isComplete = status?.toLowerCase().includes('complete');
 
     return (

@@ -4,34 +4,46 @@ import { useAuth } from './AuthContext';
 import { useNotification } from './NotificationContext';
 import { normalizeConfidence } from '../utils/confidenceUtils';
 
-const DashboardContext = createContext();
+// Split into specialized contexts for granular re-renders
+const UIContext = createContext();
+const DataContext = createContext();
+const ActionContext = createContext();
+const ScanContext = createContext();
 
-export const useDashboard = () => useContext(DashboardContext);
+export const useUI = () => useContext(UIContext);
+export const useData = () => useContext(DataContext);
+export const useActions = () => useContext(ActionContext);
+export const useScan = () => useContext(ScanContext);
+
+// Legacy hook for backward compatibility (throttled/grouped)
+export const useDashboard = () => {
+    return {
+        ...useContext(UIContext),
+        ...useContext(DataContext),
+        ...useContext(ActionContext),
+        ...useContext(ScanContext)
+    };
+};
 
 export const DashboardProvider = ({ children }) => {
     const { session } = useAuth();
     const notify = useNotification();
 
-    // UI State
+    // --- UI State ---
     const [dashboardState, setDashboardState] = useState('OVERVIEW');
-    const [activeFile, setActiveFile] = useState(null);
     const [rightPanelOpen, setRightPanelOpen] = useState(false);
     const [isSubscriptionOpen, setSubscriptionOpen] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [focusedIssue, setFocusedIssue] = useState(null); // { id, label, snippet, suggestion, explanation }
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [focusedIssue, setFocusedIssue] = useState(null);
+    const [isHandshaking, setIsHandshaking] = useState(true);
 
-
-    // Data State
+    // --- Data State ---
     const [files, setFiles] = useState([]);
+    const [activeFile, setActiveFile] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
     const [integrityAvg, setIntegrityAvg] = useState(0);
     const [totalAudits, setTotalAudits] = useState(0);
-    const [scanStatus, setScanStatus] = useState('Idle');
     const [loadingHistory, setLoadingHistory] = useState(false);
-    const [isHandshaking, setIsHandshaking] = useState(true);
-    const lastFetchRef = useRef({ token: null, time: 0 });
-
-    // Pre-fetched data cache (for instant navigation)
     const [prefetchedData, setPrefetchedData] = useState({
         profile: null,
         securitySetup: null,
@@ -39,7 +51,13 @@ export const DashboardProvider = ({ children }) => {
         sessions: null
     });
 
-    // Lag detection state
+    // --- Scan State ---
+    const [scanStatus, setScanStatus] = useState('Idle');
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [page, setPage] = useState(1);
+
+    // --- System Metrics ---
     const [lagMetrics, setLagMetrics] = useState({
         lastFetchDuration: 0,
         slowOperations: [],
@@ -47,62 +65,42 @@ export const DashboardProvider = ({ children }) => {
         lagCause: null
     });
 
-    // Performance tracking helper
+    // Ref-based performance tracking (prevents render loops)
+    const perfRef = useRef({ slowOps: [] });
+
     const trackOperation = useCallback(async (name, operation) => {
         const startTime = performance.now();
         try {
             const result = await operation();
             const duration = performance.now() - startTime;
-
-            console.log(`[Perf] ${name}: ${duration.toFixed(0)}ms`);
-
-            // Track slow operations (>1000ms)
             if (duration > 1000) {
-                setLagMetrics(prev => ({
-                    ...prev,
-                    slowOperations: [...prev.slowOperations.slice(-4), { name, duration, time: new Date().toISOString() }],
-                    isLagging: duration > 3000,
-                    lagCause: duration > 3000 ? `${name} took ${(duration / 1000).toFixed(1)}s` : prev.lagCause
-                }));
+                console.warn(`[Perf] Slow Operation: ${name} took ${duration.toFixed(0)}ms`);
             }
-
             return result;
         } catch (err) {
-            const duration = performance.now() - startTime;
-            console.error(`[Perf] ${name} FAILED after ${duration.toFixed(0)}ms:`, err.message);
+            console.error(`[Perf] ${name} FAILED:`, err.message);
             throw err;
         }
     }, []);
 
-    // 1. Fetch History (Paginated)
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
-    const [loadingMore, setLoadingMore] = useState(false);
-
+    // --- Actions ---
     const fetchHistory = useCallback(async (isLoadMore = false) => {
         const currentToken = session?.access_token;
         if (!currentToken) return;
 
-        if (isLoadMore) {
-            setLoadingMore(true);
-        } else {
-            setLoadingHistory(true);
-        }
+        if (isLoadMore) setLoadingMore(true);
+        else setLoadingHistory(true);
 
         try {
             const outputPage = isLoadMore ? page + 1 : 1;
-            console.log(`[History] Fetching page ${outputPage}...`);
-
             const response = await trackOperation('Fetch Analyses', () =>
                 axios.get(
                     `${import.meta.env.VITE_API_BASE_URL}/api/analyses?page=${outputPage}&limit=20`,
                     { headers: { Authorization: `Bearer ${session.access_token}` } }
-                ) // Using default limit 20
+                )
             );
 
             const { data: analysisData, meta, pagination } = response.data;
-
-            // Map backend schema
             const historicalFiles = (analysisData || []).map(analysis => {
                 const results = analysis.analysis_results?.[0]?.result_json || analysis.results;
                 return {
@@ -121,142 +119,59 @@ export const DashboardProvider = ({ children }) => {
                 };
             });
 
-            if (isLoadMore) {
-                setFiles(prev => [...prev, ...historicalFiles]);
-                setPage(outputPage);
-            } else {
-                setFiles(historicalFiles);
-                setPage(1);
-            }
+            setFiles(prev => isLoadMore ? [...prev, ...historicalFiles] : historicalFiles);
+            if (isLoadMore) setPage(outputPage);
+            else setPage(1);
 
-            // Sync Meta
             if (pagination) setHasMore(pagination.hasMore);
             if (meta) {
                 setIntegrityAvg(meta.global_integrity_avg || 0);
                 setTotalAudits(meta.total_audits || 0);
             }
-
         } catch (err) {
-            console.error('Failed to fetch scan history:', err?.message || err);
+            console.error('Failed to fetch history:', err.message);
         } finally {
             setLoadingHistory(false);
             setLoadingMore(false);
         }
     }, [session?.access_token, page, trackOperation]);
 
-    const loadMore = () => {
-        if (!loadingMore && hasMore) {
-            fetchHistory(true);
-        }
-    };
+    const loadMore = useCallback(() => {
+        if (!loadingMore && hasMore) fetchHistory(true);
+    }, [loadingMore, hasMore, fetchHistory]);
 
-    // Pre-fetch all dashboard data for instant navigation
     const prefetchAllData = useCallback(async () => {
         if (!session?.access_token) return;
-
         const headers = { Authorization: `Bearer ${session.access_token}` };
         const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
-        console.log('[Handshake] Pre-fetching all dashboard data...');
-        const startTime = performance.now();
-
         try {
-            // Fetch all data in parallel for speed
-            const [profileRes, securityRes, logsRes, sessionsRes] = await Promise.allSettled([
-                trackOperation('Fetch Profile', () => axios.get(`${baseUrl}/api/user/profile`, { headers })),
-                trackOperation('Fetch Security', () => axios.get(`${baseUrl}/api/security/setup`, { headers })),
-                trackOperation('Fetch Audit Logs', () => axios.get(`${baseUrl}/api/security/audit-logs`, { headers })),
-                trackOperation('Fetch Sessions', () => axios.get(`${baseUrl}/api/security/sessions`, { headers }))
+            const results = await Promise.allSettled([
+                axios.get(`${baseUrl}/api/user/profile`, { headers }),
+                axios.get(`${baseUrl}/api/security/setup`, { headers }),
+                axios.get(`${baseUrl}/api/security/audit-logs`, { headers }),
+                axios.get(`${baseUrl}/api/security/sessions`, { headers })
             ]);
 
             setPrefetchedData({
-                profile: profileRes.status === 'fulfilled' ? profileRes.value.data : null,
-                securitySetup: securityRes.status === 'fulfilled' ? securityRes.value.data : null,
-                auditLogs: logsRes.status === 'fulfilled' ? logsRes.value.data : null,
-                sessions: sessionsRes.status === 'fulfilled' ? sessionsRes.value.data : null
+                profile: results[0].status === 'fulfilled' ? results[0].value.data : null,
+                securitySetup: results[1].status === 'fulfilled' ? results[1].value.data : null,
+                auditLogs: results[2].status === 'fulfilled' ? results[2].value.data : null,
+                sessions: results[3].status === 'fulfilled' ? results[3].value.data : null
             });
-
-            const totalDuration = performance.now() - startTime;
-            console.log(`[Handshake] Pre-fetch complete in ${totalDuration.toFixed(0)}ms`);
-
-            setLagMetrics(prev => ({ ...prev, lastFetchDuration: totalDuration }));
-
         } catch (err) {
-            console.error('[Handshake] Pre-fetch error:', err);
+            console.error('Prefetch failed:', err);
         }
-    }, [session?.access_token, trackOperation]);
+    }, [session?.access_token]);
 
-    // Initial Fetch & Handshake when session is ready
-    const tokenStr = session?.access_token;
-    useEffect(() => {
-        if (tokenStr) {
-            console.log('[Handshake] Session detected, starting data hydration...');
-            const handshakeStart = performance.now();
-
-            // Start fetching ALL data in parallel
-            Promise.all([
-                fetchHistory(),
-                prefetchAllData()
-            ]).then(() => {
-                const duration = performance.now() - handshakeStart;
-                console.log(`[Handshake] All data loaded in ${duration.toFixed(0)}ms`);
-
-                // Dynamic handshake: finish when data is ready OR after 2s max
-                if (duration < 2000) {
-                    setTimeout(() => setIsHandshaking(false), 2000 - duration);
-                } else {
-                    setIsHandshaking(false);
-                }
-            });
-
-            // Fallback timeout in case something hangs
-            const maxTimeout = setTimeout(() => {
-                setIsHandshaking(false);
-            }, 5000);
-
-            return () => clearTimeout(maxTimeout);
-        }
-    }, [tokenStr, fetchHistory, prefetchAllData]);
-
-    // Visibility-based refresh: Re-fetch when tab regains focus
-    useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible' && session?.access_token) {
-                console.log('[Visibility] Tab focused, refreshing data...');
-                fetchHistory();
-                prefetchAllData();
-            }
-        };
-
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-    }, [session?.access_token, fetchHistory, prefetchAllData]);
-
-    // Clear lag warning after 5 seconds
-    useEffect(() => {
-        if (lagMetrics.lagCause) {
-            const timeout = setTimeout(() => {
-                setLagMetrics(prev => ({ ...prev, isLagging: false, lagCause: null }));
-            }, 5000);
-            return () => clearTimeout(timeout);
-        }
-    }, [lagMetrics.lagCause]);
-
-    // 2. Load File Detail
-    const loadFile = async (file) => {
-        if (!session?.access_token) {
-            console.warn("Cannot load file without valid session");
-            return;
-        }
-
+    const loadFile = useCallback(async (file) => {
+        if (!session?.access_token) return;
         try {
-            // Optimistic set (basic data from list)
             setActiveFile({ ...file, isFileLoading: true });
             setDashboardState('RESULTS');
             setRightPanelOpen(true);
             setIsChatOpen(false);
 
-            // Fetch full analysis detail
             const response = await axios.get(
                 `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${file.id}`,
                 { headers: { Authorization: `Bearer ${session.access_token}` } }
@@ -266,239 +181,130 @@ export const DashboardProvider = ({ children }) => {
             const results = analysis.analysis_results?.[0]?.result_json || analysis.results;
             const docInfo = analysis.uploaded_documents?.[0] || {};
 
-            // Fetch file blob for High-Fidelity Viewer
             let fileUrl = null;
-            let fileBlob = null;
             try {
-                const fileResponse = await axios.get(
+                const fileRes = await axios.get(
                     `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${file.id}/file`,
-                    {
-                        headers: { Authorization: `Bearer ${session.access_token}` },
-                        responseType: 'blob'
-                    }
+                    { headers: { Authorization: `Bearer ${session.access_token}` }, responseType: 'blob' }
                 );
-                fileBlob = fileResponse.data;
-                fileUrl = URL.createObjectURL(fileBlob);
-            } catch (fileErr) {
-                console.error('Failed to fetch original file blob:', fileErr);
-            }
+                fileUrl = URL.createObjectURL(fileRes.data);
+            } catch (e) { console.error("Blob fetch failed", e); }
 
-            const hydratedFile = {
+            setActiveFile({
                 ...file,
                 title: results?.title || file.title,
                 fullText: results?.full_text || file.fullText,
                 dimensions: results?.dimensions || file.dimensions,
                 flags: results?.flags || file.flags,
                 forensic_analysis: results?.forensic_analysis || file.forensic_analysis,
-                // High-Fidelity Data
                 fileUrl,
-                fileBlob,
                 mimeType: docInfo.file_type || 'application/octet-stream',
                 isFileLoading: false
-            };
-            setActiveFile(hydratedFile);
-
+            });
         } catch (err) {
-            console.error('Failed to hydrate analysis detail:', err);
+            console.error('Hydration failed:', err);
             setActiveFile(prev => ({ ...prev, isFileLoading: false }));
         }
-    };
+    }, [session?.access_token]);
 
-    // 3. Scan Logic (Polled)
-    const inputScan = async (uploadedFile) => {
-        if (!uploadedFile) return;
-        if (!session?.access_token) {
-            alert("Session expired. Please log in again.");
-            return;
-        }
+    const inputScan = useCallback(async (uploadedFile) => {
+        if (!uploadedFile || !session?.access_token) return;
 
         setDashboardState('SCANNING');
         setRightPanelOpen(false);
-        setScanStatus('Initializing institutional audit...');
+        setScanStatus('Initializing audit...');
 
         try {
-            // STEP 1: Create Analysis
-            const initAnalysis = await axios.post(
+            const init = await axios.post(
                 `${import.meta.env.VITE_API_BASE_URL}/api/analysis`,
                 { filename: uploadedFile.name },
                 { headers: { Authorization: `Bearer ${session.access_token}` } }
             );
-            const analysisId = initAnalysis.data.id;
-            const optimisticFile = {
-                id: analysisId,
-                filename: uploadedFile.name,
-                status: 'scanning',
-                title: uploadedFile.name,
-                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                confidence: "Pending",
-                ai_usage: "In Progress"
-            };
+            const id = init.data.id;
+            const optimistic = { id, filename: uploadedFile.name, status: 'scanning', title: uploadedFile.name, confidence: "Pending" };
 
-            // Add scanning card immediately to Overview
-            setFiles(prev => [optimisticFile, ...prev]);
-            setActiveFile(optimisticFile);
+            setFiles(prev => [optimistic, ...prev]);
+            setActiveFile(optimistic);
 
-            // STEP 2: Upload
-            setScanStatus('Securely transmitting document...');
-            const initUpload = await axios.post(
-                `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${analysisId}/upload/init`,
+            const uploadInit = await axios.post(
+                `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/upload/init`,
                 { filename: uploadedFile.name, fileType: uploadedFile.type, fileSize: uploadedFile.size },
                 { headers: { Authorization: `Bearer ${session.access_token}` } }
             );
 
-            // Use signed URL directly (it's a full Supabase URL, not a relative path)
-            await axios.put(
-                initUpload.data.uploadUrl,
-                uploadedFile,
-                {
-                    headers: {
-                        'Content-Type': uploadedFile.type
-                    }
-                }
-            );
+            await axios.put(uploadInit.data.uploadUrl, uploadedFile, { headers: { 'Content-Type': uploadedFile.type } });
+            await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/upload/complete`, {}, { headers: { Authorization: `Bearer ${session.access_token}` } });
 
-            await axios.post(
-                `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${analysisId}/upload/complete`,
-                {},
-                { headers: { Authorization: `Bearer ${session.access_token}` } }
-            );
-
-            // STEP 3: Poll
-            setScanStatus('Processing against UNESCO protocols...');
-            const pollInterval = setInterval(async () => {
-                try {
-                    const { data: statusData } = await axios.get(
-                        `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${analysisId}/status`,
-                        { headers: { Authorization: `Bearer ${session.access_token}` } }
-                    );
-
-                    if (statusData.status === 'COMPLETED') {
-                        clearInterval(pollInterval);
-                        setScanStatus('Audit Complete. Finalizing report...');
-
-                        const { data: resultData } = await axios.get(
-                            `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${analysisId}/result`,
-                            { headers: { Authorization: `Bearer ${session.access_token}` } }
-                        );
-
-                        const resultModel = resultData.result_json || resultData.result || {};
-
-                        const completedFile = {
-                            id: analysisId,
-                            filename: uploadedFile.name,
-                            status: 'COMPLETED',
-                            title: resultModel.title || uploadedFile.name,
-                            date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                            confidence: resultModel.confidence,
-                            ai_usage: resultModel.ai_usage,
-                            summary: resultModel.summary,
-                            dimensions: resultModel.dimensions,
-                            flags: resultModel.flags,
-                            fullText: resultModel.full_text,
-                            forensic_analysis: resultModel.forensic_analysis
-                        };
-
-                        // Update the EXISING scanning card in the list
-                        setFiles(prev => {
-                            const updatedFiles = prev.map(f => f.id === analysisId ? completedFile : f);
-                            // Real-time stat update
-                            setTotalAudits(updatedFiles.length);
-                            const totalSum = updatedFiles.reduce((acc, f) => acc + normalizeConfidence(f.confidence), 0);
-                            setIntegrityAvg(Math.round(totalSum / updatedFiles.length));
-                            return updatedFiles;
-                        });
-                        setActiveFile(completedFile);
-
-                        // Give a small delay for the "Audit Complete" message to be read 
-                        // and for any overview card animations to play
-                        setTimeout(() => {
-                            setDashboardState('RESULTS');
-                            setRightPanelOpen(true);
-                        }, 1500);
-                    } else if (statusData.status === 'FAILED') {
-                        clearInterval(pollInterval);
-                        setFiles(prev => prev.filter(f => f.id !== analysisId)); // Remove failed scan from list
-                        setDashboardState('UPLOAD');
-                        notify.error('Audit Failed', statusData.error_reason || 'Analysis processing encountered an unexpected error.');
-                    }
-                } catch (e) {
-                    console.error("Polling error", e);
+            setScanStatus('UNESCO Verification...');
+            const interval = setInterval(async () => {
+                const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/status`, { headers: { Authorization: `Bearer ${session.access_token}` } });
+                if (res.data.status === 'COMPLETED') {
+                    clearInterval(interval);
+                    const result = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/result`, { headers: { Authorization: `Bearer ${session.access_token}` } });
+                    const model = result.data.result_json || result.data.result || {};
+                    const completed = { ...optimistic, status: 'COMPLETED', title: model.title, confidence: model.confidence, summary: model.summary };
+                    setFiles(prev => prev.map(f => f.id === id ? completed : f));
+                    setActiveFile(completed);
+                    setTimeout(() => { setDashboardState('RESULTS'); setRightPanelOpen(true); }, 1500);
+                } else if (res.data.status === 'FAILED') {
+                    clearInterval(interval);
+                    setDashboardState('UPLOAD');
+                    notify.error("Audit Failed");
                 }
             }, 3000);
-
         } catch (err) {
-            console.error('[Scan Initialization Error]', err);
-            const errorMsg = err.response?.data?.details || err.response?.data?.error || err.message || "Unknown error";
-            const errorCode = err.response?.data?.code ? ` (Code: ${err.response.data.code})` : "";
-
             setDashboardState('UPLOAD');
-            notify.error('Upload Failed', `${errorMsg}${errorCode}`);
+            notify.error("Upload Failed");
         }
-    };
+    }, [session?.access_token, notify]);
 
-    // 4. Delete Analysis
-    const deleteAnalysis = async (id) => {
+    const deleteAnalysis = useCallback(async (id) => {
         if (!session?.access_token) return;
         try {
             await axios.delete(
                 `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}`,
                 { headers: { Authorization: `Bearer ${session.access_token}` } }
             );
-
-            // Calculate new stats locally to avoid re-fetching and redundant renders
-            setFiles(prev => {
-                const updatedFiles = prev.filter(f => f.id !== id);
-
-                // Re-calculate Total Audits
-                setTotalAudits(updatedFiles.length);
-
-                // Re-calculate Integrity Average
-                if (updatedFiles.length > 0) {
-                    const totalSum = updatedFiles.reduce((acc, f) => acc + normalizeConfidence(f.confidence), 0);
-                    setIntegrityAvg(Math.round(totalSum / updatedFiles.length));
-                } else {
-                    setIntegrityAvg(0);
-                }
-
-                return updatedFiles;
-            });
-
-            // Close panel if deleted file was active
-            if (activeFile?.id === id) {
-                setRightPanelOpen(false);
-                setActiveFile(null);
-            }
+            setFiles(prev => prev.filter(f => f.id !== id));
+            if (activeFile?.id === id) setActiveFile(null);
+            notify.success("Analysis deleted successfully");
         } catch (err) {
-            console.error("Delete failed:", err);
-            notify.error("Action Failed", "Failed to delete analysis. Please try again.");
+            console.error('Delete failed:', err);
+            notify.error("Failed to delete analysis");
         }
-    };
+    }, [session?.access_token, activeFile?.id, notify]);
 
+    // Initial Handshake
+    useEffect(() => {
+        if (session?.access_token) {
+            const start = performance.now();
+            Promise.all([fetchHistory(), prefetchAllData()]).then(() => {
+                const elapsed = performance.now() - start;
+                setTimeout(() => setIsHandshaking(false), Math.max(0, 2000 - elapsed));
+            });
+        }
+    }, [session?.access_token, fetchHistory, prefetchAllData]);
+
+    // Cleanup lag message
+    useEffect(() => {
+        if (lagMetrics.lagCause) {
+            const t = setTimeout(() => setLagMetrics(p => ({ ...p, lagCause: null })), 5000);
+            return () => clearTimeout(t);
+        }
+    }, [lagMetrics.lagCause]);
 
     return (
-        <DashboardContext.Provider value={{
-            dashboardState, setDashboardState,
-            activeFile, setActiveFile, loadFile,
-            files, setFiles,
-            searchTerm, setSearchTerm,
-            rightPanelOpen, setRightPanelOpen,
-            isSubscriptionOpen, setSubscriptionOpen,
-            integrityAvg, totalAudits,
-            scanStatus, startScan: inputScan,
-            loadingHistory, deleteAnalysis,
-            isHandshaking,
-            // Pagination
-            hasMore, loadingMore, loadMore,
-            // Pre-fetched data for instant navigation
-            prefetchedData,
-            // Lag detection metrics
-            lagMetrics,
-            // Interactive Audit
-            focusedIssue, setFocusedIssue,
-            // Chatbot
-            isChatOpen, setIsChatOpen
-        }}>
-            {children}
-        </DashboardContext.Provider>
+        <UIContext.Provider value={{ dashboardState, rightPanelOpen, isSubscriptionOpen, isChatOpen, focusedIssue, isHandshaking, lagMetrics }}>
+            <DataContext.Provider value={{ files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory, prefetchedData }}>
+                <ScanContext.Provider value={{ scanStatus, hasMore, loadingMore }}>
+                    <ActionContext.Provider value={{
+                        setDashboardState, setRightPanelOpen, setSubscriptionOpen, setIsChatOpen, setFocusedIssue, setSearchTerm, setActiveFile,
+                        loadFile, fetchHistory, loadMore, startScan: inputScan, deleteAnalysis
+                    }}>
+                        {children}
+                    </ActionContext.Provider>
+                </ScanContext.Provider>
+            </DataContext.Provider>
+        </UIContext.Provider>
     );
 };
