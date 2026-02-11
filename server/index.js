@@ -12,7 +12,7 @@ const busboy = require('busboy');
 const { getIPLocation, parseUA } = require('./services/geoService');
 const scoringService = require('./services/scoringService');
 const chatService = require('./services/chatService');
-const analysisQueue = require('./services/analysisQueue');
+const analysisQueue = require('./services/analysisQueue'); // Queue service
 const billingRoutes = require('./routes/billingRoutes');
 
 const app = express();
