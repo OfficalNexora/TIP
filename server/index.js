@@ -43,7 +43,7 @@ app.use(cors({
 }));
 
 // Explicit OPTIONS handling for preflight
-app.options('*', cors());
+app.options('/*', cors());
 
 // --- STARTUP DIAGNOSTICS ---
 console.log('[Startup] Node Environment:', process.env.NODE_ENV);
