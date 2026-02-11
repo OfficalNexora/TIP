@@ -107,9 +107,6 @@ const getClientIP = (req) => {
     return ip === '::1' ? '127.0.0.1' : ip;
 };
 
-const app = express();
-const PORT = process.env.PORT || 3000;
-
 // --- CORS CONFIGURATION (MUST BE FIRST) ---
 app.use(cors({
     origin: (origin, callback) => {
