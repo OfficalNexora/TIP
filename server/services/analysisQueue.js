@@ -86,29 +86,53 @@ const queueFacade = {
     _mode: 'PENDING',
 
     async init() {
-        // Wait 100ms to see if Redis connects or fails
-        if (connection.status === 'ready' || connection.status === 'connecting') {
-            try {
-                this._redisQueue = new Queue('analysis-scan', {
-                    connection,
-                    defaultJobOptions: {
-                        attempts: 3,
-                        removeOnComplete: 1000,
-                        removeOnFail: 5000
+        if (this._mode !== 'PENDING') return this._mode;
+
+        // Promise that resolves once the mode is determined (Redis vs Memory)
+        return new Promise((resolve) => {
+            const determineMode = async () => {
+                if (connection.status === 'ready') {
+                    try {
+                        this._redisQueue = new Queue('analysis-scan', {
+                            connection,
+                            defaultJobOptions: {
+                                attempts: 3,
+                                removeOnComplete: 1000,
+                                removeOnFail: 5000
+                            }
+                        });
+                        await this._redisQueue.waitUntilReady();
+                        this._mode = 'REDIS';
+                        console.log('[Queue] BullMQ (Redis) is ACTIVE.');
+                    } catch (err) {
+                        console.warn('[Queue] Redis init failed, falling back to Memory:', err.message);
+                        this._mode = 'MEMORY';
+                        this._memoryQueue = new MemoryQueue('analysis-scan-mem');
                     }
-                });
-                await this._redisQueue.waitUntilReady(); // Waits for Redis to actually be ready
-                this._mode = 'REDIS';
-                console.log('[Queue] BullMQ (Redis) is ACTIVE.');
-            } catch (err) {
-                console.warn('[Queue] Redis connection failed during init. Switching to Memory.');
-                this._mode = 'MEMORY';
-                this._memoryQueue = new MemoryQueue('analysis-scan-mem');
-            }
-        } else {
-            this._mode = 'MEMORY';
-            this._memoryQueue = new MemoryQueue('analysis-scan-mem');
-        }
+                    resolve(this._mode);
+                } else if (connection.status === 'end') {
+                    this._mode = 'MEMORY';
+                    this._memoryQueue = new MemoryQueue('analysis-scan-mem');
+                    console.warn('[Queue] Redis connection exhausted. Mode: MEMORY');
+                    resolve(this._mode);
+                } else {
+                    // Try again in 100ms
+                    setTimeout(determineMode, 100);
+                }
+            };
+
+            // Global safety timeout (3s) to prevent blocking the worker startup
+            setTimeout(() => {
+                if (this._mode === 'PENDING') {
+                    this._mode = 'MEMORY';
+                    this._memoryQueue = new MemoryQueue('analysis-scan-mem');
+                    console.warn('[Queue] Initialization timed out. Defaulting to MEMORY.');
+                    resolve(this._mode);
+                }
+            }, 3000);
+
+            determineMode();
+        });
     },
 
     async add(name, data, opts) {

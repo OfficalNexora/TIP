@@ -38,7 +38,7 @@ const Landing = ({ videoLoaded, randomText, onStart }) => {
 
                 {/* Explanatory Line */}
                 <p className="hero-element text-lg text-slate-200 max-w-2xl mx-auto mb-10 font-medium leading-relaxed">
-                    An AI-powered platform for auditing documents against UNESCO ethical standards.
+                    Tamang Integridad at Pananagutan sa Artificial Intelligence
                 </p>
 
                 {/* Action Button */}

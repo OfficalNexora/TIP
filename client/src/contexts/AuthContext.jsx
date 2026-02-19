@@ -42,7 +42,8 @@ export const AuthProvider = ({ children }) => {
             }, {
                 headers: {
                     Authorization: `Bearer ${activeSession.access_token}`,
-                    'x-public-ip': ip
+                    'x-public-ip': ip,
+                    'ngrok-skip-browser-warning': '69420'
                 }
             });
         } catch (error) {
@@ -72,7 +73,10 @@ export const AuthProvider = ({ children }) => {
         try {
             console.log(`[Auth] Fetching Profile for ${currentSession.user?.email}`);
             const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/profile`, {
-                headers: { Authorization: `Bearer ${tokenStr}` }
+                headers: {
+                    Authorization: `Bearer ${tokenStr}`,
+                    'ngrok-skip-browser-warning': '69420'
+                }
             });
             setUserProfile(response.data);
         } catch (error) {

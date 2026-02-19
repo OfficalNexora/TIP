@@ -6,22 +6,33 @@ const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabaseServiceKey = rawKey.replace(/[^a-zA-Z0-9\-_.]/g, '');
 
 if (!supabaseUrl || !supabaseServiceKey) {
-    const errorMsg = '[Security] Missing Supabase configuration (SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY). Deployment will fail.';
-    console.error(errorMsg);
-    throw new Error(errorMsg);
+    console.error('[Security] Missing Supabase configuration. Please check your .env file.');
 }
 
 // 1. PUBLIC CLIENT: Used for RLS-scoped operations (with user token)
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-        detectSessionInUrl: false
-    }
-});
+// This creates a NEW client instance for each request, scoped to the user's JWT.
+const createClientWithToken = (token) => {
+    return createClient(supabaseUrl, supabaseServiceKey, {
+        global: {
+            headers: { Authorization: `Bearer ${token}` }
+        },
+        auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+        }
+    });
+};
 
-// 2. ADMIN CLIENT: Dedicated instance for administrative tasks
-// This ensures Service Role usage is never "polluted" by user sessions in the same process.
+
+/* 
+ * NOTE: The 'supabase' client below uses the SERVICE_ROLE_KEY.
+ * It bypasses RLS and should ONLY be used for:
+ * - Admin tasks
+ * - Webhooks
+ * - Background jobs
+ * - Auth verification (getUser)
+ */
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
         persistSession: false,
@@ -30,4 +41,4 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
     }
 });
 
-module.exports = { supabase, supabaseAdmin };
+module.exports = { supabase: supabaseAdmin, supabaseAdmin, createClientWithToken };

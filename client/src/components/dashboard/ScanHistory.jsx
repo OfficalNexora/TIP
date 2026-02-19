@@ -97,7 +97,7 @@ const ScanHistory = () => {
                                 </th>
                                 <th className="w-[15%] px-6 py-4 cursor-pointer hover:bg-[#003366] transition-colors" onClick={() => handleSort('confidence')}>
                                     <div className="flex items-center gap-2">
-                                        Integrity
+                                        Risk Score
                                         {sortConfig.key === 'confidence' && (sortConfig.direction === 'asc' ? <Icons.ArrowUp size={12} /> : <Icons.ArrowDown size={12} />)}
                                     </div>
                                 </th>
@@ -124,7 +124,7 @@ const ScanHistory = () => {
                                         <div className="flex items-center gap-3">
                                             <div className="w-20 h-1.5 bg-tip-bg border border-tip-border/10 rounded-full overflow-hidden transition-colors">
                                                 <div
-                                                    className={`h-full rounded-full transition-all duration-1000 ${normalizeConfidence(file.confidence) > 70 ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                                                    className={`h-full rounded-full transition-all duration-1000 ${normalizeConfidence(file.confidence) >= 60 ? 'bg-rose-500' : normalizeConfidence(file.confidence) >= 30 ? 'bg-amber-500' : 'bg-emerald-500'}`}
                                                     style={{ width: `${normalizeConfidence(file.confidence)}%` }}
                                                 ></div>
                                             </div>
@@ -132,8 +132,8 @@ const ScanHistory = () => {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors ${normalizeConfidence(file.confidence) > 70 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'}`}>
-                                            {normalizeConfidence(file.confidence) > 70 ? <Icons.CheckCircle size={10} /> : <Icons.AlertCircle size={10} />}
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors ${normalizeConfidence(file.confidence) >= 60 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' : normalizeConfidence(file.confidence) >= 30 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'}`}>
+                                            {normalizeConfidence(file.confidence) >= 60 ? <Icons.AlertCircle size={10} /> : normalizeConfidence(file.confidence) >= 30 ? <Icons.AlertTriangle size={10} /> : <Icons.CheckCircle size={10} />}
                                             {getComplianceLabel(file.confidence)}
                                         </span>
                                     </td>

@@ -2,6 +2,8 @@
 node_modules/
 client/node_modules/
 server/node_modules/
+app/node_modules/
+apps/mobile/node_modules/
 save/node_modules/
 
 # Build outputs
@@ -47,14 +49,26 @@ server/redis_data/
 server/storage/uploads/
 
 # Project-specific
-supabase/
 save/
 .vercel/
 
+# Mobile / Capacitor (Exclude build junk, keep config)
+**/local.properties
+**/build/
+**/capacitor-cordova-android-plugins/
+**/.gradle/
+
+# Agentic / Temp search artifacts
+temp_preserved/
+temp_search/
+temp_search_oldest/
+.antigravityignore
+
 # Large local documents (avoid long path issues)
+**/*.mp4
+**/*.backup.mp4
+**/*.apk
 client/src/assets/*.docx
 client/src/assets/*.doc
 client/src/assets/*.rtf
 client/src/assets/*.xlsx
-client/src/assets/earth video.mp4
-client/src/assets/earth video.backup.mp4

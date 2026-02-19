@@ -1,14 +1,15 @@
-// We use regex for now as it is faster and deterministic for this specific request.
+// I will use regex, reason:faster and deterministic 
+// and god i love this decision 
 
 /**
- * Heuristics Engine for UNESCO Integrity Protocol
- * Performs deterministic forensic analysis on bilingual academic text.
+ * this is a Heuristics Engine for the Integrity checker Protocol
+ * it performs deterministic forensic analysis on bilingual academic text.
  */
 /**
  * HeuristicsService
- * Deterministic Forensic Analysis Engine (Rule-based, No LLM)
+ * Deterministic Forensic Analysis Engine
  * 
- * Features:
+ * Current Features: (will probably improved in the future but im too lazy)
  * 1. Weighted Pattern Matching (extensible)
  * 2. Contextual Omission Detection (Trigger -> Expectation)
  * 3. Typography & Structure Analysis
@@ -263,21 +264,22 @@ const PATTERN_DICTIONARY = [
     { pattern: "posibleng may implikasyon sa", weight: 1.5, category: "hedging_ph" },
 
     // K. Transitional / Linking Phrases (PH Expansion)
-    { pattern: "bukod dito,", weight: 0.5, category: "connector_ph" },
-    { pattern: "dagdag pa rito,", weight: 0.5, category: "connector_ph" },
-    { pattern: "higit pa rito,", weight: 0.5, category: "connector_ph" },
-    { pattern: "sa kabilang banda,", weight: 0.5, category: "connector_ph" },
-    { pattern: "bunga nito,", weight: 0.8, category: "connector_ph" },
-    { pattern: "kaya naman,", weight: 0.8, category: "connector_ph" },
-    { pattern: "samakatuwid,", weight: 0.8, category: "connector_ph" },
-    { pattern: "sa kabuuan,", weight: 0.5, category: "connector_ph" },
-    { pattern: "sa konteksto ng mga natuklasan,", weight: 1.2, category: "connector_ph" },
-    { pattern: "tungkol dito,", weight: 0.8, category: "connector_ph" },
-    { pattern: "sa aspetong ito,", weight: 1.0, category: "connector_ph" },
-    { pattern: "bilang karagdagan,", weight: 0.8, category: "connector_ph" },
-    { pattern: "bilang resulta,", weight: 0.8, category: "connector_ph" },
-    { pattern: "sa madaling salita,", weight: 0.8, category: "connector_ph" },
-    { pattern: "sa ganitong paraan,", weight: 0.8, category: "connector_ph" },
+    // These are standard Filipino connectors — low weight, scoring only, NOT displayed in UI.
+    { pattern: "bukod dito,", weight: 0.1, category: "connector_ph" },
+    { pattern: "dagdag pa rito,", weight: 0.1, category: "connector_ph" },
+    { pattern: "higit pa rito,", weight: 0.1, category: "connector_ph" },
+    { pattern: "sa kabilang banda,", weight: 0.1, category: "connector_ph" },
+    { pattern: "bunga nito,", weight: 0.1, category: "connector_ph" },
+    { pattern: "kaya naman,", weight: 0.1, category: "connector_ph" },
+    { pattern: "samakatuwid,", weight: 0.1, category: "connector_ph" },
+    { pattern: "sa kabuuan,", weight: 0.1, category: "connector_ph" },
+    { pattern: "sa konteksto ng mga natuklasan,", weight: 0.3, category: "connector_ph" },
+    { pattern: "tungkol dito,", weight: 0.1, category: "connector_ph" },
+    { pattern: "sa aspetong ito,", weight: 0.1, category: "connector_ph" },
+    { pattern: "bilang karagdagan,", weight: 0.1, category: "connector_ph" },
+    { pattern: "bilang resulta,", weight: 0.1, category: "connector_ph" },
+    { pattern: "sa madaling salita,", weight: 0.1, category: "connector_ph" },
+    { pattern: "sa ganitong paraan,", weight: 0.1, category: "connector_ph" },
 
     // L. Stylistic Reinforcement / AI Filler (PH)
     { pattern: "ang pag-aaral na ito ay naglalayong magbigay ng batayan sa", weight: 1.8, category: "filler_ph" },
@@ -297,8 +299,161 @@ const PATTERN_DICTIONARY = [
     { pattern: "ang pag-aaral na ito ay nagpapakita ng potensyal para sa pag-unlad ng", weight: 1.8, category: "filler_ph" },
 
     // User requested specific weight
-    { pattern: "like", weight: 0.2, category: "filler" }
+    { pattern: "like", weight: 0.2, category: "filler" },
+
+    // Batch 3.5: "Deep Tagalog" (AI Hallucinated / Makata Style)
+    // Only flag truly unusual words. Common academic Filipino is NOT suspicious.
+    { pattern: "masalimuot na", weight: 2.5, category: "deep_tagalog" }, // Intricate — genuinely uncommon
+    { pattern: "sari-saring", weight: 2.0, category: "deep_tagalog" }, // Various (often unnatural in academic)
+    { pattern: "kaakibat nito", weight: 2.0, category: "deep_tagalog" }, // Accompanied by
+    { pattern: "sa kadahilanang", weight: 0.3, category: "deep_tagalog" }, // Normal Filipino — NOT suspicious
+    { pattern: "bigyang-diin", weight: 0.5, category: "deep_tagalog" }, // Common academic word
+    { pattern: "sa pangkalahatan,", weight: 0.2, category: "deep_tagalog" }, // Normal connector
+    { pattern: "hindi maikakaila", weight: 2.0, category: "deep_tagalog" }, // Undeniable — AI favorite
+    { pattern: "lubos na", weight: 0.3, category: "deep_tagalog" }, // Common Filipino — NOT suspicious
+    { pattern: "mahigpit na", weight: 0.3, category: "deep_tagalog" }, // Common Filipino — NOT suspicious
+    { pattern: "malalim na pag-unawa", weight: 2.0, category: "deep_tagalog" }, // Deep understanding — AI-ish
+    { pattern: "pangunahing aspeto", weight: 0.5, category: "deep_tagalog" }, // Normal academic
+    { pattern: "kritikal na pagsusuri", weight: 0.5, category: "deep_tagalog" }, // Normal academic
+    { pattern: "esensyal", weight: 0.3, category: "deep_tagalog" }, // Common loanword — NOT suspicious
+    { pattern: "komprehensibo", weight: 2.0, category: "deep_tagalog" }, // Comprehensive — AI-ish
+    { pattern: "signipikante", weight: 2.5, category: "deep_tagalog" }, // Significant — AI loves this
+    { pattern: "implikasyon", weight: 0.5, category: "deep_tagalog" }, // Common academic loanword
+    { pattern: "metodolohikal", weight: 2.5, category: "deep_tagalog" }, // Methodological — AI-ish
+    { pattern: "konseptwal", weight: 2.5, category: "deep_tagalog" }, // Conceptual — AI-ish
+
+    // Batch 3.6: "Literal Translation" (The "Ang" Virus)
+    // Only flag when the full AI-typical sentence structure is present.
+    // Short common phrases are NOT suspicious by themselves.
+    { pattern: "ang pag-aaral na ito ay nagpapakita", weight: 0.5, category: "literal_trans" }, // Normal academic sentence
+    { pattern: "ang mga resulta ay nagpapahiwatig", weight: 0.5, category: "literal_trans" }, // Normal academic sentence
+    { pattern: "ang kahalagahan ng", weight: 0.2, category: "literal_trans" }, // Extremely common — NOT suspicious
+    { pattern: "ang epekto ng", weight: 0.2, category: "literal_trans" }, // Extremely common — NOT suspicious
+    { pattern: "ang papel ng", weight: 0.3, category: "literal_trans" }, // Common academic
+    { pattern: "sa larangan ng", weight: 0.2, category: "literal_trans" }, // Extremely common — NOT suspicious
+    { pattern: "bilang isang", weight: 0.2, category: "literal_trans" }, // Extremely common — NOT suspicious
+    { pattern: "sa pamamagitan ng paggamit ng", weight: 2.0, category: "literal_trans" }, // This one IS AI-typical
+    { pattern: "pagdating sa", weight: 0.2, category: "literal_trans" }, // Extremely common — NOT suspicious
+    { pattern: "kaugnay nito", weight: 0.3, category: "literal_trans" }, // Common connector
+
+    // Batch 3.7: "Robotic / Polite" (Customer Service AI Tone)
+    { pattern: "mahalagang malaman", weight: 1.5, category: "robotic_ph" }, // Important to know
+    { pattern: "narito ang ilang", weight: 1.5, category: "robotic_ph" }, // Here are some
+    { pattern: "sa madaling sabi", weight: 1.5, category: "robotic_ph" }, // In other words
+    { pattern: "upang masagot ang", weight: 1.5, category: "robotic_ph" }, // To answer the
+    { pattern: "batay sa iyong", weight: 1.5, category: "robotic_ph" }, // Based on your
+    { pattern: "kung mayroon kang", weight: 2.0, category: "robotic_ph" }, // If you have
+    { pattern: "huwag mag-atubiling", weight: 3.0, category: "robotic_ph" }, // Do not hesitate (Dead giveaway)
+
+    // Batch 4: Modern AI-isms (2024-2025 Era) - High Specificity
+    { pattern: "stands as a testament", weight: 3.0, category: "ai_mega" },
+    { pattern: "a myriad of", weight: 2.0, category: "ai_mega" },
+    { pattern: "underscores the importance", weight: 2.0, category: "ai_mega" },
+    { pattern: "navigating the complexities", weight: 2.5, category: "ai_mega" },
+    { pattern: "at the intersection of", weight: 2.0, category: "ai_mega" },
+    { pattern: "poised to", weight: 1.5, category: "ai_mega" },
+    { pattern: "heralds a new era", weight: 2.5, category: "ai_mega" },
+    { pattern: "in the realm of", weight: 1.5, category: "ai_mega" },
+    { pattern: "game-changer", weight: 2.0, category: "ai_mega" },
+    { pattern: "multifaceted", weight: 2.0, category: "ai_mega" },
+    { pattern: "nuanced understanding", weight: 2.0, category: "ai_mega" },
+    { pattern: "leveraging", weight: 1.5, category: "ai_mega" },
+    { pattern: "fostering", weight: 1.5, category: "ai_mega" },
+    { pattern: "delving deeper", weight: 2.5, category: "ai_mega" },
+    { pattern: "rich tapestry", weight: 3.0, category: "ai_mega" },
+    { pattern: "digital landscape", weight: 1.8, category: "ai_mega" },
+    { pattern: "pivotal role", weight: 1.8, category: "ai_mega" },
+    { pattern: "paramount importance", weight: 1.8, category: "ai_mega" },
+    { pattern: "intricate interplay", weight: 2.5, category: "ai_mega" },
+    { pattern: "holistic approach", weight: 1.5, category: "ai_mega" },
+    { pattern: "paradigm shift", weight: 2.0, category: "ai_mega" },
+    { pattern: "beacon of", weight: 3.0, category: "ai_mega" },
+    { pattern: "unwavering commitment", weight: 2.5, category: "ai_mega" },
+    { pattern: "ever-evolving", weight: 2.0, category: "ai_mega" },
+    { pattern: "Unlock the potential", weight: 2.0, category: "ai_mega" },
+    { pattern: "Harnessing the power", weight: 2.0, category: "ai_mega" },
+
+    // Batch 5: Advanced Academic/Business Speak (Deep AI)
+    { pattern: "serves as a testament", weight: 2.5, category: "ai_mega" },
+    { pattern: "delve into the intricacies", weight: 2.5, category: "ai_mega" },
+    { pattern: "myriad challenges", weight: 2.0, category: "ai_mega" },
+    { pattern: "navigating the landscape", weight: 2.0, category: "ai_mega" },
+    { pattern: "ever-changing landscape", weight: 2.0, category: "ai_mega" },
+    { pattern: "poised to revolutionize", weight: 2.5, category: "ai_mega" },
+    { pattern: "comprehensive overview", weight: 1.5, category: "ai_mega" },
+    { pattern: "in-depth analysis", weight: 1.2, category: "ai_mega" },
+    { pattern: "meticulous", weight: 1.2, category: "ai_mega" },
+    { pattern: "rigorous", weight: 1.2, category: "ai_mega" },
+    { pattern: "robust framework", weight: 1.5, category: "ai_mega" },
+    { pattern: "seamless integration", weight: 1.8, category: "ai_mega" },
+    { pattern: "spearhead", weight: 1.5, category: "ai_mega" },
+    { pattern: "cornerstone of", weight: 1.8, category: "ai_mega" },
+    { pattern: "linchpin", weight: 2.0, category: "ai_mega" },
+    { pattern: "bedrock of", weight: 1.8, category: "ai_mega" },
+    { pattern: "burgeoning", weight: 2.0, category: "ai_mega" },
+    { pattern: "transformative power", weight: 2.0, category: "ai_mega" },
+    { pattern: "unleash the potential", weight: 2.0, category: "ai_mega" },
+    { pattern: "harness the potential", weight: 2.0, category: "ai_mega" },
+    // Batch 6: AI Personas (The "Salesman", "The Robot", "The Poet")
+    // 6.1 The Salesman (Overtly enthusiastic/promotional in academic text)
+    { pattern: "unlock the power of", weight: 2.5, category: "ai_salesman" },
+    { pattern: "cutting-edge solution", weight: 2.0, category: "ai_salesman" },
+    { pattern: "revolutionize the way", weight: 2.5, category: "ai_salesman" },
+    { pattern: "supercharge your", weight: 3.0, category: "ai_salesman" }, // Dead giveaway
+    { pattern: "tailored to your needs", weight: 2.5, category: "ai_salesman" },
+    { pattern: "seamlessly integrated", weight: 2.0, category: "ai_salesman" },
+    { pattern: "unparalleled", weight: 2.0, category: "ai_salesman" },
+
+    // 6.2 The Robot (Structural Repetition & Clunky Transitions)
+    { pattern: "in conclusion, it can be said that", weight: 1.5, category: "ai_robot" },
+    { pattern: "to summarize the points", weight: 1.5, category: "ai_robot" },
+    { pattern: "various factors such as", weight: 1.2, category: "ai_robot" },
+    { pattern: "it is worth mentioning", weight: 1.5, category: "ai_robot" },
+    { pattern: "factors contributing to", weight: 1.2, category: "ai_robot" },
+    { pattern: "play a significant role in", weight: 1.2, category: "ai_robot" },
+
+    // 6.3 The Poet (Flowery/Metaphorical in Technical Contexts)
+    { pattern: "dance of", weight: 2.5, category: "ai_poet" }, // "The dance of electrons"
+    { pattern: "symphony of", weight: 2.5, category: "ai_poet" },
+    { pattern: "echoes of", weight: 2.0, category: "ai_poet" },
+    { pattern: "threads of", weight: 2.0, category: "ai_poet" }, // "Threads of history"
+    { pattern: "weaving together", weight: 2.0, category: "ai_poet" },
+    { pattern: "illuminate the path", weight: 2.5, category: "ai_poet" },
+    { pattern: "beacon of hope", weight: 2.5, category: "ai_poet" }
 ];
+
+// Pre-compile Regex patterns for performance
+PATTERN_DICTIONARY.forEach(item => {
+    try {
+        // Regex Construction
+        // 1. Split by wildcard '.*' (or '.*?' if manually added, but usually '.*')
+        // We look for '.*' which is our placeholder for "something in between"
+        const parts = item.pattern.split('.*');
+
+        // 2. Escape regex special chars in each part
+        const escapedParts = parts.map(part => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+
+        // 3. Rejoin with non-greedy wildcard
+        const corePattern = escapedParts.join('.*?');
+
+        // 4. Determine boundaries
+        // If pattern starts/ends with a word char, strictly enforce word boundary.
+        // If not (e.g. " et al."), relax the boundary.
+        const startBoundary = /^\w/.test(item.pattern) ? '\\b' : '';
+        const endBoundary = /\w$/.test(item.pattern) ? '\\b' : '';
+
+        item.regex = new RegExp(`${startBoundary}${corePattern}${endBoundary}`, 'gi');
+
+        // Optimization: Pre-check string
+        // If no wildcards, we can fast-fail with Includes() which is O(N) but very fast
+        if (!item.pattern.includes('.*')) {
+            item.simple = item.pattern.toLowerCase();
+        }
+    } catch (e) {
+        console.warn(`[Heuristics] Invalid regex pattern: ${item.pattern}`, e.message);
+        item.regex = null;
+    }
+});
 
 const HEDGING_WORDS = ["may", "might", "could", "possibly", "perhaps", "maybe", "suggests", "seems", "maaaring", "marahil", "tila", "parang", "siguro"];
 const JARGON_WORDS = ["research", "study", "findings", "data", "analysis", "investigate", "explore", "examine", "pananaliksik", "pag-aaral", "resulta", "datos", "pagsusuri", "metodolohiya"];
@@ -351,8 +506,6 @@ class HeuristicsService {
 
         return {
             ...scores,
-            // Explicitly expose patterns at top level to fix hydration issues
-            pattern_list: patterns.detected_patterns || [],
             details: {
                 norm_text_length: cleanText.length,
                 typography,
@@ -403,34 +556,33 @@ class HeuristicsService {
     }
 
     // PHASE 3: WEIGHTED PATTERN MATCHING
+    // Display threshold: only patterns with weight >= DISPLAY_WEIGHT_THRESHOLD
+    // are shown to users. Lower-weight patterns still contribute to scoring.
+    static DISPLAY_WEIGHT_THRESHOLD = 1.8;
+
     phase3_weighted_patterns(text) {
         const lower = text.toLowerCase();
         let totalScore = 0;
-        const hits = [];
+        const allHits = [];       // All matches (for scoring)
+        const displayHits = [];   // High-confidence only (for UI)
 
         PATTERN_DICTIONARY.forEach(item => {
-            let regex;
-            try {
-                // Transform .* to non-greedy .*? for better performance and multiple hits
-                const safePattern = item.pattern.replace(/\.\*/g, '.*?');
+            if (!item.regex) return;
+            // Optimization: Fast fail with string search if no wildcards used
+            if (item.simple && !lower.includes(item.simple)) return;
 
-                if (safePattern.includes('.*?')) {
-                    regex = new RegExp(`\\b${safePattern}\\b`, 'gi');
-                } else {
-                    const escapedPattern = safePattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    regex = new RegExp(`\\b${escapedPattern}\\b`, 'gi');
-                }
-            } catch (e) {
-                console.warn(`[Heuristics] Invalid regex pattern: ${item.pattern}`);
-                return;
-            }
-
-            const matches = lower.match(regex);
+            const matches = lower.match(item.regex);
             if (matches) {
                 const count = matches.length;
                 const points = count * item.weight;
                 totalScore += points;
-                hits.push({ pattern: item.pattern, count, points, category: item.category });
+                const hitRecord = { pattern: item.pattern, count, points, category: item.category, weight: item.weight };
+                allHits.push(hitRecord);
+
+                // Only include high-confidence patterns in UI-facing list
+                if (item.weight >= HeuristicsService.DISPLAY_WEIGHT_THRESHOLD) {
+                    displayHits.push(hitRecord);
+                }
             }
         });
 
@@ -441,7 +593,9 @@ class HeuristicsService {
         return {
             total_weighted_points: parseFloat(totalScore.toFixed(2)),
             normalized_score: parseFloat(normalizedScore.toFixed(2)), // AI Risk Score based on patterns
-            detected_patterns: hits
+            detected_patterns: displayHits,  // UI-facing: only high-confidence patterns
+            all_patterns_count: allHits.length,  // Total matches (for scoring transparency)
+            scoring_patterns: allHits  // Full list (for debugging, not sent to UI)
         };
     }
 
@@ -476,8 +630,8 @@ class HeuristicsService {
         // 1. Typography Risk (15%)
         // 2. Pattern Risk (25%)
         // 3. Omission Risk (20%)
-        // 4. Style Risk (25%) - NEW (Passive voice, hedging)
-        // 5. Structure Risk (15%) - NEW
+        // 4. Style Risk (25%) 
+        // 5. Structure Risk (15%) 
 
         const typoRisk = typography.risk_score;
         let patternRisk = Math.min(patterns.normalized_score * 2, 100);
@@ -502,9 +656,9 @@ class HeuristicsService {
             (styleRisk * 0.25) +
             (structureRisk * 0.15);
 
-        let confidenceNode = 'Mataas'; // Default to High Integrity (Low Risk)
-        if (finalScore > 75) confidenceNode = 'Mababa'; // High Risk = Low Integrity
-        else if (finalScore > 40) confidenceNode = 'Katamtaman'; // Moderate Risk = Moderate Integrity
+        let confidenceNode = 'Mababa'; // Risk
+        if (finalScore > 75) confidenceNode = 'Mataas';
+        else if (finalScore > 40) confidenceNode = 'Katamtaman';
 
         return {
             ai_probability_score: Math.round(finalScore), // 0-100

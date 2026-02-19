@@ -2,7 +2,7 @@ import React from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useData, useScan } from '../../contexts/DashboardContext';
 
-const Scanning = () => {
+const Scanning = React.memo(() => {
     const { activeFile } = useData();
     const { scanStatus } = useScan();
 
@@ -26,10 +26,10 @@ const Scanning = () => {
 
             <div className="flex flex-col items-center gap-4 text-center max-w-md mx-auto">
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-tip-text-main tracking-tight transition-colors">
-                    {filename || "Processing Document"}
+                    {filename || "Pinoproseso ang Dokumento"}
                 </h3>
                 <p className="text-slate-500 dark:text-slate-400 transition-colors h-12">
-                    {status || "Our system is analyzing the document structure and verifying compliance with UNESCO ethical guidelines."}
+                    {status || "Sinusuri ng aming system ang istruktura ng dokumento at tinitiyak ang pagsunod sa mga alituntunin ng UNESCO."}
                 </p>
 
                 <div className="w-64 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full mt-6 overflow-hidden relative transition-colors shadow-inner">
@@ -38,6 +38,6 @@ const Scanning = () => {
             </div>
         </div>
     );
-};
+});
 
 export default Scanning;

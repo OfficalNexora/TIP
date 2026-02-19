@@ -1,4 +1,4 @@
-const { supabase } = require('../services/supabaseClient');
+const { createClientWithToken, supabase } = require('../services/supabaseClient');
 const jwt = require('jsonwebtoken');
 const jwksClient = require('jwks-rsa');
 
@@ -22,7 +22,11 @@ function getKey(header, callback) {
 }
 
 const authMiddleware = async (req, res, next) => {
-    // Explicitly allow OPTIONS for CORS preflight
+    if (process.env.NODE_ENV !== 'production') {
+        console.log(`[Auth Middleware] ${req.method} ${req.url} | Headers: ${JSON.stringify(req.headers['authorization'] ? 'Present' : 'Missing')}`);
+    }
+
+    // Always allow OPTIONS requests to pass through for CORS preflights
     if (req.method === 'OPTIONS') {
         return next();
     }
@@ -77,6 +81,10 @@ const authMiddleware = async (req, res, next) => {
         }
 
         req.user = user;
+        // 3. Create RLS-Scoped Client
+        // This client will attach the user's JWT to every request, properly enforcing RLS policies in Postgres.
+        req.supabase = createClientWithToken(token);
+
         next();
 
     } catch (error) {

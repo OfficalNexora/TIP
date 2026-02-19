@@ -100,18 +100,18 @@ h4 {
 }
 
 /* --- TECH ANIMATIONS --- */
-@keyframes scanline {
+@keyframes scan-line {
     0% {
         top: 0;
         opacity: 0;
     }
 
-    5% {
-        opacity: 0.5;
+    10% {
+        opacity: 1;
     }
 
-    95% {
-        opacity: 0.5;
+    90% {
+        opacity: 1;
     }
 
     100% {
@@ -120,8 +120,8 @@ h4 {
     }
 }
 
-@utility animate-scanline {
-    animation: scanline 4s linear infinite;
+@utility animate-scan-line {
+    animation: scan-line 2.5s cubic-bezier(0.15, 0, 0.15, 1) forwards;
 }
 
 @keyframes typing-deleting {

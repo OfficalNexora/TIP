@@ -1,0 +1,18 @@
+{
+    "appId": "com.unesco.aiethics",
+    "appName": "UNESCO AI Ethics",
+    "webDir": "dist",
+    "bundledWebRuntime": false,
+    "server": {
+        "androidScheme": "http",
+        "cleartext": true,
+        "allowNavigation": [
+            "*"
+        ]
+    },
+    "plugins": {
+        "CapacitorHttp": {
+            "enabled": true
+        }
+    }
+}

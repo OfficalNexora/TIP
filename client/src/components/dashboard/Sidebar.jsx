@@ -90,7 +90,7 @@ const Sidebar = React.memo(() => {
             {/* Navigation */}
             <nav className="flex-1 px-3 space-y-1">
                 <div className="pt-4 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider sidebar-item">
-                    Tools
+                    Mga Tool
                 </div>
                 <NavItem
                     icon={Icons.LayoutDashboard}
@@ -121,7 +121,7 @@ const Sidebar = React.memo(() => {
                 {dashboardState === 'RESULTS' && activeFile && (
                     <div ref={aiSectionRef}>
                         <div className="pt-4 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider ai-item">
-                            AI & Insights
+                            AI at mga Insight
                         </div>
                         <NavItem
                             icon={Icons.FileText}
@@ -203,7 +203,7 @@ const Sidebar = React.memo(() => {
 
                 <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors">
                     <Icons.HelpCircle size={18} />
-                    Support
+                    Suporta
                 </button>
             </div>
         </aside>

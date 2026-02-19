@@ -69,7 +69,7 @@ const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handl
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); alert("Comparison Mode coming soon"); }}
+                                    onClick={(e) => { e.stopPropagation(); alert("Darating na ang Comparison Mode"); }}
                                     className="w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors"
                                 >
                                     <Icons.RefreshCw size={14} className="opacity-70" /> I-upload Ulit
@@ -112,7 +112,7 @@ const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handl
                         {/* HUD Badge - Only for Analyzed - Matches Screenshot Style */}
                         {!isScanning && (
                             <div className="absolute -bottom-2 -right-3 w-8 h-8 bg-slate-900 dark:bg-slate-950/80 backdrop-blur-sm border border-slate-700 rounded-full flex items-center justify-center shadow-lg z-10">
-                                <span className={`text-[9px] font-bold ${confidenceScore > 70 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                                <span className={`text-[9px] font-bold ${confidenceScore >= 60 ? 'text-rose-400' : confidenceScore >= 30 ? 'text-amber-400' : 'text-emerald-400'}`}>
                                     {confidenceScore}%
                                 </span>
                             </div>
@@ -140,7 +140,7 @@ const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handl
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center justify-between gap-3">
                         <h4 className={`font-bold text-sm truncate transition-colors leading-tight ${isScanning ? 'text-blue-700 dark:text-blue-400' : 'text-slate-900 dark:text-tip-text-main'}`}>
-                            {file.title || "Untitled Analysis"}
+                            {file.title || "Walang Pamagat na Pagsusuri"}
                         </h4>
                         <span className={`text-[9px] font-black uppercase tracking-[0.1em] border rounded-sm px-1 leading-none py-0.5 h-fit whitespace-nowrap
                             ${isScanning
@@ -162,7 +162,7 @@ const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handl
                                 </p>
                                 <div className="w-16 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                     <div
-                                        className={`h-full transition-all duration-1000 ease-out ${confidenceScore > 70 ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                                        className={`h-full transition-all duration-1000 ease-out ${confidenceScore >= 60 ? 'bg-rose-500' : confidenceScore >= 30 ? 'bg-amber-500' : 'bg-emerald-500'}`}
                                         style={{ width: `${confidenceScore}%` }}
                                     ></div>
                                 </div>
@@ -235,7 +235,7 @@ const Overview = () => {
         return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
                 <Loader />
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-8 animate-pulse">Syncing Institutional Database</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-8 animate-pulse">Sini-sync ang Database ng Institusyon</p>
             </div>
         );
     }
@@ -287,12 +287,12 @@ const Overview = () => {
                         </div>
                     </div>
                     <div className="bg-tip-surface border border-slate-200 dark:border-slate-800 p-4 rounded-lg flex items-center gap-4 shadow-soft transition-colors duration-300">
-                        <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-full">
-                            <Icons.CheckCircle size={20} />
+                        <div className="p-2 bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400 rounded-full">
+                            <Icons.AlertCircle size={20} />
                         </div>
                         <div>
                             <span className="block text-2xl font-bold text-slate-900 dark:text-tip-text-main">{integrityAvg}%</span>
-                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Avg. Integrity</span>
+                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Average na Risk</span>
                         </div>
                     </div>
                 </div>

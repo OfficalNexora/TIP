@@ -14,32 +14,21 @@ export const ThemeProvider = ({ children }) => {
     useEffect(() => {
         const root = window.document.documentElement;
 
-        const removeOldTheme = () => {
-            root.classList.remove('dark');
-            root.classList.remove('light');
+        const syncTheme = () => {
+            const isSystemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const effectiveIsDark = theme === 'dark' || (theme === 'system' && isSystemDark);
+
+            root.classList.toggle('dark', effectiveIsDark);
+            root.classList.toggle('light', !effectiveIsDark);
         };
 
-        const applyTheme = (currentTheme) => {
-            removeOldTheme();
-
-            if (currentTheme === 'system') {
-                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                root.classList.add(systemTheme);
-                return;
-            }
-
-            root.classList.add(currentTheme);
-        };
-
-        applyTheme(theme);
+        syncTheme();
         localStorage.setItem('tip_ai_theme', theme);
 
         // Listener for system changes if mode is 'system'
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const handleChange = () => {
-            if (theme === 'system') {
-                applyTheme('system');
-            }
+            if (theme === 'system') syncTheme();
         };
 
         mediaQuery.addEventListener('change', handleChange);

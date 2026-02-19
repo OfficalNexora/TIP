@@ -1,96 +1,92 @@
 ﻿const Groq = require('groq-sdk');
-const { supabase } = require('./supabaseClient');
 
 // ============================================================================
-// API KEY ROTATION - Reuses the same pattern from ethicsService.js
+// API KEY ROTATION SYSTEM (GROQ)
 // ============================================================================
 
-class ChatKeyManager {
-    constructor() {
+class ApiKeyManager {
+    constructor(envVarName, legacyEnvVarName) {
+        this.envVarName = envVarName;
+        this.legacyEnvVarName = legacyEnvVarName;
         this.keys = this._loadKeys();
-        this.keyStatus = new Map();
+        this.keyStatus = new Map(); // key -> { exhausted: boolean, cooldownUntil: Date }
         this.currentIndex = 0;
-        console.log('[ChatService] Initialized with ' + this.keys.length + ' Groq API key(s)');
+
+        console.log(`[Chat:KeyManager] Initialized with ${this.keys.length} API key(s)`);
     }
 
     _loadKeys() {
-        const multi = process.env.GROQ_API_KEYS;
-        const single = process.env.GROQ_API_KEY;
-        if (multi) {
-            const keys = multi.split(',').map(k => k.trim()).filter(k => k.length > 0);
+        const multipleKeys = process.env[this.envVarName];
+        const singleKey = process.env[this.legacyEnvVarName];
+
+        if (multipleKeys) {
+            const keys = multipleKeys.split(',').map(k => k.trim()).filter(k => k.length > 0);
             if (keys.length > 0) return keys;
         }
-        if (single) return [single];
+
+        if (singleKey) return [singleKey];
         return [];
     }
 
     getNextAvailableKey() {
         if (this.keys.length === 0) return null;
+
         const now = new Date();
-        let checked = 0;
-        while (checked < this.keys.length) {
-            const idx = (this.currentIndex + checked) % this.keys.length;
-            const key = this.keys[idx];
+        let checkedCount = 0;
+
+        while (checkedCount < this.keys.length) {
+            const index = (this.currentIndex + checkedCount) % this.keys.length;
+            const key = this.keys[index];
             const status = this.keyStatus.get(key);
+
             if (!status || !status.exhausted || (status.cooldownUntil && status.cooldownUntil < now)) {
-                if (status && status.exhausted && status.cooldownUntil < now) {
+                if (status?.exhausted && status.cooldownUntil < now) {
                     this.keyStatus.set(key, { exhausted: false, cooldownUntil: null });
                 }
-                this.currentIndex = (idx + 1) % this.keys.length;
-                return { key, index: idx };
+                this.currentIndex = (index + 1) % this.keys.length;
+                return { key, index };
             }
-            checked++;
+            checkedCount++;
         }
         return null;
     }
 
-    markExhausted(key, cooldownSeconds) {
-        cooldownSeconds = cooldownSeconds || 60;
+    markExhausted(key, cooldownSeconds = 60) {
         const cooldownUntil = new Date(Date.now() + cooldownSeconds * 1000);
         this.keyStatus.set(key, { exhausted: true, cooldownUntil });
-        console.log('[ChatService] Key exhausted. Cooldown until ' + cooldownUntil.toLocaleTimeString());
+        console.log(`[Chat:Groq] Key marked as exhausted. Cooldown until ${cooldownUntil.toLocaleTimeString()}`);
     }
 
-    hasKeys() { return this.keys.length > 0; }
+    hasKeys() {
+        return this.keys.length > 0;
+    }
 }
 
-const keyManager = new ChatKeyManager();
-const CHAT_MODEL = 'llama-3.1-8b-instant';
+const keyManager = new ApiKeyManager('GROQ_API_KEYS', 'GROQ_API_KEY');
+const CHAT_MODEL = "llama-3.1-8b-instant";
 
-// ============================================================================
-// SYSTEM PROMPT - Tagalog-first TIP AI assistant
-// ============================================================================
+const BASE_SYSTEM_PROMPT = `
+Ikaw ay si "Nexora AI", isang dalubhasa sa UNESCO Ethical AI Standards at Research Integrity.
+Ang iyong layunin ay tulungan ang mga researcher na maunawaan ang kanilang audit results.
 
-const BASE_SYSTEM_PROMPT = [
-    'Ikaw ay ang TIP AI Assistant - isang matulunging AI na katulong para sa TIP AI Ethics & Integrity Checker.',
-    '',
-    'TUNGKULIN MO:',
-    '- Sumagot ng mga tanong tungkol sa resulta ng pagsusuri ng dokumento (risk scores, AI patterns, omissions, UNESCO principles).',
-    '- Magbigay ng payo kung paano mapabuti ang iskor ng integridad.',
-    '- Ipaliwanag ang mga konsepto ng AI ethics sa simpleng paraan.',
-    '- Sumagot sa Tagalog bilang default, pero kung nagtanong ang user sa English, sumagot sa English.',
-    '',
-    'MGA PANUNTUNAN:',
-    '- Maging maikli at direkta sa sagot. Huwag lumampas ng 150 salita maliban kung kailangan.',
-    '- Gamitin ang konteksto ng pagsusuri kung available.',
-    '- Huwag mag-imbento ng datos. Kung walang impormasyon, sabihin mo.',
-    '- Maging professional at magalang.'
-].join('\n');
-
-// ============================================================================
-// CHAT SERVICE
-// ============================================================================
+MGA ALITUNTUNIN:
+1. Gamitin ang Tagalog/Filipino (Natural, professional pero friendly na reviewer tone).
+2. Magbigay ng praktikal na payo kung paano itataas ang compliance score.
+3. Huwag mag-imbento ng facts. Gamitin lamang ang ibinigay na konteksto ng dokumento.
+4. Kung ang tanong ay labas sa dokumento, sagutin ito batay sa pangkalahatang research ethics.
+5. Manatiling tapat sa "Institutional Persona": Maging mapanuri pero nakakatulong.
+`;
 
 class ChatService {
-    async generate(message, userId, analysisId, history) {
+    async generate(message, userId, analysisId, history, supabaseClient) {
         history = history || [];
         const normalized = (message || '').trim();
         if (!normalized) return { reply: 'Mangyaring mag-type ng tanong.', contextUsed: false };
 
         let analysisContext = null;
-        if (analysisId) {
+        if (analysisId && supabaseClient) {
             try {
-                const { data } = await supabase
+                const { data } = await supabaseClient
                     .from('analysis_results')
                     .select('result_json, created_at')
                     .eq('analysis_id', analysisId)
@@ -125,79 +121,59 @@ class ChatService {
         const risk = fa.risk_level || 'hindi tiyak';
         const score = fa.heuristic_score != null ? fa.heuristic_score : (ctx.confidence_score != null ? ctx.confidence_score : '—');
         const patterns = fa.pattern_list || [];
-        const patternCount = patterns.length;
-        const topPatterns = patterns.slice(0, 5).map(function(p) { return '"' + (p.pattern || p.text || p) + '"'; }).join(', ');
+        const topPatterns = patterns.slice(0, 5).map(p => '"' + (p.pattern || p.text || p) + '"').join(', ');
         const omissions = fa.omission_count || 0;
-        const riskExplanation = fa.risk_explanation || '';
-        const omissionExplanation = fa.omission_explanation || '';
 
-        const dimensions = ctx.dimensions || {};
-        const dimSummary = Object.entries(dimensions)
-            .map(function(entry) { return '  - ' + entry[0] + ': ' + (entry[1].alignment || entry[1].rate || 'N/A'); })
-            .join('\n');
+        const contextBlock = `
+KONTEKSTO NG KASALUKUYANG DOKUMENTO:
+- Antas ng Panganib: ${risk}
+- AI Risk Score: ${score}%
+- AI Patterns: ${topPatterns || 'Walang nakita'}
+- Omission Flags: ${omissions}
 
-        const contextBlock = [
-            '',
-            'KONTEKSTO NG KASALUKUYANG DOKUMENTO:',
-            '- Antas ng Panganib: ' + risk,
-            '- AI Risk Score: ' + score + '%',
-            '- Bilang ng AI Patterns: ' + patternCount + (topPatterns ? ' (hal: ' + topPatterns + ')' : ''),
-            '- Bilang ng Omission Flags: ' + omissions,
-            '- Paliwanag ng Panganib: ' + riskExplanation,
-            '- Paliwanag ng Omissions: ' + omissionExplanation,
-            dimSummary ? '\nUNESCO Dimensions:\n' + dimSummary : '',
-            '',
-            'Gamitin ang kontekstong ito para sumagot ng mga tanong tungkol sa dokumentong ito.'
-        ].join('\n');
-
+Gamitin ang kontekstong ito para sumagot. Mag-focus sa kung bakit nakuha ang score na ito.
+`;
         return BASE_SYSTEM_PROMPT + contextBlock;
     }
 
     _buildMessages(systemPrompt, history, latestMessage) {
-        var msgs = [{ role: 'system', content: systemPrompt }];
-        var trimmedHistory = history.slice(-20);
-        for (var i = 0; i < trimmedHistory.length; i++) {
-            var msg = trimmedHistory[i];
+        const msgs = [{ role: 'system', content: systemPrompt }];
+        const trimmedHistory = (history || []).slice(-10);
+
+        trimmedHistory.forEach(msg => {
             if (msg.role === 'user' || msg.role === 'assistant') {
                 msgs.push({ role: msg.role, content: msg.content });
             }
-        }
+        });
+
         msgs.push({ role: 'user', content: latestMessage });
         return msgs;
     }
 
     async _callGroq(messages) {
-        var maxAttempts = keyManager.keys.length;
-        for (var attempt = 0; attempt < maxAttempts; attempt++) {
-            var keyInfo = keyManager.getNextAvailableKey();
-            if (!keyInfo) {
-                console.warn('[ChatService] No available Groq keys');
-                return null;
-            }
-            var key = keyInfo.key;
-            var index = keyInfo.index;
-            var groq = new Groq({ apiKey: key });
+        let attempts = 0;
+        const maxAttempts = keyManager.keys.length;
 
+        while (attempts < maxAttempts) {
+            const keyInfo = keyManager.getNextAvailableKey();
+            if (!keyInfo) break;
+            attempts++;
+
+            const groq = new Groq({ apiKey: keyInfo.key });
             try {
-                console.log('[ChatService] Key #' + (index + 1) + ' | Calling ' + CHAT_MODEL + '...');
-                var completion = await groq.chat.completions.create({
+                const completion = await groq.chat.completions.create({
                     model: CHAT_MODEL,
                     messages: messages,
                     temperature: 0.7,
                     max_tokens: 512,
-                    top_p: 0.9
                 });
 
-                var reply = completion.choices && completion.choices[0] && completion.choices[0].message && completion.choices[0].message.content;
-                if (reply) {
-                    reply = reply.trim();
-                    console.log('[ChatService] Success with Key #' + (index + 1));
-                    return reply;
-                }
+                const reply = completion.choices?.[0]?.message?.content;
+                if (reply) return reply.trim();
             } catch (error) {
-                console.warn('[ChatService] Key #' + (index + 1) + ' failed: ' + error.message);
-                if (error.status === 429 || (error.message && error.message.includes('rate_limit'))) {
-                    keyManager.markExhausted(key, 60);
+                console.warn(`[ChatService] Key #${keyInfo.index + 1} failed: ${error.message}`);
+                if (error.status === 429) {
+                    keyManager.markExhausted(keyInfo.key, 60);
                 }
             }
         }
@@ -205,29 +181,14 @@ class ChatService {
     }
 
     _fallbackReply(message, ctx) {
-        var lines = [];
+        const lines = ["(Paumanhin, offline ang aking AI engine sa ngayon.)"];
         if (ctx) {
-            var fa = ctx.forensic_analysis || {};
-            var risk = fa.risk_level || 'katamtaman';
-            var score = fa.heuristic_score != null ? fa.heuristic_score : (ctx.confidence_score != null ? ctx.confidence_score : '—');
-            var patterns = fa.pattern_list || [];
-            var top = patterns.slice(0, 3).map(function(p) { return '"' + (p.pattern || p.text || p) + '"'; }).join(', ');
-            lines.push('Batay sa report na ito, ang panganib ay ' + risk + ' (score: ' + score + ').');
-            if (top) lines.push('Nakitang AI patterns: ' + top + '.');
-            var omissions = fa.omission_count || 0;
-            if (omissions > 0) lines.push('May ' + omissions + ' na omission flags. Linawin ang methodology/ethics kung kulang.');
-        } else {
-            lines.push('Makakatulong ako sa pagpapaliwanag ng mga resulta, risk scores, o mga susunod na hakbang.');
+            const score = ctx.confidence_score || 0;
+            lines.push(`Ang iyong dokumento ay may risk score na ${score}%.`);
+            if (score > 60) lines.push("Mataas ang posibilidad ng AI patterns o kulang sa ethical disclosures.");
+            else lines.push("Maayos ang alignment ng iyong dokumento sa UNESCO standards.");
         }
-
-        var lower = message.toLowerCase();
-        if (lower.includes('improve') || lower.includes('fix') || lower.includes('pabuti')) {
-            lines.push('Para mapabuti ang score: bawasan ang template phrases, magdagdag ng citations, at palawakin ang detalye ng methodology.');
-        } else if (lower.includes('ai') || lower.includes('plag')) {
-            lines.push('Ang AI probability ay pinagsasama ang heuristic patterns at omissions; gumamit ng sariling phrasing at mag-cite ng sources.');
-        }
-
-        lines.push('(Fallback mode - ang Groq AI ay kasalukuyang hindi available.)');
+        lines.push("Subukan muli mamaya para sa mas detalyadong paliwanag.");
         return lines.join(' ');
     }
 }

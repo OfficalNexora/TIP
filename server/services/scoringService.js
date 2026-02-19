@@ -23,6 +23,7 @@ class ScoringService {
     /**
      * Convert string rating to number.
      * Handles Filipino/English/Mixed case.
+     * Returns a RISK SCORE (0 = Safe/Human, 100 = High Risk/AI).
      * @param {string|number} rate 
      * @returns {number}
      */
@@ -32,21 +33,24 @@ class ScoringService {
 
         const cleanRate = rate.toString().toUpperCase().trim();
 
-        // Direct map check
+        // Direct map check (usually strings like 'low', 'medium', 'high')
         if (this.scoreMap[cleanRate]) return this.scoreMap[cleanRate];
 
         // Language specific mapping for UNESCO Mirror (Filipino)
-        if (cleanRate === 'MATAAS') return this.scoreMap['EXEMPLARY'] || 10; // Low Risk (Excellent)
-        if (cleanRate === 'KATAMTAMAN') return this.scoreMap['REFLECT'] || 50; // Moderate Risk
-        if (cleanRate === 'MABABA') return this.scoreMap['FLAGGED'] || 90; // High Risk (Poor)
+        // 0-is-good model: Low Risk (Mababa/Safe) -> Low Number
+        if (cleanRate === 'MATAAS' || cleanRate === 'EXEMPLARY') return 5;
+        if (cleanRate === 'ALIGNED' || cleanRate === 'COMPLIANT') return 15;
+        if (cleanRate === 'KATAMTAMAN' || cleanRate === 'REFLECT' || cleanRate === 'OBSERVED') return 35;
+        if (cleanRate === 'MABABA' || cleanRate === 'FLAGGED') return 90;
+        if (cleanRate === 'KRITIKAL' || cleanRate === 'CRITICAL') return 98;
 
         // Fallback for numeric strings
         const parsed = parseInt(cleanRate);
-        return isNaN(parsed) ? 50 : parsed;
+        return isNaN(parsed) ? 10 : parsed;
     }
 
     /**
-     * Compute average integrity score from a set of analyses.
+     * Compute average RISK score from a set of analyses.
      * @param {Array} analyses 
      * @returns {number}
      */
@@ -55,11 +59,13 @@ class ScoringService {
 
         const validScores = analyses
             .map(a => {
-                const results = a.analysis_results?.[0]?.result_json || a.results; // Handle both schema variants
-                const confidence = results?.confidence;
-                return this.normalize(confidence);
+                const results = a.analysis_results?.[0]?.result_json || a.results;
+                // Prefer numeric confidence_score (risk) if available
+                if (results?.confidence_score !== undefined) return results.confidence_score;
+                // Fallback to normalizing the label
+                return this.normalize(results?.confidence);
             })
-            .filter(s => s > 0);
+            .filter(s => s !== null && s !== undefined);
 
         if (validScores.length === 0) return 0;
         const sum = validScores.reduce((acc, curr) => acc + curr, 0);

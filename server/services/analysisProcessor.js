@@ -19,29 +19,26 @@ const jobHandler = async (job) => {
 
 // Initialization Logic
 const initProcessor = async () => {
-    // Wait for Facade to determine mode (simple delay or explicit init)
-    // In index.js we can call a setup, but here we can just check connection
+    // Deterministic init: Wait for Redis connection to stabilize or timeout
+    const mode = await analysisQueue.init();
 
-    // Give redisClient a moment to connect or fail
-    setTimeout(() => {
-        if (connection.status === 'ready') {
-            console.log('[Processor] Initializing BullMQ Worker (Redis Mode)...');
-            const worker = new Worker('analysis-scan', jobHandler, {
-                connection,
-                concurrency: 5,
-                lockDuration: 60000,
-                limiter: { max: 10, duration: 1000 }
-            });
+    if (mode === 'REDIS') {
+        console.log('[Processor] Initializing BullMQ Worker (Redis Mode)...');
+        const worker = new Worker('analysis-scan', jobHandler, {
+            connection,
+            concurrency: 5,
+            lockDuration: 60000,
+            limiter: { max: 10, duration: 1000 }
+        });
 
-            worker.on('completed', job => console.log(`[Worker:Redis] Job ${job.id} OK`));
-            worker.on('failed', (job, err) => console.error(`[Worker:Redis] Job ${job.id} Failed: ${err.message}`));
+        worker.on('completed', job => console.log(`[Worker:Redis] Job ${job.id} OK`));
+        worker.on('failed', (job, err) => console.error(`[Worker:Redis] Job ${job.id} Failed: ${err.message}`));
 
-        } else {
-            console.log('[Processor] Initializing In-Memory Handler (Memory Mode)...');
-            // Register execution logic with the memory queue
-            analysisQueue.setHandler(jobHandler, 5);
-        }
-    }, 2000); // 2s delay to ensure Redis conn failure is detected if present
+    } else {
+        console.log('[Processor] Initializing In-Memory Handler (Memory Mode)...');
+        // Register execution logic with the memory queue
+        analysisQueue.setHandler(jobHandler, 5);
+    }
 };
 
 initProcessor();

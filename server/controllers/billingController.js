@@ -1,100 +1,121 @@
-const { supabase } = require('../services/supabaseClient');
+// const { supabase } = require('../services/supabaseClient'); // Removed to enforce usage of req.supabase
 const paymentService = require('../services/paymentService');
 
 const BillingController = {
-    // GET /api/billing/subscription
+    /**
+     * Get Subscription Data
+     */
     getSubscription: async (req, res) => {
         try {
-            // Fetch from local DB first
-            const { data: sub, error } = await supabase
-                .from('subscriptions')
-                .select('*')
-                .eq('user_id', req.user.id)
+            const { data: user, error } = await req.supabase
+                .from('users')
+                .select('subscription_status, subscription_metadata')
+                .eq('id', req.user.id)
                 .single();
 
-            if (error && error.code !== 'PGRST116') throw error;
-
-            // Return active sub or free placeholder
-            if (!sub) {
-                return res.json({
-                    plan_id: 'free',
-                    status: 'active',
-                    current_period_end: null
-                });
+            if (error || !user) {
+                return res.status(404).json({ error: 'User not found.' });
             }
 
-            res.json(sub);
+            res.json({
+                status: user.subscription_status || 'free',
+                metadata: user.subscription_metadata || {},
+                providers: {
+                    gcash: { number: paymentService.gcashDetails.number, name: paymentService.gcashDetails.name },
+                    paypal: { email: paymentService.paypalDetails.email }
+                }
+            });
         } catch (error) {
-            console.error('Get subscription failed:', error);
-            res.status(500).json({ error: 'Failed to fetch subscription' });
+            console.error('[Billing] Fetch error:', error);
+            res.status(500).json({ error: 'Failed to fetch billing status.' });
         }
     },
 
-    // POST /api/billing/subscription/upgrade
+    /**
+     * Request Upgrade (Initiate GCash/PayPal Flow)
+     */
     upgradePlan: async (req, res) => {
         try {
-            const { planId } = req.body;
-            console.log(`[Billing] Upgrade requested to ${planId}. Note: Stripe is disabled. Manual verification required.`);
+            const { provider } = req.body; // 'gcash' | 'paypal'
+            const userId = req.user.id;
 
-            // For now, redirect users to manual payment flow
-            res.status(400).json({
-                error: 'Automated billing is currently disabled.',
-                message: 'Please use the GCash or PayPal options in the billing portal for manual verification.'
+            if (!['gcash', 'paypal'].includes(provider)) {
+                return res.status(400).json({ error: 'Invalid payment provider. Choose gcash or paypal.' });
+            }
+
+            let redirectUrl;
+            if (provider === 'gcash') {
+                redirectUrl = await paymentService.getGcashPaymentFlow(req.user);
+            } else {
+                redirectUrl = await paymentService.getPaypalPaymentFlow(req.user);
+            }
+
+            // Log attempt
+            await req.supabase.from('security_audit_logs').insert({
+                user_id: userId,
+                event_type: 'SUBSCRIPTION_INITIATED',
+                status: 'PENDING',
+                metadata: { provider }
             });
+
+            res.json({
+                message: 'Payment initialized.',
+                redirectUrl: redirectUrl
+            });
+
         } catch (error) {
+            console.error('[Billing] Upgrade failed:', error);
             res.status(500).json({ error: error.message });
         }
     },
 
-    // POST /api/billing/manual-payment
-    submitManualPayment: async (req, res) => {
+    /**
+     * Confirm Payment (Success Callback)
+     * This is the "Automatic Notify" endpoint called once a payment is successful.
+     */
+    confirmPayment: async (req, res) => {
         try {
-            const { method, referenceNumber } = req.body;
-            const userId = req.user.id;
+            const { userId, provider, amount, token } = req.body;
 
-            console.log(`[ManualPayment] User ${userId} submitted ${method} ref: ${referenceNumber}`);
+            if (!userId || !provider) {
+                return res.status(400).json({ error: 'Missing payment confirmation data.' });
+            }
 
-            const { error } = await supabase.from('manual_payments').insert({
-                user_id: userId,
-                method,
-                reference_number: referenceNumber,
-                status: 'PENDING'
-            });
+            console.log(`[Billing] Received Success Signal for ${userId} via ${provider}`);
 
-            if (error) throw error;
+            await paymentService.handleSuccessfulPayment(userId, provider, { amount, token });
 
-            res.json({ message: 'Payment submitted for manual verification' });
+            res.json({ success: true, message: 'Plan upgraded to PRO.' });
+
         } catch (error) {
-            console.error('Manual payment submission failed:', error);
-            res.status(500).json({ error: 'Failed to submit payment' });
+            console.error('[Billing] Confirmation failed:', error);
+            res.status(500).json({ error: 'Failed to confirm payment.' });
         }
     },
 
-    // GET /api/billing/payment-methods
+    /**
+     * Managed Payment Methods (Not applicable for Direct GCash/PayPal)
+     */
     getPaymentMethods: async (req, res) => {
-        try {
-            // Return empty list or manual methods if tracked
-            res.json([]);
-        } catch (error) {
-            res.status(500).json({ error: 'Failed' });
-        }
+        res.json({ methods: [] });
     },
 
-    // POST /api/billing/payment-methods
-    addPaymentMethod: async (req, res) => {
-        res.status(400).json({
-            error: 'Automated card linking is disabled.',
-            message: 'To maintain security and support localized payments, please use the GCash or PayPal options.'
-        });
-    },
-
-    // GET /api/billing/invoices
+    /**
+     * Invoices/Activity
+     */
     getInvoices: async (req, res) => {
         try {
-            // Return empty for now as we transition to manual
-            res.json([]);
+            const { data, error } = await req.supabase
+                .from('security_audit_logs')
+                .select('*')
+                .eq('user_id', req.user.id)
+                .in('event_type', ['SUBSCRIPTION_INITIATED', 'SUBSCRIPTION_UPGRADED'])
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            res.json(data || []);
         } catch (error) {
-            res.status(500).json({ error: 'Failed to fetch invoices' });
+            res.status(500).json({ error: 'Failed to fetch billing history' });
         }
     }
 };

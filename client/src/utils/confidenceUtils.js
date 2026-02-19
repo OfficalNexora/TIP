@@ -12,27 +12,32 @@ export const normalizeConfidence = (rating) => {
     const normalized = rating.toString().toLowerCase().trim();
 
     // Institutional Mapping (Synced with backend SCORING_MAP)
-    // INVERTED LOGIC: 0 = Low Risk (Good), 100 = High Risk (Bad)
+    // RISK MODEL: 0 = Safe (Good), 100 = Risk (Bad)
     const map = {
         'exemplary': 5,
-        'mataas': 10,  // Low Risk (High Integrity)
-        'compliant': 20,
-        'katamtaman': 50,
-        'observed': 60,
-        'mababa': 90,  // High Risk (Low Integrity)
-        'reflect': 80,
-        'flagged': 95
+        'mataas': 5,     // High Integrity -> Low Risk (Good)
+        'aligned': 15,
+        'compliant': 15,
+        'katamtaman': 35, // Consistent with backend 35
+        'reflect': 35,
+        'observed': 35,
+        'mababa': 85,     // Low Integrity -> High Risk (Bad)
+        'flagged': 90,
+        'kritikal': 98,
+        'critical': 98
     };
 
-    return map[normalized] || 0;
+    return map[normalized] || 10;
 };
 
 /**
- * Returns a human-readable compliance label based on the confidence level.
+ * Returns a human-readable compliance label based on the Risk Score.
+ * 0-30: Safe, 30-60: Moderate, 60-85: High, 85+: Critical
  */
 export const getComplianceLabel = (confidence) => {
     const score = normalizeConfidence(confidence);
-    if (score >= 70) return 'High_Risk_Detected';
-    if (score >= 40) return 'Moderate_Risk';
-    return 'Low_Risk_Safe';
+    if (score >= 85) return 'Kritikal_na_Panganib';
+    if (score >= 60) return 'Mataas_na_Panganib';
+    if (score >= 30) return 'Katamtamang_Panganib';
+    return 'Ligtas_na_Dokumento';
 };

@@ -71,16 +71,7 @@ OUTPUT FORMAT (STRICT JSON)
     "title": "Document Title",
     "confidence": "mataas | katamtaman | mababa",
     "confidence_score": 0-100,
-    "ai_usage": "Low | Moderate | High",
     "summary": "Clinical summary of audit findings (Filipino)...",
-    "forensic_analysis": {
-        "risk_level": "Mababa | Katamtaman | Mataas",
-        "risk_explanation": "Filipino explanation of the overall ethical risk profile.",
-        "pattern_hits": number,
-        "pattern_explanation": "Filipino explanation of detected ethical patterns (e.g., repeating omissions).",
-        "omission_count": number,
-        "omission_explanation": "Filipino explanation of the impact of missing procedural segments."
-    },
     "dimensions": {
         "human_rights": { 
             "status": "Aligned | May Obserbasyon | Pagnilay", 
@@ -109,6 +100,8 @@ OUTPUT FORMAT (STRICT JSON)
         }
     ]
 }
+
+IMPORTANT: Do NOT include "ai_usage" or "forensic_analysis" in your output. AI pattern detection is handled by a separate deterministic system.
 `;
 
 // ============================================================================
@@ -211,7 +204,7 @@ async function analyzeEthics(text) {
     }
 
     console.error("[AI] ❌ Groq analysis failed or no keys configured. Falling back to Mock response.");
-    return getMockEthicsResponse();
+    return { data: getMockEthicsResponse(), model_name: 'mock' };
 }
 
 async function tryGroq(text) {
@@ -246,8 +239,12 @@ async function tryGroq(text) {
 
                 const responseText = completion.choices[0]?.message?.content;
                 const parsed = JSON.parse(responseText);
+                // Strip any ai_usage/forensic_analysis that the LLM may hallucinate despite instructions
+                delete parsed.ai_usage;
+                delete parsed.forensic_analysis;
+                delete parsed.omissions;
                 console.log(`[AI:Groq] ✅ Success with Key #${index + 1}, ${modelName}`);
-                return parsed;
+                return { data: parsed, model_name: modelName };
             } catch (error) {
                 console.warn(`[AI:Groq] Key #${index + 1} | Model ${modelName} failed: ${error.message}`);
 
@@ -268,20 +265,20 @@ function getMockEthicsResponse() {
     return {
         "title": "Mock Analysis (AI Providers Unavailable)",
         "confidence": "katamtaman",
-        "ai_usage": "Moderate",
+        "confidence_score": 50,
         "summary": "Pangunahing pagsusuri: Ang AI provider (Groq) ay kasalukuyang unavailable. Gumagamit ng pre-generated mock data.",
         "dimensions": {
-            "human_rights": { "status": "Aligned", "reason": "Walang nakitang paglabag.", "suggestion": null, "revision_prompt": null },
-            "no_harm": { "status": "Aligned", "reason": "Ligtas ang metodolohiya.", "suggestion": null, "revision_prompt": null },
-            "justice": { "status": "N/A", "reason": "Hindi direktang tinatalakay.", "suggestion": null, "revision_prompt": null },
-            "privacy": { "status": "May Obserbasyon", "reason": "Kailangang linawin ang data handling.", "suggestion": "Linawin ang pamamaraan ng anonymization.", "revision_prompt": "Rewrite the data handling section to explicitly state how participants' identities are protected." },
-            "transparency": { "status": "Aligned", "reason": "Malinaw ang layunin.", "suggestion": null, "revision_prompt": null },
-            "oversight": { "status": "N/A", "reason": "Hindi sakop.", "suggestion": null, "revision_prompt": null },
-            "safety": { "status": "Aligned", "reason": "Maayos ang ethical safeguards.", "suggestion": null, "revision_prompt": null },
-            "sustainability": { "status": "N/A", "reason": "Hindi sakop.", "suggestion": null, "revision_prompt": null },
-            "inclusiveness": { "status": "Aligned", "reason": "Kasama ang marginalized groups.", "suggestion": null, "revision_prompt": null },
-            "ai_awareness": { "status": "May Obserbasyon", "reason": "Kailangang lagyan ng disclaimer.", "suggestion": "Magdagdag ng AI acknowledgement clause.", "revision_prompt": "Add a sentence acknowledging the use of AI tools in the preparation of this report." },
-            "governance": { "status": "Aligned", "reason": "Sumusunod sa lokal na batas.", "suggestion": null, "revision_prompt": null }
+            "human_rights": { "status": "Aligned", "reason": "Walang nakitang paglabag.", "suggestion": null },
+            "no_harm": { "status": "Aligned", "reason": "Ligtas ang metodolohiya.", "suggestion": null },
+            "justice": { "status": "N/A", "reason": "Hindi direktang tinatalakay.", "suggestion": null },
+            "privacy": { "status": "May Obserbasyon", "reason": "Kailangang linawin ang data handling.", "suggestion": "Linawin ang pamamaraan ng anonymization." },
+            "transparency": { "status": "Aligned", "reason": "Malinaw ang layunin.", "suggestion": null },
+            "oversight": { "status": "N/A", "reason": "Hindi sakop.", "suggestion": null },
+            "safety": { "status": "Aligned", "reason": "Maayos ang ethical safeguards.", "suggestion": null },
+            "sustainability": { "status": "N/A", "reason": "Hindi sakop.", "suggestion": null },
+            "inclusiveness": { "status": "Aligned", "reason": "Kasama ang marginalized groups.", "suggestion": null },
+            "ai_awareness": { "status": "May Obserbasyon", "reason": "Kailangang lagyan ng disclaimer.", "suggestion": "Magdagdag ng AI acknowledgement clause." },
+            "governance": { "status": "Aligned", "reason": "Sumusunod sa lokal na batas.", "suggestion": null }
         },
         "flags": [
             {
@@ -289,19 +286,9 @@ function getMockEthicsResponse() {
                 "label": "AI Provider Offline",
                 "explanation": "Kasalukuyang ginagamit ang mock logic dahil sa technical difficulty.",
                 "suggestion": "Subukan muli mamaya para sa real-time forensic analysis.",
-                "revision_prompt": "Please re-run the analysis when Groq services are back online.",
-                "associated_snippet": "N/A"
+                "associated_snippet": null
             }
-        ],
-        "forensic_analysis": {
-            "risk_level": "Mababa",
-            "risk_explanation": "Ang status na ito ay batay sa pre-generated mock data. Ang forensic risk ay hindi pa ganap na nasusuri dahil offline ang AI audit engine.",
-            "pattern_hits": 0,
-            "pattern_explanation": "Walang nakitang patterns sa mock state.",
-            "omission_count": 0,
-            "omission_explanation": "Kailangan ang live analysis para sa contextual omission detection."
-        },
-        "omissions": ["N/A"]
+        ]
     };
 }
 

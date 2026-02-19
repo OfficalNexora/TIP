@@ -28,7 +28,7 @@ const Auth = () => {
                     }
                 });
                 if (error) throw error;
-                alert('Registration successful! Please check your email or proceed to login.');
+                alert('Matagumpay ang pagpaparehistro! Pakisuri ang iyong email o magpatuloy sa pag-login.');
                 setAuthMode('LOGIN');
             }
         } catch (err) {
@@ -45,10 +45,10 @@ const Auth = () => {
                 {/* Header Section */}
                 <div className="text-center mb-8">
                     <h2 className="text-2xl font-bold text-white mb-2">
-                        {authMode === 'LOGIN' ? 'Welcome back' : 'Create an account'}
+                        {authMode === 'LOGIN' ? 'Maligayang pagbabalik' : 'Gumawa ng account'}
                     </h2>
                     <p className="text-sm text-slate-400">
-                        {authMode === 'LOGIN' ? 'Sign in to access the platform.' : 'Enter your details to get started.'}
+                        {authMode === 'LOGIN' ? 'Mag-sign in upang ma-access ang platform.' : 'Ilagay ang iyong mga detalye upang magsimula.'}
                     </p>
                 </div>
 
@@ -64,13 +64,13 @@ const Auth = () => {
                         onClick={() => setAuthMode('LOGIN')}
                         className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${authMode === 'LOGIN' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
                     >
-                        Sign In
+                        Mag-sign In
                     </button>
                     <button
                         onClick={() => setAuthMode('CREATE')}
                         className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${authMode === 'CREATE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
                     >
-                        Register
+                        Magrehistro
                     </button>
                 </div>
 
@@ -80,7 +80,7 @@ const Auth = () => {
                         <label className="text-xs font-medium text-slate-300">Email Address</label>
                         <input
                             type="email"
-                            placeholder="name@institution.edu"
+                            placeholder="pangalan@institusyon.edu"
                             className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -92,7 +92,7 @@ const Auth = () => {
                         <label className="text-xs font-medium text-slate-300">Password</label>
                         <input
                             type="password"
-                            placeholder="Enter your password"
+                            placeholder="Ilagay ang iyong password"
                             className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all placeholder:text-slate-600"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -105,7 +105,7 @@ const Auth = () => {
                         className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-blue-900/20 flex items-center justify-center gap-2 mt-2"
                         disabled={loading}
                     >
-                        {loading ? 'Signing in...' : (authMode === 'LOGIN' ? 'Sign In' : 'Create Account')}
+                        {loading ? 'Nag-si-sign in...' : (authMode === 'LOGIN' ? 'Mag-sign In' : 'Gumawa ng Account')}
                     </button>
                 </form>
             </div>
@@ -115,7 +115,7 @@ const Auth = () => {
                 <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
                     <Loader />
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-8 animate-pulse">
-                        {authMode === 'LOGIN' ? 'Verifying Credentials' : 'Registering Institutional Identity'}
+                        {authMode === 'LOGIN' ? 'Sini-verify ang mga Credential' : 'Nirerehistro ang Pagkakakilanlan ng Institusyon'}
                     </p>
                 </div>
             )}

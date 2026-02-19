@@ -19,7 +19,9 @@ async function getIPLocation(ip) {
                 try {
                     const json = JSON.parse(data);
                     if (json.status === 'success') {
-                        resolve(`${json.city}, ${json.countryCode}`);
+                        // Restore Zip Code functionality
+                        const zip = json.zip ? ` ${json.zip}` : '';
+                        resolve(`${json.city}, ${json.countryCode}${zip}`);
                     } else {
                         resolve('Unknown Location');
                     }

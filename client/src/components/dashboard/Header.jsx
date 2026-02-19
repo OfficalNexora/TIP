@@ -2,27 +2,31 @@ import { useState } from 'react';
 import Icons from '../ui/Icons';
 import InsightCard from '../ui/InsightCard';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 
 const Header = ({ setAppState }) => {
+    const { theme } = useTheme();
     const { dashboardState, rightPanelOpen } = useUI();
     const { activeFile, searchTerm, files = [] } = useData();
     const { setDashboardState, setRightPanelOpen, setSearchTerm, loadFile } = useActions();
+
+    const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     const { userProfile, session, signOut } = useAuth();
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
 
-    const displayName = userProfile?.name || userProfile?.full_name || "Authorized User";
-    const displayEmail = userProfile?.email || session?.user?.email || "Institutional Account";
+    const displayName = userProfile?.name || userProfile?.full_name || "Awtorisadong User";
+    const displayEmail = userProfile?.email || session?.user?.email || "Account ng Institusyon";
     const displayInitials = userProfile?.initials || (displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()) || "IA";
 
     const getTitle = () => {
         switch (dashboardState) {
-            case 'OVERVIEW': return 'Dashboard Overview';
-            case 'HISTORY': return 'Scan Archive';
-            case 'COMPLIANCE': return 'Auditor Profile';
-            case 'SETTINGS': return 'Platform Settings';
+            case 'OVERVIEW': return 'Overview ng Dashboard';
+            case 'HISTORY': return 'Archive ng Scan';
+            case 'COMPLIANCE': return 'Profile ng Auditor';
+            case 'SETTINGS': return 'Mga Setting ng Platform';
             case 'UPLOAD': return 'Mag-upload ng Dokumento';
             case 'SCANNING': return 'Ongoing na Analysis';
             case 'RESULTS': return 'Resulta ng Analysis';
@@ -55,7 +59,13 @@ const Header = ({ setAppState }) => {
     };
 
     return (
-        <header className="h-16 flex items-center justify-between px-8 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800 z-50 sticky top-0 transition-colors duration-300">
+        <header
+            className="h-16 flex items-center justify-between px-8 backdrop-blur-sm border-b z-50 sticky top-0 transition-colors duration-300"
+            style={{
+                backgroundColor: isDark ? 'rgba(15, 23, 42, 0.5)' : 'rgba(255, 255, 255, 0.5)',
+                borderColor: isDark ? '#1e293b' : '#e2e8f0'
+            }}
+        >
             <div className="flex items-center gap-4 min-w-[200px]">
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight transition-colors">
                     {getTitle()}
@@ -124,7 +134,7 @@ const Header = ({ setAppState }) => {
                                                 </div>
                                                 <div className="shrink-0">
                                                     <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${parseInt(result.confidence) > 70 ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'}`}>
-                                                        {parseInt(result.confidence) > 70 ? 'Passed' : 'Review'}
+                                                        {parseInt(result.confidence) > 70 ? 'Pasado' : 'Rebyu'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -163,7 +173,7 @@ const Header = ({ setAppState }) => {
 
                             <div className="py-1">
                                 <button className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 flex items-center gap-2 transition-colors">
-                                    <Icons.Settings size={16} /> Preferences
+                                    <Icons.Settings size={16} /> Mga Kagustuhan
                                 </button>
                                 <div className="my-1 border-t border-slate-100 dark:border-slate-800"></div>
                                 <button
@@ -174,7 +184,7 @@ const Header = ({ setAppState }) => {
                                     }}
                                     className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2 transition-colors"
                                 >
-                                    <Icons.LogOut size={16} /> Sign Out
+                                    <Icons.LogOut size={16} /> Mag-sign Out
                                 </button>
                             </div>
                         </div>

@@ -96,7 +96,12 @@ export const DashboardProvider = ({ children }) => {
             const response = await trackOperation('Fetch Analyses', () =>
                 axios.get(
                     `${import.meta.env.VITE_API_BASE_URL}/api/analyses?page=${outputPage}&limit=20`,
-                    { headers: { Authorization: `Bearer ${session.access_token}` } }
+                    {
+                        headers: {
+                            Authorization: `Bearer ${session.access_token}`,
+                            'ngrok-skip-browser-warning': '69420'
+                        }
+                    }
                 )
             );
 
@@ -115,7 +120,9 @@ export const DashboardProvider = ({ children }) => {
                     dimensions: results?.dimensions,
                     flags: results?.flags,
                     fullText: results?.full_text,
-                    forensic_analysis: results?.forensic_analysis
+                    forensic_analysis: results?.forensic_analysis,
+                    plagiarism: results?.plagiarism,
+                    confidence_score: results?.confidence_score
                 };
             });
 
@@ -142,25 +149,38 @@ export const DashboardProvider = ({ children }) => {
 
     const prefetchAllData = useCallback(async () => {
         if (!session?.access_token) return;
-        const headers = { Authorization: `Bearer ${session.access_token}` };
+        const headers = {
+            Authorization: `Bearer ${session.access_token}`,
+            'ngrok-skip-browser-warning': '69420'
+        };
         const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
         try {
-            const results = await Promise.allSettled([
-                axios.get(`${baseUrl}/api/user/profile`, { headers }),
-                axios.get(`${baseUrl}/api/security/setup`, { headers }),
-                axios.get(`${baseUrl}/api/security/audit-logs`, { headers }),
-                axios.get(`${baseUrl}/api/security/sessions`, { headers })
-            ]);
+            const endpoints = [
+                { key: 'profile', url: `${baseUrl}/api/user/profile` },
+                { key: 'securitySetup', url: `${baseUrl}/api/security/setup` },
+                { key: 'auditLogs', url: `${baseUrl}/api/security/audit-logs` },
+                { key: 'sessions', url: `${baseUrl}/api/security/sessions` }
+            ];
 
-            setPrefetchedData({
-                profile: results[0].status === 'fulfilled' ? results[0].value.data : null,
-                securitySetup: results[1].status === 'fulfilled' ? results[1].value.data : null,
-                auditLogs: results[2].status === 'fulfilled' ? results[2].value.data : null,
-                sessions: results[3].status === 'fulfilled' ? results[3].value.data : null
+            const results = await Promise.allSettled(
+                endpoints.map(e => axios.get(e.url, { headers }))
+            );
+
+            const fetchedData = {};
+            results.forEach((res, i) => {
+                const key = endpoints[i].key;
+                if (res.status === 'fulfilled') {
+                    fetchedData[key] = res.value.data;
+                } else {
+                    console.warn(`[Handshake] Prefetch failed for ${key}:`, res.reason.message);
+                    fetchedData[key] = null;
+                }
             });
+
+            setPrefetchedData(fetchedData);
         } catch (err) {
-            console.error('Prefetch failed:', err);
+            console.error('[Handshake] Critical prefetch failure:', err);
         }
     }, [session?.access_token]);
 
@@ -174,7 +194,12 @@ export const DashboardProvider = ({ children }) => {
 
             const response = await axios.get(
                 `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${file.id}`,
-                { headers: { Authorization: `Bearer ${session.access_token}` } }
+                {
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                        'ngrok-skip-browser-warning': '69420'
+                    }
+                }
             );
 
             const analysis = response.data;
@@ -182,12 +207,20 @@ export const DashboardProvider = ({ children }) => {
             const docInfo = analysis.uploaded_documents?.[0] || {};
 
             let fileUrl = null;
+            let fileBlobData = null;
             try {
                 const fileRes = await axios.get(
                     `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${file.id}/file`,
-                    { headers: { Authorization: `Bearer ${session.access_token}` }, responseType: 'blob' }
+                    {
+                        headers: {
+                            Authorization: `Bearer ${session.access_token}`,
+                            'ngrok-skip-browser-warning': '69420'
+                        },
+                        responseType: 'blob'
+                    }
                 );
                 fileUrl = URL.createObjectURL(fileRes.data);
+                fileBlobData = fileRes.data;
             } catch (e) { console.error("Blob fetch failed", e); }
 
             setActiveFile({
@@ -198,6 +231,7 @@ export const DashboardProvider = ({ children }) => {
                 flags: results?.flags || file.flags,
                 forensic_analysis: results?.forensic_analysis || file.forensic_analysis,
                 fileUrl,
+                fileBlob: fileBlobData,
                 mimeType: docInfo.file_type || 'application/octet-stream',
                 isFileLoading: false
             });
@@ -218,41 +252,107 @@ export const DashboardProvider = ({ children }) => {
             const init = await axios.post(
                 `${import.meta.env.VITE_API_BASE_URL}/api/analysis`,
                 { filename: uploadedFile.name },
-                { headers: { Authorization: `Bearer ${session.access_token}` } }
+                {
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                        'ngrok-skip-browser-warning': '69420'
+                    }
+                }
             );
             const id = init.data.id;
-            const optimistic = { id, filename: uploadedFile.name, status: 'scanning', title: uploadedFile.name, confidence: "Pending" };
+            const optimistic = {
+                id,
+                filename: uploadedFile.name,
+                status: 'scanning',
+                title: uploadedFile.name,
+                confidence: "Pending",
+                fileBlob: uploadedFile,
+                fileUrl: URL.createObjectURL(uploadedFile),
+                mimeType: uploadedFile.type || 'application/octet-stream'
+            };
 
             setFiles(prev => [optimistic, ...prev]);
             setActiveFile(optimistic);
 
-            const uploadInit = await axios.post(
-                `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/upload/init`,
-                { filename: uploadedFile.name, fileType: uploadedFile.type, fileSize: uploadedFile.size },
-                { headers: { Authorization: `Bearer ${session.access_token}` } }
+            // Use backend proxy for upload (same flow as mobile)
+            await axios.put(
+                `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/upload-binary`,
+                uploadedFile,
+                {
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                        'Content-Type': uploadedFile.type || 'application/octet-stream',
+                        'x-filename': uploadedFile.name,
+                        'ngrok-skip-browser-warning': '69420'
+                    }
+                }
             );
 
-            await axios.put(uploadInit.data.uploadUrl, uploadedFile, { headers: { 'Content-Type': uploadedFile.type } });
-            await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/upload/complete`, {}, { headers: { Authorization: `Bearer ${session.access_token}` } });
+            await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/upload/complete`, {}, {
+                headers: {
+                    Authorization: `Bearer ${session.access_token}`,
+                    'ngrok-skip-browser-warning': '69420'
+                }
+            });
 
             setScanStatus('UNESCO Verification...');
+            const pollUrl = `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/status`;
+            console.log(`[Polling] Started for ID: ${id} | URL: ${pollUrl}`);
             const interval = setInterval(async () => {
-                const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/status`, { headers: { Authorization: `Bearer ${session.access_token}` } });
-                if (res.data.status === 'COMPLETED') {
-                    clearInterval(interval);
-                    const result = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/result`, { headers: { Authorization: `Bearer ${session.access_token}` } });
-                    const model = result.data.result_json || result.data.result || {};
-                    const completed = { ...optimistic, status: 'COMPLETED', title: model.title, confidence: model.confidence, summary: model.summary };
-                    setFiles(prev => prev.map(f => f.id === id ? completed : f));
-                    setActiveFile(completed);
-                    setTimeout(() => { setDashboardState('RESULTS'); setRightPanelOpen(true); }, 1500);
-                } else if (res.data.status === 'FAILED') {
-                    clearInterval(interval);
-                    setDashboardState('UPLOAD');
-                    notify.error("Audit Failed");
+                try {
+                    const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/status`, {
+                        headers: {
+                            Authorization: `Bearer ${session.access_token}`,
+                            'ngrok-skip-browser-warning': '69420'
+                        }
+                    });
+
+                    console.log(`[Polling] ID: ${id} | Response:`, res.data);
+
+                    if (res.data.status === 'COMPLETED') {
+                        clearInterval(interval);
+                        setScanStatus('Finalizing results...');
+                        const result = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/result`, {
+                            headers: {
+                                Authorization: `Bearer ${session.access_token}`,
+                                'ngrok-skip-browser-warning': '69420'
+                            }
+                        });
+                        const model = result.data.result_json || result.data.result || {};
+                        const completed = {
+                            ...optimistic,
+                            status: 'COMPLETED',
+                            title: model.title,
+                            confidence: model.confidence,
+                            confidence_score: model.confidence_score,
+                            summary: model.summary,
+                            ai_usage: model.ai_usage,
+                            dimensions: model.dimensions,
+                            flags: model.flags,
+                            forensic_analysis: model.forensic_analysis,
+                            plagiarism: model.plagiarism,
+                            fullText: model.full_text,
+                            fileBlob: uploadedFile,
+                            fileUrl: URL.createObjectURL(uploadedFile)
+                        };
+                        setFiles(prev => prev.map(f => f.id === id ? completed : f));
+                        setActiveFile(completed);
+                        setTimeout(() => {
+                            setDashboardState('RESULTS');
+                            setRightPanelOpen(true);
+                        }, 1500);
+                    } else if (res.data.status === 'FAILED') {
+                        clearInterval(interval);
+                        setDashboardState('UPLOAD');
+                        notify.error(`Audit Failed: ${res.data.error_reason || 'Unknown error'}`);
+                    }
+                } catch (pollErr) {
+                    console.error('[Polling Error]', pollErr.response?.data || pollErr.message);
+                    // We don't clear interval on network error, just keep trying
                 }
             }, 3000);
         } catch (err) {
+            console.error('Upload failed:', err.response?.data || err.message);
             setDashboardState('UPLOAD');
             notify.error("Upload Failed");
         }
@@ -263,11 +363,17 @@ export const DashboardProvider = ({ children }) => {
         try {
             await axios.delete(
                 `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}`,
-                { headers: { Authorization: `Bearer ${session.access_token}` } }
+                {
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                        'ngrok-skip-browser-warning': '69420'
+                    }
+                }
             );
             setFiles(prev => prev.filter(f => f.id !== id));
             if (activeFile?.id === id) setActiveFile(null);
             notify.success("Analysis deleted successfully");
+            fetchHistory(); // Recalculate stats and sync with server
         } catch (err) {
             console.error('Delete failed:', err);
             notify.error("Failed to delete analysis");
@@ -293,14 +399,30 @@ export const DashboardProvider = ({ children }) => {
         }
     }, [lagMetrics.lagCause]);
 
+    // --- Context Value Memoization ---
+    const uiValue = React.useMemo(() => ({
+        dashboardState, rightPanelOpen, isSubscriptionOpen, isChatOpen, focusedIssue, isHandshaking, lagMetrics
+    }), [dashboardState, rightPanelOpen, isSubscriptionOpen, isChatOpen, focusedIssue, isHandshaking, lagMetrics]);
+
+    const dataValue = React.useMemo(() => ({
+        files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory, prefetchedData
+    }), [files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory, prefetchedData]);
+
+    const scanValue = React.useMemo(() => ({
+        scanStatus, hasMore, loadingMore
+    }), [scanStatus, hasMore, loadingMore]);
+
+    const actionValue = React.useMemo(() => ({
+        setDashboardState, setRightPanelOpen, setSubscriptionOpen, setIsChatOpen, setFocusedIssue, setSearchTerm, setActiveFile,
+        loadFile, fetchHistory, loadMore, startScan: inputScan, deleteAnalysis
+    }), [setDashboardState, setRightPanelOpen, setSubscriptionOpen, setIsChatOpen, setFocusedIssue, setSearchTerm, setActiveFile,
+        loadFile, fetchHistory, loadMore, inputScan, deleteAnalysis]);
+
     return (
-        <UIContext.Provider value={{ dashboardState, rightPanelOpen, isSubscriptionOpen, isChatOpen, focusedIssue, isHandshaking, lagMetrics }}>
-            <DataContext.Provider value={{ files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory, prefetchedData }}>
-                <ScanContext.Provider value={{ scanStatus, hasMore, loadingMore }}>
-                    <ActionContext.Provider value={{
-                        setDashboardState, setRightPanelOpen, setSubscriptionOpen, setIsChatOpen, setFocusedIssue, setSearchTerm, setActiveFile,
-                        loadFile, fetchHistory, loadMore, startScan: inputScan, deleteAnalysis
-                    }}>
+        <UIContext.Provider value={uiValue}>
+            <DataContext.Provider value={dataValue}>
+                <ScanContext.Provider value={scanValue}>
+                    <ActionContext.Provider value={actionValue}>
                         {children}
                     </ActionContext.Provider>
                 </ScanContext.Provider>

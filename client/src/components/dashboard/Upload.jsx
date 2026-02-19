@@ -91,12 +91,12 @@ const Upload = () => {
                     <div className="flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
                         <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest">
-                            Processing Mode
+                            Mode ng Pag-proseso
                         </span>
                     </div>
                     <span className="text-slate-300 dark:text-slate-700">•</span>
                     <span className="text-sm font-bold text-[#002147] dark:text-blue-400 uppercase tracking-wide">
-                        Institutional Worker
+                        Manggagawa sa Institusyon
                     </span>
                 </div>
             </div>

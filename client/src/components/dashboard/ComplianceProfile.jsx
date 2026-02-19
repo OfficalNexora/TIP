@@ -9,8 +9,8 @@ const ComplianceProfile = () => {
     // Fallback to local profile if fetch is still warming up, or use empty default
     const profile = useMemo(() => {
         return prefetchedData?.profile || {
-            full_name: "Loading Auditor...",
-            role: "Verifying...",
+            full_name: "Sini-load ang Auditor...",
+            role: "Sini-verify...",
             institutional_id: "--------",
             stats: { flagged: 0 }
         };
@@ -27,7 +27,7 @@ const ComplianceProfile = () => {
         return (
             <div className="flex flex-col items-center justify-center h-64 space-y-4">
                 <div className="w-6 h-6 rounded-full border-2 border-tip-border border-t-tip-primary animate-spin"></div>
-                <p className="text-[10px] font-bold text-tip-text-muted uppercase tracking-widest animate-pulse">Retrieving Personnel Record...</p>
+                <p className="text-[10px] font-bold text-tip-text-muted uppercase tracking-widest animate-pulse">Kinukuha ang Record ng Empleyado...</p>
             </div>
         );
     }
@@ -66,7 +66,7 @@ const ComplianceProfile = () => {
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-xs">
                             <span className="font-bold text-tip-text-main uppercase tracking-wider flex items-center gap-1.5">
                                 <Icons.User size={12} className="text-tip-access" />
-                                {profile.role || "Authorized Auditor"}
+                                {profile.role || "Awtorisadong Auditor"}
                             </span>
                             <span className="text-tip-border hidden md:inline">•</span>
                             <span className="font-mono text-[10px] text-tip-text-muted bg-tip-bg px-1.5 py-0.5 rounded border border-tip-border/50">
@@ -75,7 +75,7 @@ const ComplianceProfile = () => {
                             <span className="text-tip-border hidden md:inline">•</span>
                             <span className="text-emerald-600 dark:text-emerald-400 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                Clearance Active
+                                Clearance Aktibo
                             </span>
                         </div>
                     </div>
@@ -87,7 +87,7 @@ const ComplianceProfile = () => {
                 {/* Integrity Score */}
                 <InsightCard variant="highlight" className="flex flex-col justify-between h-auto min-h-[140px]">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-[9px] font-bold text-tip-primary uppercase tracking-[0.2em]">Integrity Score</span>
+                        <span className="text-[9px] font-bold text-tip-primary uppercase tracking-[0.2em]">Score ng Integridad</span>
                         <Icons.Activity size={14} className="text-tip-primary opacity-50" />
                     </div>
                     <div className="flex items-end gap-2 mt-auto">
@@ -99,14 +99,14 @@ const ComplianceProfile = () => {
                     </div>
                     <p className="text-[9px] text-tip-text-muted mt-3 font-medium border-t border-tip-border/50 pt-2 flex items-center gap-1">
                         <span className="w-1 h-1 rounded-full bg-tip-primary/50"></span>
-                        Calculated from all sessions
+                        Calculated mula sa lahat ng session
                     </p>
                 </InsightCard>
 
                 {/* Audit Volume */}
                 <InsightCard className="flex flex-col justify-between h-auto min-h-[140px]">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-[9px] font-bold text-tip-text-muted uppercase tracking-[0.2em]">Total Audits</span>
+                        <span className="text-[9px] font-bold text-tip-text-muted uppercase tracking-[0.2em]">Kabuuang Audits</span>
                         <Icons.FileText size={14} className="text-tip-text-secondary opacity-50" />
                     </div>
                     <div className="flex items-end gap-2 mt-auto">
@@ -117,14 +117,14 @@ const ComplianceProfile = () => {
                     </div>
                     <p className="text-[9px] text-tip-text-muted mt-3 font-medium border-t border-tip-border/50 pt-2 flex items-center gap-1">
                         <span className="w-1 h-1 rounded-full bg-tip-text-muted"></span>
-                        Archived in secure database
+                        Naka-archive sa ligtas na database
                     </p>
                 </InsightCard>
 
                 {/* Flags/Issues */}
                 <InsightCard variant={operationalFlags > 0 ? "danger" : "default"} className="flex flex-col justify-between h-auto min-h-[140px]">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-[9px] font-bold text-tip-text-muted uppercase tracking-[0.2em]">Active Flags</span>
+                        <span className="text-[9px] font-bold text-tip-text-muted uppercase tracking-[0.2em]">Mga Aktibong Flag</span>
                         <Icons.AlertCircle size={14} className={`opacity-50 ${operationalFlags > 0 ? 'text-red-500' : 'text-emerald-500'}`} />
                     </div>
                     <div className="flex items-end gap-2 mt-auto">
@@ -132,12 +132,12 @@ const ComplianceProfile = () => {
                             {operationalFlags}
                         </div>
                         <span className={`text-[9px] font-bold mb-1.5 uppercase ${operationalFlags > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                            {operationalFlags > 0 ? "Review Rqd" : "All Clear"}
+                            {operationalFlags > 0 ? "Kailangan ng Rebyu" : "Lahat Ligtas"}
                         </span>
                     </div>
                     <p className="text-[9px] text-tip-text-muted mt-3 font-medium border-t border-tip-border/50 pt-2 flex items-center gap-1">
                         <span className={`w-1 h-1 rounded-full ${operationalFlags > 0 ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
-                        Real-time operational status
+                        Real-time na status ng operasyon
                     </p>
                 </InsightCard>
             </div>
@@ -147,7 +147,7 @@ const ComplianceProfile = () => {
                 <div className="px-6 py-4 border-b border-tip-border flex items-center justify-between">
                     <h3 className="text-xs font-bold text-tip-text-main uppercase tracking-widest flex items-center gap-2">
                         <Icons.Award size={14} className="text-tip-accent" />
-                        Credentials & Compliance
+                        Mga Credential at Pagsunod
                     </h3>
                     <span className="text-[9px] font-mono text-tip-text-muted bg-tip-bg px-2 py-0.5 rounded">VERIFIED</span>
                 </div>
@@ -161,12 +161,12 @@ const ComplianceProfile = () => {
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-sm font-bold text-tip-primary">{cert.name}</span>
-                                    <span className="text-[10px] text-tip-text-muted uppercase tracking-wider">Expires: {cert.valid}</span>
+                                    <span className="text-[10px] text-tip-text-muted uppercase tracking-wider">Mag-eexpire sa: {cert.valid}</span>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse-slow"></span>
-                                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Active</span>
+                                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Aktibo</span>
                             </div>
                         </div>
                     ))}
