@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Icons from "./Icons";
 import { useAuth } from "../../contexts/AuthContext";
@@ -7,7 +7,7 @@ import { useUI, useData, useActions } from "../../contexts/DashboardContext";
 const Chatbot = () => {
   const { session } = useAuth();
   const { activeFile } = useData();
-  const { isChatOpen: isOpen } = useUI();
+  const { isChatOpen: isOpen, language } = useUI();
   const { setIsChatOpen: setIsOpen } = useActions();
 
   const analysisId = activeFile?.id;
@@ -16,9 +16,25 @@ const Chatbot = () => {
   const [messages, setMessages] = useState([
     {
       from: "bot",
-      text: "Kumusta! Ako ang TIP AI Assistant. Magtanong ka tungkol sa pagsusuri, risk scores, o mga susunod na hakbang."
+      text: language === 'tl' 
+        ? "Kumusta! Ako ang TIP AI Assistant. Magtanong ka tungkol sa pagsusuri, risk scores, o mga susunod na hakbang."
+        : "Hello! I am the TIP AI Assistant. Feel free to ask about the analysis, risk scores, or next steps."
     }
   ]);
+
+  // Sync initial message with language
+  useEffect(() => {
+    if (messages.length === 1 && messages[0].from === 'bot') {
+        setMessages([
+            {
+                from: "bot",
+                text: language === 'tl' 
+                  ? "Kumusta! Ako ang TIP AI Assistant. Magtanong ka tungkol sa pagsusuri, risk scores, o mga susunod na hakbang."
+                  : "Hello! I am the TIP AI Assistant. Feel free to ask about the analysis, risk scores, or next steps."
+            }
+        ]);
+    }
+  }, [language]);
   const listRef = useRef(null);
 
   useEffect(() => {
@@ -44,14 +60,24 @@ const Chatbot = () => {
     try {
       const res = await axios.post(
         (import.meta.env.VITE_API_BASE_URL || "") + "/api/chat",
-        { message: userMsg.text, analysisId, history },
+        { 
+          message: userMsg.text, 
+          analysisId, 
+          history,
+          language: language // Explicitly send context language to backend
+        },
         { headers: { Authorization: "Bearer " + session.access_token } }
       );
-      setMessages((m) => [...m, { from: "bot", text: res.data.reply || "(walang sagot)" }]);
+      setMessages((m) => [...m, { from: "bot", text: res.data.reply || (language === 'tl' ? "(walang sagot)" : "(no response)") }]);
     } catch (e) {
       setMessages((m) => [
         ...m,
-        { from: "bot", text: "Paumanhin, hindi ko maabot ang assistant ngayon. Subukan ulit mamaya." }
+        { 
+          from: "bot", 
+          text: language === 'tl' 
+            ? "Paumanhin, hindi ko maabot ang assistant ngayon. Subukan ulit mamaya." 
+            : "Sorry, I can't reach the assistant right now. Please try again later."
+        }
       ]);
     } finally {
       setLoading(false);
@@ -65,7 +91,39 @@ const Chatbot = () => {
     }
   };
 
-  // If not open, don't render anything (or could animate out)
+  const renderMessageContent = (text) => {
+    const showcaseRegex = /<showcase\s+title="([^"]+)">([\s\S]*?)<\/showcase>/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = showcaseRegex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push({ type: 'text', content: text.substring(lastIndex, match.index) });
+      }
+      parts.push({ type: 'showcase', title: match[1], content: match[2].trim() });
+      lastIndex = showcaseRegex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      parts.push({ type: 'text', content: text.substring(lastIndex) });
+    }
+
+    if (parts.length === 0) return text;
+
+    return (
+      <div className="flex flex-col gap-3">
+        {parts.map((part, i) => (
+          part.type === 'text' ? (
+            <span key={i} className="whitespace-pre-wrap">{part.content}</span>
+          ) : (
+            <ShowcaseCard key={i} title={part.title} content={part.content} />
+          )
+        ))}
+      </div>
+    );
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -97,13 +155,13 @@ const Chatbot = () => {
             {m.from === 'bot' && (
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">AI Assistant</span>
             )}
-            <div className={"max-w-[90%] px-5 py-3.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap shadow-sm " +
+            <div className={"max-w-[95%] px-5 py-3.5 rounded-2xl text-sm leading-relaxed shadow-sm " +
               (m.from === "user"
-                ? "bg-blue-600 text-white rounded-br-sm"
+                ? "bg-blue-600 text-white rounded-br-sm whitespace-pre-wrap"
                 : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-bl-sm"
               )
             }>
-              {m.text}
+              {m.from === 'bot' ? renderMessageContent(m.text) : m.text}
             </div>
           </div>
         ))}
@@ -130,7 +188,7 @@ const Chatbot = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
-            className="flex-1 bg-transparent text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none resize-none max-h-32 py-2 px-2"
+            className="flex-1 bg-transparent text-sm text-slate-800 dark:text-slate-200 placeholder:text-slate-400 focus:outline-none resize-none max-h-32 py-2 px-2 shadow-none border-none outline-none ring-0 w-full"
             placeholder="Type your message..."
             style={{ minHeight: '40px' }}
           />
@@ -147,4 +205,40 @@ const Chatbot = () => {
   );
 };
 
+const ShowcaseCard = ({ title, content }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copy = () => {
+    navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="my-2 border border-emerald-200 dark:border-emerald-900/50 rounded-xl overflow-hidden shadow-md bg-emerald-50/30 dark:bg-emerald-900/10 animate-in fade-in zoom-in duration-300">
+      <div className="bg-emerald-500/10 dark:bg-emerald-500/20 px-4 py-2 border-b border-emerald-200 dark:border-emerald-900/30 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <Icons.Sparkles size={14} className="text-emerald-600 dark:text-emerald-400" />
+          <span className="text-[11px] font-black text-emerald-700 dark:text-emerald-300 uppercase tracking-tighter">{title}</span>
+        </div>
+        <button
+          onClick={copy}
+          className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors p-1"
+          title="Copy to clipboard"
+        >
+          {copied ? <Icons.Check size={14} /> : <Icons.Copy size={14} />}
+        </button>
+      </div>
+      <div className="p-4 text-slate-800 dark:text-slate-100 font-serif italic leading-relaxed text-[13px] bg-white dark:bg-slate-900/50">
+        {content}
+      </div>
+      <div className="px-4 py-2 bg-slate-50/50 dark:bg-slate-800/50 text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 border-t border-slate-100 dark:border-slate-800">
+        <Icons.Info size={12} />
+        <span>You can copy and manually apply this to your document.</span>
+      </div>
+    </div>
+  );
+};
+
 export default Chatbot;
+

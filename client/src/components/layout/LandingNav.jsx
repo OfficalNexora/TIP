@@ -7,7 +7,7 @@ const LandingNav = () => (
             <div className="w-8 h-8 relative flex items-center justify-center">
                 <img src={tipLogo} alt="TIP AI Logo" className="w-full h-full object-contain" />
             </div>
-            <span className="text-xl font-bold text-white tracking-tight">TIP <span className="text-blue-400">AI</span></span>
+            <span className="text-xl font-bold text-white tracking-tight">TIP <span className="text-emerald-400">AI</span></span>
         </div>
     </nav>
 );

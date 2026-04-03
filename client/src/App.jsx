@@ -21,6 +21,7 @@ import ScanHistory from './components/dashboard/ScanHistory';
 import ComplianceProfile from './components/dashboard/ComplianceProfile';
 import Settings from './components/dashboard/Settings';
 import SubscriptionModal from './components/dashboard/SubscriptionModal';
+import OnboardingModal from './components/dashboard/OnboardingModal';
 
 import Loader from './components/ui/Loader';
 import LagNotifier from './components/ui/LagNotifier';
@@ -89,11 +90,28 @@ function AppContent() {
 
   // COMBINED LOADING GUARD (Session check + Institutional Handshake)
   if (authLoading || (session && handshakeActive)) return (
-    <div className="h-screen w-full bg-slate-950 flex flex-col items-center justify-center transition-colors">
-      <Loader />
-      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-8 animate-pulse">
-        {authLoading ? 'Initializing Secure Context' : 'Establishing Institutional Handshake'}
-      </p>
+    <div className="h-screen w-full bg-slate-950 flex flex-col items-center justify-center transition-all duration-500 overflow-hidden">
+      <div className="relative flex flex-col items-center">
+        <Loader />
+        
+        {/* Institutional Branding Splash */}
+        <div className="mt-12 text-center animate-in fade-in zoom-in duration-1000">
+           <h2 className="text-xl font-black text-white tracking-[0.2em] mb-2 uppercase">TIP <span className="text-blue-500">AI</span></h2>
+           <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.4em] max-w-xs leading-relaxed opacity-80">
+             Tamang Integridad at Pananagutan sa Artificial Intelligence
+           </p>
+        </div>
+
+        {/* Loading Indicator */}
+        <div className="mt-8 flex flex-col items-center gap-2">
+            <div className="w-48 h-1 bg-slate-900 rounded-full overflow-hidden">
+                <div className="h-full bg-blue-600 animate-[loading_2s_ease-in-out_infinite]" />
+            </div>
+            <p className="text-[8px] font-black text-blue-500/50 uppercase tracking-[0.3em] animate-pulse">
+              {authLoading ? 'Initializing Secure Context' : 'Establishing Institutional Handshake'}
+            </p>
+        </div>
+      </div>
     </div>
   );
 
@@ -217,6 +235,13 @@ function AppContent() {
           <AnalyticPanel />
 
           <SubscriptionModal />
+          <OnboardingModal 
+            isOpen={appState === 'DASHBOARD' && userProfile && (!userProfile.tos_accepted || !userProfile.privacy_policy_accepted)} 
+            onComplete={() => {
+              // The onComplete is handled by the fetchProfile in the modal itself
+              console.log("Onboarding completed.");
+            }}
+          />
 
           {/* Lag Detection Notifier */}
           <LagNotifier />

@@ -112,7 +112,7 @@ const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handl
                         {/* HUD Badge - Only for Analyzed - Matches Screenshot Style */}
                         {!isScanning && (
                             <div className="absolute -bottom-2 -right-3 w-8 h-8 bg-slate-900 dark:bg-slate-950/80 backdrop-blur-sm border border-slate-700 rounded-full flex items-center justify-center shadow-lg z-10">
-                                <span className={`text-[9px] font-bold ${confidenceScore >= 60 ? 'text-rose-400' : confidenceScore >= 30 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                <span className={`text-[9px] font-bold ${confidenceScore >= 60 ? 'text-rose-600 dark:text-rose-400' : confidenceScore >= 30 ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
                                     {confidenceScore}%
                                 </span>
                             </div>
@@ -162,7 +162,7 @@ const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handl
                                 </p>
                                 <div className="w-16 h-1 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                                     <div
-                                        className={`h-full transition-all duration-1000 ease-out ${confidenceScore >= 60 ? 'bg-rose-500' : confidenceScore >= 30 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                                        className={`h-full transition-all duration-1000 ease-out ${confidenceScore >= 60 ? 'bg-rose-600' : confidenceScore >= 30 ? 'bg-amber-500' : 'bg-emerald-600'}`}
                                         style={{ width: `${confidenceScore}%` }}
                                     ></div>
                                 </div>
@@ -274,16 +274,100 @@ const Overview = () => {
                 </div>
             )}
 
-            <div className="flex-1 overflow-y-auto px-8 py-8 space-y-10 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto px-8 py-8 space-y-12 custom-scrollbar">
+                
+                {/* AI Assistant Showcase - APK Parity Feature */}
+                <div className="space-y-6 fade-in-item opacity-0">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Mga AI Assistant</h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Pumili ng tool para sa iyong institutional audit</p>
+                        </div>
+                        <button 
+                            onClick={() => setDashboardState('UPLOAD')}
+                            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5"
+                        >
+                            Tignan lahat <Icons.ChevronRight size={14} />
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {[
+                            {
+                                id: 'auditor',
+                                title: 'Research Auditor',
+                                desc: 'Malalim na pagsusuri ng akademikong integridad.',
+                                icon: Icons.ShieldCheck,
+                                color: 'blue',
+                                lottie: 'https://lottie.host/8908b664-402b-4f65-ab5f-122e42a0eaff/lJD6OSQpKY.lottie'
+                            },
+                            {
+                                id: 'plagiarism',
+                                title: 'Plagiarism Checker',
+                                desc: 'Paghahambing sa mga global na database.',
+                                icon: Icons.Copy,
+                                color: 'rose',
+                                lottie: 'https://lottie.host/6771ba6c-4ac3-463d-8411-84bb4f0819b5/lJD6OSQpKY.lottie'
+                            },
+                            {
+                                id: 'ethical',
+                                title: 'Ethical AI Audit',
+                                desc: 'Pagsunod sa UNESCO ethics at bias standards.',
+                                icon: Icons.Scale,
+                                color: 'emerald',
+                                lottie: 'https://lottie.host/4101998b-f74e-4c77-a318-de4377d81d2a/lJD6OSQpKY.lottie'
+                            },
+                            {
+                                id: 'forensic',
+                                title: 'Forensic Reporter',
+                                desc: 'Detalyadong pattern at linguistic footprint.',
+                                icon: Icons.Search,
+                                color: 'amber',
+                                lottie: 'https://lottie.host/2992a316-b15c-4cbf-844a-63a7046edb25/lJD6OSQpKY.lottie'
+                            }
+                        ].map((asst) => (
+                            <div 
+                                key={asst.id}
+                                onClick={() => setDashboardState('UPLOAD')}
+                                className="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl shadow-sm hover:shadow-xl hover:border-blue-500/30 transition-all duration-500 cursor-pointer overflow-hidden group"
+                            >
+                                {/* Background Decorative Circle */}
+                                <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-[0.03] dark:opacity-[0.07] transition-all duration-700 group-hover:scale-150 group-hover:opacity-10 dark:group-hover:opacity-20
+                                    ${asst.color === 'blue' ? 'bg-blue-600' : asst.color === 'rose' ? 'bg-rose-600' : asst.color === 'emerald' ? 'bg-emerald-600' : 'bg-amber-600'}`} 
+                                />
+
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 transition-colors duration-500
+                                    ${asst.color === 'blue' ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400' : 
+                                      asst.color === 'rose' ? 'bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400' : 
+                                      asst.color === 'emerald' ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : 
+                                      'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'}`}
+                                >
+                                    <asst.icon size={20} strokeWidth={2} />
+                                </div>
+
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                    {asst.title}
+                                </h4>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                                    {asst.desc}
+                                </p>
+
+                                <div className="mt-4 flex items-center gap-1 text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+                                    Gamitin Ngayon <Icons.ArrowRight size={10} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6 fade-in-item opacity-0">
-                    <div className="bg-tip-surface border border-slate-200 dark:border-slate-800 p-4 rounded-lg flex items-center gap-4 shadow-soft transition-colors duration-300">
+                    <div className="bg-tip-surface border border-slate-200 dark:border-slate-800 p-4 rounded-xl flex items-center gap-4 shadow-soft transition-colors duration-300">
                         <div className="p-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-full">
                             <Icons.FileText size={20} />
                         </div>
                         <div>
                             <span className="block text-2xl font-bold text-slate-900 dark:text-tip-text-main">{totalAudits || files.length}</span>
-                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Kabuuang Reports</span>
+                            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Reports</span>
                         </div>
                     </div>
                     <div className="bg-tip-surface border border-slate-200 dark:border-slate-800 p-4 rounded-lg flex items-center gap-4 shadow-soft transition-colors duration-300">

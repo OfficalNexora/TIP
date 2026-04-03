@@ -7,7 +7,7 @@ import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 
 const Sidebar = React.memo(() => {
     const { dashboardState, isChatOpen, rightPanelOpen } = useUI();
-    const { activeFile, files } = useData();
+    const { activeFile, files, credits, creditsTotal } = useData();
     const { setDashboardState, setIsChatOpen, setRightPanelOpen, loadFile, setActiveFile, setSubscriptionOpen } = useActions();
 
     const onUpgrade = () => setSubscriptionOpen(true);
@@ -177,27 +177,43 @@ const Sidebar = React.memo(() => {
 
             {/* Bottom Actions */}
             <div className="p-4 mt-auto border-t border-slate-100 dark:border-slate-800 bg-[#f8f9fc] dark:bg-slate-900/30 transition-colors">
-                {/* Free Plan / Upgrade Card */}
+                {/* Institutional Usage Card */}
                 <div
-                    className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 mb-3 shadow-sm relative overflow-hidden group cursor-pointer transition-all hover:border-blue-300 dark:hover:border-blue-500 hover:shadow-md"
+                    className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 rounded-xl p-4 mb-3 shadow-md relative overflow-hidden group cursor-pointer transition-all hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg"
                 >
-                    <div className="flex items-center justify-between mb-2">
-                        <p className="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">Katayuan ng Sistema</p>
-                        <span className="bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full">BETA</span>
+                    {/* Decorative glow */}
+                    <div className="absolute -right-4 -top-4 w-12 h-12 bg-blue-50 dark:bg-blue-900/10 rounded-full blur-2xl group-hover:bg-blue-100 dark:group-hover:bg-blue-500/20 transition-all duration-700"></div>
+
+                    <div className="flex items-center justify-between mb-3 relative z-10">
+                        <p className="text-[10px] uppercase font-bold tracking-widest text-slate-500 dark:text-slate-400">Paggamit ng Institusyon</p>
+                        <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-black px-2 py-0.5 rounded-full ring-1 ring-blue-100 dark:ring-blue-800/50">
+                            <div className="w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse"></div>
+                            ACTIVE
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-2 mb-3">
-                        <span className="text-lg font-bold text-slate-900 dark:text-white">Public Preview</span>
+                    <div className="flex items-end justify-between mb-2 relative z-10">
+                        <div>
+                            <span className="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none">{credits.toLocaleString()}</span>
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold ml-1">TOKENS</span>
+                        </div>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-1">mula sa {creditsTotal.toLocaleString()}</span>
                     </div>
 
-
+                    {/* Progress Bar */}
+                    <div className="w-full h-2 bg-slate-100 dark:bg-slate-700/50 rounded-full mb-5 overflow-hidden ring-1 ring-slate-200/50 dark:ring-slate-700/30">
+                        <div 
+                            className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-500 dark:to-indigo-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(37,99,235,0.4)]"
+                            style={{ width: `${Math.min(100, Math.max(0, (credits / (creditsTotal || 1)) * 100))}%` }}
+                        ></div>
+                    </div>
 
                     <button
                         onClick={onUpgrade}
-                        className="w-full bg-[#002147] dark:bg-blue-600 text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-2 group-hover:bg-[#003366] dark:group-hover:bg-blue-700 transition-colors"
+                        className="w-full bg-[#001c3d] dark:bg-blue-600 hover:bg-[#002f66] dark:hover:bg-blue-500 text-white text-[11px] font-black py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] shadow-sm hover:shadow-md"
                     >
-                        <Icons.Zap size={12} className="text-[#C9A227] fill-[#C9A227] dark:text-yellow-300 dark:fill-yellow-300" />
-                        Institutional Access
+                        <Icons.Zap size={13} className="text-yellow-400 fill-yellow-400" />
+                        Dagdagan ang Tokens
                     </button>
                 </div>
 

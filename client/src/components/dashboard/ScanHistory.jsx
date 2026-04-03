@@ -10,7 +10,7 @@ import { useUI, useData, useActions, useScan } from '../../contexts/DashboardCon
 const ScanHistory = () => {
     const { loadingHistory } = useData();
     const { files } = useData();
-    const { loadFile, loadMore } = useActions();
+    const { loadFile, loadMore, deleteAnalysis } = useActions();
     const { hasMore, loadingMore } = useScan();
     const [searchTerm, setSearchTerm] = useState("");
     const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
@@ -124,7 +124,7 @@ const ScanHistory = () => {
                                         <div className="flex items-center gap-3">
                                             <div className="w-20 h-1.5 bg-tip-bg border border-tip-border/10 rounded-full overflow-hidden transition-colors">
                                                 <div
-                                                    className={`h-full rounded-full transition-all duration-1000 ${normalizeConfidence(file.confidence) >= 60 ? 'bg-rose-500' : normalizeConfidence(file.confidence) >= 30 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                                                    className={`h-full rounded-full transition-all duration-1000 ${normalizeConfidence(file.confidence) >= 60 ? 'bg-rose-600' : normalizeConfidence(file.confidence) >= 30 ? 'bg-amber-500' : 'bg-emerald-600'}`}
                                                     style={{ width: `${normalizeConfidence(file.confidence)}%` }}
                                                 ></div>
                                             </div>
@@ -132,18 +132,32 @@ const ScanHistory = () => {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors ${normalizeConfidence(file.confidence) >= 60 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' : normalizeConfidence(file.confidence) >= 30 ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'}`}>
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-colors ${normalizeConfidence(file.confidence) >= 60 ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' : normalizeConfidence(file.confidence) >= 30 ? 'bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'}`}>
                                             {normalizeConfidence(file.confidence) >= 60 ? <Icons.AlertCircle size={10} /> : normalizeConfidence(file.confidence) >= 30 ? <Icons.AlertTriangle size={10} /> : <Icons.CheckCircle size={10} />}
                                             {getComplianceLabel(file.confidence)}
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <button
-                                            onClick={() => loadFile(file)}
-                                            className="btn-institutional px-4 py-1.5 text-[10px] shadow-sm transform translate-x-1 group-hover:translate-x-0 opacity-0 group-hover:opacity-100 transition-all"
-                                        >
-                                            Tingnan ang Report
-                                        </button>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (window.confirm("Sigurado ka bang gusto mong burahin ang audit record na ito? Hindi na ito mababawi.")) {
+                                                        deleteAnalysis(file.id);
+                                                    }
+                                                }}
+                                                className="p-2 text-rose-500 hover:bg-rose-500/10 rounded-md transition-all opacity-0 group-hover:opacity-100"
+                                                title="Delete Audit"
+                                            >
+                                                <Icons.Trash2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => loadFile(file)}
+                                                className="btn-institutional px-4 py-1.5 text-[10px] shadow-sm transform translate-x-1 group-hover:translate-x-0 opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap"
+                                            >
+                                                Tingnan ang Report
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

@@ -67,10 +67,28 @@ const TypewriterSummary = React.memo(({ fullSummary, activeFileId }) => {
 const AnalyticPanel = React.memo(() => {
     const { activeFile } = useData();
     const { theme } = useTheme();
-    const { focusedIssue, rightPanelOpen: isOpen } = useUI();
-    const { setFocusedIssue, setRightPanelOpen } = useActions();
+    const { focusedIssue, rightPanelOpen: isOpen, language } = useUI();
+    const { setFocusedIssue, setRightPanelOpen, deleteAnalysis, translateSummary } = useActions();
+
+    const [isTranslating, setIsTranslating] = useState(false);
+
+    const handleTranslate = async () => {
+        const targetLang = language === 'tl' ? 'en' : 'tl';
+        setIsTranslating(true);
+        try {
+            await translateSummary(activeFile.id, targetLang);
+        } catch (error) {
+            console.error('Translation click error:', error);
+        } finally {
+            setIsTranslating(false);
+        }
+    };
 
     const onClose = () => setRightPanelOpen(false);
+
+    const handleIssueClick = useCallback((issue) => {
+        setFocusedIssue(issue);
+    }, [setFocusedIssue]);
 
     const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
@@ -108,10 +126,11 @@ const AnalyticPanel = React.memo(() => {
     const getAlignmentColor = (alignment) => {
         if (!alignment) return 'text-slate-500';
         const lower = alignment.toLowerCase();
-        if (lower.includes('aligned') || lower.includes('ligtas')) return 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400';
-        if (lower.includes('obserbasyon')) return 'text-amber-700 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400';
-        if (lower.includes('pagnilay') || lower.includes('warning')) return 'text-rose-700 bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400';
-        return 'text-blue-700 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400';
+        // Emerald-600 for Compliant, Amber-500 for Needs Improvement, Rose-600 for Non-Compliant
+        if (lower.includes('aligned') || lower.includes('ligtas')) return 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400';
+        if (lower.includes('obserbasyon')) return 'text-amber-500 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400';
+        if (lower.includes('pagnilay') || lower.includes('warning')) return 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400';
+        return 'text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400';
     };
 
     const getIconForDimension = (key) => {
@@ -146,22 +165,38 @@ const AnalyticPanel = React.memo(() => {
                 : 'Mababang Panganib / Ligtas';
 
     const confidenceBadgeClass = confidenceScore >= 60
-        ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
+        ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'
         : confidenceScore >= 30
-            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-            : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400';
+            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400'
+            : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400';
 
-    const handleIssueClick = (issue) => {
-        setFocusedIssue(issue);
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDelete = async () => {
+        if (!window.confirm("Sigurado ka bang gusto mong burahin ang pagsusuring ito? (Are you sure you want to delete this analysis?)")) return;
+
+        setIsDeleting(true);
+        try {
+            await deleteAnalysis(activeFile.id);
+            onClose();
+        } catch (error) {
+            console.error('Delete error:', error);
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
-    const patternList = activeFile.forensic_analysis?.pattern_list
-        || activeFile.forensic_analysis?.patterns?.detected_patterns
-        || activeFile.forensic_analysis?.details?.patterns?.detected_patterns
+    const forensic = activeFile.forensic_analysis || {};
+    const details = forensic.details || {};
+
+    const patternList = forensic.pattern_list
+        || forensic.patterns?.detected_patterns
+        || details.patterns?.detected_patterns
         || [];
 
-    const omissionList = activeFile.forensic_analysis?.omission_list
-        || activeFile.forensic_analysis?.details?.omissions?.detected_omissions
+    const omissionList = forensic.omission_list
+        || forensic.omissions?.flagged_omissions
+        || details.omissions?.flagged_omissions
         || [];
 
     // Debug: Log what we have
@@ -206,12 +241,22 @@ const AnalyticPanel = React.memo(() => {
                     </div>
                     <span className="font-semibold text-slate-900 dark:text-tip-text-main tracking-tight transition-colors">Report ng Pagsunod</span>
                 </div>
-                <button
-                    onClick={onClose}
-                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all"
-                >
-                    <Icons.X size={18} />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-rose-100 dark:hover:bg-rose-900/40 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-all"
+                        title="Delete Analysis"
+                    >
+                        {isDeleting ? <Icons.Loader size={16} className="animate-spin" /> : <Icons.Trash2 size={16} />}
+                    </button>
+                    <button
+                        onClick={onClose}
+                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-all"
+                    >
+                        <Icons.X size={18} />
+                    </button>
+                </div>
             </div>
 
             {/* Content Area */}
@@ -237,10 +282,24 @@ const AnalyticPanel = React.memo(() => {
 
                     {/* Summary Section with Typewriter Effect */}
                     <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 animate-in fade-in slide-in-from-top-4 duration-1000">
-                        <h4 className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                            <Icons.MessageCircle size={12} />
-                            Buod ng Institusyon
-                        </h4>
+                        <div className="flex items-center justify-between mb-2">
+                            <h4 className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest flex items-center gap-2">
+                                <Icons.MessageCircle size={12} />
+                                Buod ng Institusyon
+                            </h4>
+                            <button
+                                onClick={handleTranslate}
+                                disabled={isTranslating}
+                                className="text-[10px] flex items-center gap-1.5 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 font-bold uppercase transition-all hover:bg-white dark:hover:bg-slate-800 px-2 py-1 rounded-md border border-transparent hover:border-slate-200 dark:hover:border-slate-700 disabled:opacity-50"
+                            >
+                                {isTranslating ? (
+                                    <Icons.Loader size={12} className="animate-spin" />
+                                ) : (
+                                    <Icons.Languages size={12} />
+                                )}
+                                {isTranslating ? 'Nagta-translate...' : (language === 'tl' ? 'Translate to EN' : 'Translate to TL')}
+                            </button>
+                        </div>
                         <TypewriterSummary fullSummary={fullSummary} activeFileId={activeFile.id} />
                     </div>
 
@@ -300,77 +359,142 @@ const AnalyticPanel = React.memo(() => {
                         </div>
 
                         {/* Explanations Row - Distinct Cards */}
-                        <div className="space-y-3">
-                            {showPatterns && patternList.length > 0 && (
-                                <div className="bg-tip-surface border border-blue-100 dark:border-blue-900/40 p-3 rounded-lg shadow-sm">
-                                    <div className="flex items-center gap-2 text-blue-600 dark:text-blue-300 mb-2">
-                                        <Icons.List size={14} />
-                                        <h5 className="text-[11px] font-bold uppercase tracking-wide">Mga Nakitang Pattern ng Salitang AI</h5>
+                        <div className="space-y-4">
+                            {showPatterns && (
+                                <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-500">
+                                    <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                                        <Icons.Cpu size={14} />
+                                        <h5 className="text-[11px] font-bold uppercase tracking-wider">Detalyadong Pattern ng AI</h5>
                                     </div>
-                                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                                        {patternList.map((p, idx) => (
-                                            <div key={idx} className="flex items-start justify-between text-xs text-slate-700 dark:text-slate-200">
-                                                <span className="mr-2 leading-snug">"{p.pattern || p.text || (typeof p === 'object' ? JSON.stringify(p) : p)}"</span>
-                                                <span className="text-[10px] text-slate-500">x{p.count || p.hits || 1}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                            {showPatterns && patternList.length === 0 && (
-                                <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm">
-                                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                                        <Icons.CheckCircle size={14} />
-                                        <span className="text-xs">Walang nakitang AI patterns sa dokumentong ito.</span>
-                                    </div>
+                                    {patternList.length > 0 ? (
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {patternList.map((p, idx) => (
+                                                <div key={idx} className="bg-white dark:bg-slate-800/40 border border-blue-50 dark:border-blue-900/20 p-3 rounded-lg shadow-sm group hover:border-blue-300 transition-all">
+                                                    <div className="flex items-start justify-between mb-1">
+                                                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">"{p.pattern || p.text || (typeof p === 'object' ? p.label : p)}"</span>
+                                                        <span className="text-[10px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded">x{p.count || p.hits || 1}</span>
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                                                        {p.explanation || "Nakitang linguistic footprint na karaniwan sa AI language models."}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-slate-400 dark:text-slate-500 italic p-4 bg-slate-50 dark:bg-slate-800/20 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 text-center">
+                                            Ligtas: Walang nakitang AI patterns.
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
-
-                            {showOmissions && omissionList.length > 0 && (
-                                <div className="bg-tip-surface border border-rose-100 dark:border-rose-900/40 p-3 rounded-lg shadow-sm">
-                                    <div className="flex items-center gap-2 text-rose-600 dark:text-rose-300 mb-2">
+                            {showOmissions && (
+                                <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-500">
+                                    <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
                                         <Icons.AlertTriangle size={14} />
-                                        <h5 className="text-[11px] font-bold uppercase tracking-wide">Mga Nakitang Flag ng Pagkukulang</h5>
+                                        <h5 className="text-[11px] font-bold uppercase tracking-wider">Mga Flag ng Pagkukulang</h5>
                                     </div>
-                                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                                        {omissionList.map((o, idx) => (
-                                            <div key={idx} className="flex items-start justify-between text-xs text-slate-700 dark:text-slate-200">
-                                                <span className="mr-2 leading-snug">"{o.label || o.pattern || o.text || (typeof o === 'object' ? JSON.stringify(o) : o)}"</span>
-                                                <span className="text-[10px] text-slate-500">x{o.count || o.hits || 1}</span>
+                                    {omissionList.length > 0 ? (
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {omissionList.map((o, idx) => (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => handleIssueClick({
+                                                        id: `omission-${idx}`,
+                                                        label: o.label || o.pattern || "Pagkukulang sa Konteksto",
+                                                        explanation: o.explanation || `Ang dokumento ay kulang sa sapat na detalye tungkol sa: ${o.label || o.text || 'pangunahing aspeto'}.`,
+                                                        suggestion: o.suggestion || "Magbigay ng karagdagang ebidensya o paliwanag sa bahaging ito.",
+                                                        revision_prompt: o.revision_prompt || `Paunlarin ang diskusyon tungkol sa ${o.label || o.text}.`
+                                                    })}
+                                                    className="w-full text-left bg-white dark:bg-slate-800/40 border border-rose-50 dark:border-rose-900/20 p-3 rounded-lg shadow-sm group hover:border-rose-300 hover:translate-x-1 transition-all"
+                                                >
+                                                    <div className="flex items-start justify-between mb-1">
+                                                        <span className="text-xs font-bold text-slate-900 dark:text-white">{o.label || o.pattern || o.text || "Pagkukulang"}</span>
+                                                        <Icons.ChevronRight size={14} className="text-slate-300 group-hover:text-rose-400 transition-colors" />
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2">
+                                                        {o.explanation || "Nakitang gaps sa lohikal na daloy o factual support."}
+                                                    </p>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-slate-400 dark:text-slate-500 italic p-4 bg-slate-50 dark:bg-slate-800/20 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 text-center">
+                                            Ligtas: Kumpleto ang mga kinakailangang aspeto.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Heuristic Explanations */}
+                            <div className="space-y-3 mt-4">
+                                {activeFile.forensic_analysis?.pattern_explanation && (
+                                    <div className="bg-amber-50/30 dark:bg-amber-900/10 border border-amber-100/50 dark:border-amber-800/30 p-3 rounded-lg relative overflow-hidden">
+                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400/50"></div>
+                                        <h5 className="text-[9px] font-black text-amber-600 dark:text-amber-500 uppercase mb-1 pl-2 tracking-widest flex items-center gap-1.5">
+                                            <Icons.Info size={10} />
+                                            Interpretasyon ng Pattern
+                                        </h5>
+                                        <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed pl-2 font-medium">
+                                            {activeFile.forensic_analysis.pattern_explanation}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {activeFile.forensic_analysis?.omission_explanation && (
+                                    <div className="bg-rose-50/30 dark:bg-rose-900/10 border border-rose-100/50 dark:border-rose-800/30 p-3 rounded-lg relative overflow-hidden">
+                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-400/50"></div>
+                                        <h5 className="text-[9px] font-black text-rose-600 dark:text-rose-500 uppercase mb-1 pl-2 tracking-widest flex items-center gap-1.5">
+                                            <Icons.AlertTriangle size={10} />
+                                            Epekto ng Pagkukulang
+                                        </h5>
+                                        <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed pl-2 font-medium">
+                                            {activeFile.forensic_analysis.omission_explanation}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Forensic Anomalies - Perfection Penalty */}
+                                {activeFile.forensic_analysis?.details?.perfection?.perfection_score > 40 && (
+                                    <div className="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-xl relative overflow-hidden group hover:border-rose-300 dark:hover:border-rose-500 transition-all border-l-4 border-l-rose-500 shadow-sm">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h5 className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest flex items-center gap-1.5">
+                                                <Icons.Zap size={12} className="animate-pulse" />
+                                                Perfection Penalty Detected
+                                            </h5>
+                                            <span className="text-[10px] font-black bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-full">RISK: {activeFile.forensic_analysis.details.perfection.perfection_score}%</span>
+                                        </div>
+                                        <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                                            Ang dokumento ay nagpapakita ng <span className="text-rose-600 dark:text-rose-400 font-bold underline decoration-rose-200 underline-offset-2">kahina-hinalang uniformity</span> sa haba ng mga pangungusap at estruktura ng talata. Ang "machine-like perfection" na ito ay madalas na marka ng AI-generated na teksto na kulang sa natural na linguistic noise ng tao.
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Forensic Anomalies - Lexical Spin */}
+                                {activeFile.forensic_analysis?.details?.lexical_spin?.spin_risk_score > 40 && (
+                                    <div className="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-xl relative overflow-hidden group hover:border-indigo-300 dark:hover:border-indigo-500 transition-all border-l-4 border-l-indigo-500 shadow-sm">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h5 className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+                                                <Icons.RotateCcw size={12} />
+                                                Lexical Spin Detector
+                                            </h5>
+                                            <span className="text-[10px] font-black bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full">EVASION: {activeFile.forensic_analysis.details.lexical_spin.spin_risk_score}%</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                                                Mataas ang densidad ng mga bihirang sinonimo na karaniwang ginagamit ng mga <span className="text-indigo-600 dark:text-indigo-400 font-bold underline decoration-indigo-200 underline-offset-2">AI rewriters/spinners</span> upang makaiwas sa plagiarism detection.
+                                            </p>
+                                            <div className="flex flex-wrap gap-1.5 mt-1">
+                                                {activeFile.forensic_analysis.details.lexical_spin.detected_spin_words?.slice(0, 6).map((word, i) => (
+                                                    <span key={i} className="text-[9px] font-bold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 px-2 py-1 rounded border border-indigo-100/50 dark:border-indigo-800/30">
+                                                        {word}
+                                                    </span>
+                                                ))}
                                             </div>
-                                        ))}
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                            {showOmissions && omissionList.length === 0 && (
-                                <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm">
-                                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                                        <Icons.CheckCircle size={14} />
-                                        <span className="text-xs">Walang nakitang omission flags sa dokumentong ito.</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {activeFile.forensic_analysis?.pattern_explanation && (
-                                <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg relative overflow-hidden">
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400/50"></div>
-                                    <h5 className="text-[9px] font-bold text-amber-600/80 uppercase mb-1 pl-2">Mga Nakitang Pattern</h5>
-                                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-2">
-                                        {activeFile.forensic_analysis.pattern_explanation}
-                                    </p>
-                                </div>
-                            )}
-
-                            {activeFile.forensic_analysis?.omission_explanation && (
-                                <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg relative overflow-hidden">
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-400/50"></div>
-                                    <h5 className="text-[9px] font-bold text-rose-600/80 uppercase mb-1 pl-2">Epekto ng Pagkukulang</h5>
-                                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed pl-2">
-                                        {activeFile.forensic_analysis.omission_explanation}
-                                    </p>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -461,6 +585,98 @@ const AnalyticPanel = React.memo(() => {
                             </div>
                         </InsightCard>
                     )}
+                </div>
+
+                {/* 2.7. Security & Evasion Mechanics (Tampering Threats) */}
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-bold text-rose-600 dark:text-rose-400 font-sans tracking-tight">Security & Evasion Mechanics</h4>
+                    </div>
+                    {(() => {
+                        const forensic = activeFile.forensic_analysis || {};
+                        const hasPromptInjection = !!forensic.prompt_injection_flag;
+                        const hasStego = !!forensic.steganography_detected;
+                        const spinScore = forensic.details?.lexical_spin?.spin_risk_score || 0;
+                        const perfectionScore = forensic.details?.perfection?.perfection_score || 0;
+                        const hasThreats = hasPromptInjection || hasStego || spinScore > 40 || perfectionScore > 40;
+
+                        if (!hasThreats) {
+                            return (
+                                <InsightCard className="border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/20 dark:bg-emerald-900/10">
+                                    <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
+                                        <Icons.Shield size={16} />
+                                        Walang nakitang pagtatangkang AI evasion o system tampering.
+                                    </div>
+                                </InsightCard>
+                            );
+                        }
+
+                        return (
+                            <div className="grid grid-cols-1 gap-3">
+                                {hasPromptInjection && (
+                                    <InsightCard className="border-rose-300 dark:border-rose-900 bg-rose-50 dark:bg-rose-900/20 shadow-md">
+                                        <div className="flex gap-3 items-start">
+                                            <Icons.AlertTriangle className="text-rose-600 shrink-0 mt-0.5 animate-pulse" size={18} />
+                                            <div>
+                                                <h5 className="text-xs font-black text-rose-700 dark:text-rose-400 uppercase tracking-wide">Pagtatangkang Prompt Injection</h5>
+                                                <p className="text-xs text-rose-600 dark:text-rose-300 mt-1 leading-snug font-medium">
+                                                    Ang dokumentong ito ay nagtataglay ng nakatagong utos na sinusubukang impluwensyahan ang AI scoring engine (hal. "ignore previous instructions"). Ito ay isang malubhang integrity violation.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </InsightCard>
+                                )}
+
+                                {hasStego && (
+                                    <InsightCard className="border-orange-300 dark:border-orange-900/60 bg-orange-50 dark:bg-orange-900/10">
+                                        <div className="flex gap-3 items-start">
+                                            <Icons.Lock className="text-orange-600 shrink-0 mt-0.5" size={18} />
+                                            <div>
+                                                <h5 className="text-xs font-black text-orange-700 dark:text-orange-400 uppercase tracking-wide">Zero-Width Steganography</h5>
+                                                <p className="text-xs text-orange-600 dark:text-orange-300 mt-1 leading-snug">
+                                                    Nakatagpas ng mga invisible na karakter na madalas gamitin upang labanan ang mga plagiarism scanners. Kinumpuni at na-strip na ng system ang mga palihim na karakter na ito.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </InsightCard>
+                                )}
+
+                                {spinScore > 40 && (
+                                    <InsightCard className="border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-900/10">
+                                        <div className="flex gap-3 items-start">
+                                            <Icons.Activity className="text-indigo-600 shrink-0 mt-0.5" size={18} />
+                                            <div>
+                                                <div className="flex items-center justify-between">
+                                                    <h5 className="text-xs font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-wide">Lexical Spin / Quillbot Risk</h5>
+                                                    <span className="text-[10px] bg-indigo-200 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200 px-2 py-0.5 rounded-full font-bold">{spinScore}% Risk</span>
+                                                </div>
+                                                <p className="text-xs text-indigo-600 dark:text-indigo-300 mt-1 leading-snug">
+                                                    May hindi pangkaraniwang density ng malalalim na salita (hyper-complexity) na kadalasang senyales ng paggamit ng AI Paraphraser (tulad ng Quillbot/Wordbot) para makaiwas sa AI detection.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </InsightCard>
+                                )}
+
+                                {perfectionScore > 40 && (
+                                    <InsightCard className="border-purple-200 dark:border-purple-900/60 bg-purple-50/50 dark:bg-purple-900/10">
+                                        <div className="flex gap-3 items-start">
+                                            <Icons.Scale className="text-purple-600 shrink-0 mt-0.5" size={18} />
+                                            <div>
+                                                <div className="flex items-center justify-between">
+                                                    <h5 className="text-xs font-black text-purple-700 dark:text-purple-400 uppercase tracking-wide">Structural Perfection Penalty</h5>
+                                                    <span className="text-[10px] bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded-full font-bold">{perfectionScore}% Uniformity</span>
+                                                </div>
+                                                <p className="text-xs text-purple-600 dark:text-purple-300 mt-1 leading-snug">
+                                                    Sobrang pantay at pare-pareho ang haba ng mga pangungusap at talata, isang matibay na senyales ng "raw" na kopya mula sa ChatGPT o katulad na language model.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </InsightCard>
+                                )}
+                            </div>
+                        );
+                    })()}
                 </div>
 
                 {/* 3. Critical Flags (Interactive) */}

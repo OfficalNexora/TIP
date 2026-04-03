@@ -89,27 +89,27 @@ const SubscriptionModal = () => {
                         <div className={`border rounded-lg p-5 flex items-center justify-between transition-colors ${currentPlan === 'Audit Basic' ? 'bg-emerald-50/20 border-emerald-500/30 ring-1 ring-emerald-500/20' : 'bg-slate-50/50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 opacity-60'}`}>
                             <div>
                                 <h4 className="font-bold text-slate-700 dark:text-slate-300 text-sm transition-colors uppercase tracking-widest">Audit Basic</h4>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 transition-colors">Individual research use • 5 Scans/mo</p>
+                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 transition-colors">Individual research use • 3 Scans/mo</p>
                             </div>
                             <div className="text-right">
-                                <span className="block text-slate-900 dark:text-tip-text-main font-bold text-sm transition-colors">$0/mo</span>
+                                <span className="block text-slate-900 dark:text-tip-text-main font-bold text-sm transition-colors">₱0/mo</span>
                                 {currentPlan === 'Audit Basic' && <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider transition-colors">Active Plan</span>}
                             </div>
                         </div>
 
-                        {/* Pro Tier */}
-                        <div className={`border rounded-lg p-6 relative transition-all ${currentPlan === 'Enterprise' ? 'border-emerald-500/30 bg-emerald-50/10 ring-1 ring-emerald-500/20' : 'border-[#002147]/20 dark:border-blue-900/40 bg-white dark:bg-slate-900/50 hover:border-blue-500 shadow-sm'}`}>
+                        {/* Enterprise Tier */}
+                        <div className={`border rounded-lg p-6 relative transition-all ${currentPlan === 'Enterprise' ? 'border-emerald-500/30 bg-emerald-50/10 ring-1 ring-emerald-500/20' : 'border-[#002147]/20 dark:border-blue-900/40 bg-white dark:bg-slate-900/50 hover:border-[#C9A227] shadow-sm'}`}>
                             <div className="flex justify-between items-start mb-4">
                                 <div>
                                     <h4 className="font-bold text-[#002147] dark:text-blue-400 text-lg flex items-center gap-2 transition-colors uppercase tracking-tight">
                                         Institutional Enterprise
                                     </h4>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed max-w-xs transition-colors font-medium">
-                                        Unlimited scans, PDF export, team orchestration, and direct institutional API link.
+                                        150 scans, PDF export, team orchestration, and direct institutional API link.
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-[#002147] dark:text-blue-400 font-bold text-lg transition-colors">Contact Sales</span>
+                                    <span className="text-[#002147] dark:text-blue-400 font-bold text-lg transition-colors">₱1,650/mo</span>
                                 </div>
                             </div>
 
@@ -117,12 +117,12 @@ const SubscriptionModal = () => {
                                 <button
                                     onClick={() => handleUpgrade('Enterprise')}
                                     disabled={isUpgrading}
-                                    className="w-full py-3 rounded-md bg-[#002147] dark:bg-blue-600 text-white font-bold text-sm hover:translate-y-[-1px] active:translate-y-0 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+                                    className="w-full py-3 rounded-md bg-[#C9A227] text-[#002147] font-bold text-sm hover:translate-y-[-1px] active:translate-y-0 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
                                 >
                                     {isUpgrading ? (
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <div className="w-4 h-4 border-2 border-[#002147] border-t-transparent rounded-full animate-spin"></div>
                                     ) : (
-                                        <>Upgrade Institutional Plan <Icons.ArrowRight size={16} /></>
+                                        <>Upgrade to Enterprise <Icons.ArrowRight size={16} /></>
                                     )}
                                 </button>
                             ) : (
@@ -130,6 +130,31 @@ const SubscriptionModal = () => {
                                     <Icons.CheckCircle size={16} /> Current Active Plan
                                 </div>
                             )}
+                        </div>
+
+                        {/* Enterprise++ Tier */}
+                        <div className={`border rounded-lg p-6 relative transition-all border-blue-600/30 bg-blue-50/5 dark:bg-blue-900/10 hover:border-blue-500 shadow-sm`}>
+                            <div className="flex justify-between items-start mb-4">
+                                <div>
+                                    <h4 className="font-bold text-blue-700 dark:text-blue-300 text-lg flex items-center gap-2 transition-colors uppercase tracking-tight">
+                                        Enterprise++ Unlimited
+                                    </h4>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed max-w-xs transition-colors font-medium">
+                                        Unlimited forensic scans, priority institutional support, and advanced security panels.
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-blue-700 dark:text-blue-300 font-bold text-lg transition-colors">₱4,999/mo</span>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => handleUpgrade('EnterprisePlus')}
+                                disabled={isUpgrading}
+                                className="w-full py-3 rounded-md bg-blue-600 text-white font-bold text-sm hover:translate-y-[-1px] active:translate-y-0 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+                            >
+                                Get Enterprise++ Unlimited
+                            </button>
                         </div>
                     </div>
 

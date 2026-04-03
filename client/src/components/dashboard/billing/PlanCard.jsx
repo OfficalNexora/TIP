@@ -18,7 +18,8 @@ const PlanCard = ({ subscription, onUpgrade, isLoading, onCancel }) => {
 
     // 2. Data Derivation (Strict Backend Contract)
     const planId = subscription?.plan_id || 'free';
-    const isPro = planId.includes('pro'); // e.g. 'pro_monthly'
+    const isPro = planId.includes('enterprise');
+    const isPlus = planId === 'enterprise_plus_monthly' || planId === 'enterprise_plus';
     const status = subscription?.status || 'inactive';
 
     // Status Badge Logic
@@ -28,7 +29,7 @@ const PlanCard = ({ subscription, onUpgrade, isLoading, onCancel }) => {
             case 'past_due': return 'amber';
             case 'canceled': return 'slate';
             case 'trialing': return 'blue';
-            case 'incomplete': return 'amber'; // Payment failed/incomplete
+            case 'incomplete': return 'amber';
             default: return 'slate';
         }
     };
@@ -41,11 +42,9 @@ const PlanCard = ({ subscription, onUpgrade, isLoading, onCancel }) => {
         })
         : null;
 
-    // Price Logic (Strictly from backend subscription or fallback map if waiting)
-    // In a real generic app, we'd fetch Plans[] to get price. 
-    // Here we map known IDs to display text, BUT only if sub exists.
-    const priceDisplay = isPro ? '₱2,500' : '₱0';
-    const intervalDisplay = '/mo'; // Could be dynamic based on plan_id
+    // Price Logic (Institutional PHP)
+    const priceDisplay = isPlus ? '₱4,999' : (isPro ? '₱1,650' : '₱0');
+    const intervalDisplay = '/mo';
 
     return (
         <div className="bg-[#002147] text-white rounded-lg p-6 relative overflow-hidden shadow-lg transition-all animate-fade-in border border-blue-900/50">
@@ -64,21 +63,23 @@ const PlanCard = ({ subscription, onUpgrade, isLoading, onCancel }) => {
 
                     {/* Plan Name */}
                     <h3 className="text-3xl font-bold mb-3 flex items-center gap-2 tracking-tight">
-                        {isPro ? 'Institutional Pro' : 'Audit Basic'}
+                        {isPlus ? 'Enterprise++' : (isPro ? 'Enterprise' : 'Free')}
                         {isPro && <Icons.CheckCircle className="text-emerald-400" size={24} />}
                     </h3>
 
                     {/* Description */}
                     <p className="text-sm text-blue-100/80 mb-6 max-w-lg leading-relaxed">
-                        {isPro
-                            ? 'Full institutional access with unlimited scans, API integration, and priority compliance support.'
-                            : 'Limited individual access. Upgrade to unlock institutional features.'}
+                        {isPlus 
+                            ? 'Unlimited institutional auditing with deep-tier API access and dedicated forensic support.'
+                            : isPro
+                                ? 'Full institutional access with up to 150 tokens, API integration, and priority compliance support.'
+                                : 'Limited individual access. Upgrade to unlock institutional features.'}
                     </p>
 
-                    {/* Feature List (Visual Only - Logic remains static as features don't change dynamically usually) */}
+                    {/* Feature List */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
                         {[
-                            isPro ? 'Unlimited Document Scans' : '5 Scans / Month',
+                            isPlus ? 'Unlimited Analysis Tokens' : (isPro ? '150 Analysis Tokens' : '3 Tokens / Month'),
                             isPro ? 'Full API Access' : 'No API Access',
                             'Compliance Reports (PDF)',
                             'Data Encryption'
@@ -91,30 +92,42 @@ const PlanCard = ({ subscription, onUpgrade, isLoading, onCancel }) => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-4">
+                    <div className="flex flex-col gap-4">
                         {!isPro ? (
-                            <button
-                                onClick={() => onUpgrade('pro_monthly')}
-                                className="bg-[#C9A227] hover:bg-[#D4AF37] text-[#002147] px-6 py-2.5 rounded-md text-sm font-bold transition-all shadow-lg hover:shadow-xl hover:translate-y-[-1px] flex items-center gap-2"
-                            >
-                                <Icons.Zap size={16} /> Upgrade to Pro
-                            </button>
-                        ) : (
-                            <div className="flex gap-3">
+                            <div className="flex flex-col md:flex-row gap-3">
                                 <button
-                                    className="bg-white/10 hover:bg-white/20 text-white px-5 py-2.5 rounded-md text-sm font-bold border border-white/20 transition-all backdrop-blur-sm cursor-not-allowed opacity-70"
-                                    title="Self-service management coming soon"
+                                    onClick={() => onUpgrade('enterprise_monthly')}
+                                    className="bg-[#C9A227] hover:bg-[#D4AF37] text-[#002147] flex-1 py-3 rounded-md text-sm font-bold transition-all shadow-lg hover:shadow-xl hover:translate-y-[-1px] flex items-center justify-center gap-2"
                                 >
-                                    Manage Plan
+                                    <Icons.Zap size={16} /> Upgrade to Enterprise (₱1,650)
                                 </button>
-                                {status === 'active' && (
-                                    <button
-                                        onClick={onCancel}
-                                        className="text-red-300 hover:text-red-200 text-sm font-medium px-3 transition-colors"
-                                    >
-                                        Cancel
-                                    </button>
-                                )}
+                                <button
+                                    onClick={() => onUpgrade('enterprise_plus_monthly')}
+                                    className="bg-blue-600 hover:bg-blue-500 text-white flex-1 py-3 rounded-md text-sm font-bold transition-all shadow-lg hover:shadow-xl hover:translate-y-[-1px] flex items-center justify-center gap-2"
+                                >
+                                    <Icons.ShieldCheck size={16} /> Enterprise++ (₱4,999)
+                                </button>
+                            </div>
+                        ) : isPlus ? (
+                            <div className="flex flex-col gap-2">
+                                <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-6 py-2.5 rounded-md text-sm font-bold flex items-center gap-2 w-fit">
+                                    <Icons.CheckCircle size={16} /> Active Enterprise++ Plan
+                                </span>
+                                <button onClick={onCancel} className="text-blue-300 hover:text-white text-xs underline underline-offset-4 transition-colors w-fit">
+                                    Manage Subscription
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-4">
+                                <button
+                                    onClick={() => onUpgrade('enterprise_plus_monthly')}
+                                    className="bg-blue-600 hover:bg-blue-500 text-white py-3 px-6 rounded-md text-sm font-bold transition-all shadow-lg flex items-center justify-center gap-2"
+                                >
+                                    <Icons.ArrowUpCircle size={16} /> Upgrade to Enterprise++ (Unlimited)
+                                </button>
+                                <button onClick={onCancel} className="text-blue-300 hover:text-white text-xs underline underline-offset-4 transition-colors w-fit">
+                                    Manage Subscription
+                                </button>
                             </div>
                         )}
                     </div>

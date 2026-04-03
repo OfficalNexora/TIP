@@ -108,6 +108,52 @@ const Auth = () => {
                         {loading ? 'Nag-si-sign in...' : (authMode === 'LOGIN' ? 'Mag-sign In' : 'Gumawa ng Account')}
                     </button>
                 </form>
+
+                {/* Social Auth Separator */}
+                <div className="relative my-8">
+                    <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-white/10"></div>
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-slate-900/60 px-2 text-slate-500 font-bold tracking-widest">O kaya ay</span>
+                    </div>
+                </div>
+
+                {/* Social Auth Buttons */}
+                <div className="grid grid-cols-2 gap-3">
+                    <button
+                        onClick={async () => {
+                            setLoading(true);
+                            const { error } = await supabase.auth.signInWithOAuth({
+                                provider: 'google',
+                                options: { redirectTo: window.location.origin }
+                            });
+                            if (error) setError(error.message);
+                            setLoading(false);
+                        }}
+                        disabled={loading}
+                        className="flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white text-xs font-semibold transition-all"
+                    >
+                        <Icons.Google size={14} />
+                        Google
+                    </button>
+                    <button
+                        onClick={async () => {
+                            setLoading(true);
+                            const { error } = await supabase.auth.signInWithOAuth({
+                                provider: 'facebook',
+                                options: { redirectTo: window.location.origin }
+                            });
+                            if (error) setError(error.message);
+                            setLoading(false);
+                        }}
+                        disabled={loading}
+                        className="flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white text-xs font-semibold transition-all"
+                    >
+                        <Icons.Facebook size={14} />
+                        Facebook
+                    </button>
+                </div>
             </div>
 
             {/* FULL SCREEN OVERLAY FOR AUTH TRANSITIONS */}

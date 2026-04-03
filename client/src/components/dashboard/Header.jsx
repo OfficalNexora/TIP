@@ -7,9 +7,9 @@ import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 
 const Header = ({ setAppState }) => {
     const { theme } = useTheme();
-    const { dashboardState, rightPanelOpen } = useUI();
-    const { activeFile, searchTerm, files = [] } = useData();
-    const { setDashboardState, setRightPanelOpen, setSearchTerm, loadFile } = useActions();
+    const { dashboardState, rightPanelOpen, language } = useUI();
+    const { activeFile, searchTerm, files = [], credits } = useData();
+    const { setDashboardState, setRightPanelOpen, setSearchTerm, loadFile, setLanguage } = useActions();
 
     const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     const { userProfile, session, signOut } = useAuth();
@@ -133,8 +133,8 @@ const Header = ({ setAppState }) => {
                                                     <span className="text-[10px] text-slate-500 dark:text-slate-500">{result.date}</span>
                                                 </div>
                                                 <div className="shrink-0">
-                                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${parseInt(result.confidence) > 70 ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400' : 'bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'}`}>
-                                                        {parseInt(result.confidence) > 70 ? 'Pasado' : 'Rebyu'}
+                                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${parseInt(result.confidence) < 30 ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : parseInt(result.confidence) < 60 ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-500 dark:text-amber-400' : 'bg-rose-100 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}>
+                                                        {parseInt(result.confidence) < 30 ? 'Pasado' : parseInt(result.confidence) < 60 ? 'Rebyu' : 'Bagsak'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -150,7 +150,51 @@ const Header = ({ setAppState }) => {
                     </div>
                 )}
 
-                {/* Active Analysis Button moved to Sidebar */}
+
+                {/* Credits Chip */}
+                <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-full transition-all">
+                    <Icons.Zap size={12} className="text-blue-600 dark:text-blue-400 fill-blue-600 dark:fill-blue-400" />
+                    <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300">
+                        {credits} <span className="opacity-60 font-medium">tokens</span>
+                    </span>
+                </div>
+
+                {/* Language Toggle */}
+                <button
+                    onClick={() => setLanguage(language === 'tl' ? 'en' : 'tl')}
+                    className="flex items-center gap-2 px-2.5 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-all border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                    title={language === 'tl' ? 'Switch to English' : 'Magpalit sa Tagalog'}
+                >
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tighter w-4">
+                        {language}
+                    </span>
+                    <div className="w-5 h-3.5 rounded-sm overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm relative">
+                        {language === 'tl' ? (
+                            <div className="flex flex-col h-full">
+                                <div className="bg-blue-600 h-1/2"></div>
+                                <div className="bg-red-600 h-1/2"></div>
+                                <div className="absolute left-0 top-0 bottom-0 w-1/3 bg-white flex items-center justify-center" style={{ clipPath: 'polygon(0% 0%, 100% 50%, 0% 100%)' }}>
+                                    <div className="w-1 h-1 bg-yellow-400 rounded-full"></div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="bg-blue-800 h-full relative overflow-hidden">
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="absolute w-[120%] h-[1px] bg-white rotate-[30deg]"></div>
+                                    <div className="absolute w-[120%] h-[1px] bg-white rotate-[-30deg]"></div>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-full h-1/3 bg-white"></div>
+                                        <div className="absolute h-full w-1/3 bg-white"></div>
+                                    </div>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-full h-[15%] bg-red-600"></div>
+                                        <div className="absolute h-full w-[15%] bg-red-600"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </button>
 
                 <div className="relative">
                     <button

@@ -36,6 +36,7 @@ export const DashboardProvider = ({ children }) => {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [focusedIssue, setFocusedIssue] = useState(null);
     const [isHandshaking, setIsHandshaking] = useState(true);
+    const [language, setLanguageInternal] = useState('tl'); // Default to Tagalog
 
     // --- Data State ---
     const [files, setFiles] = useState([]);
@@ -56,6 +57,9 @@ export const DashboardProvider = ({ children }) => {
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [page, setPage] = useState(1);
+
+    const [credits, setCredits] = useState(0);
+    const [creditsTotal, setCreditsTotal] = useState(0);
 
     // --- System Metrics ---
     const [lagMetrics, setLagMetrics] = useState({
@@ -172,6 +176,10 @@ export const DashboardProvider = ({ children }) => {
                 const key = endpoints[i].key;
                 if (res.status === 'fulfilled') {
                     fetchedData[key] = res.value.data;
+                    if (key === 'profile') {
+                        setCredits(res.value.data.credits || 0);
+                        setCreditsTotal(res.value.data.credits_total || 0);
+                    }
                 } else {
                     console.warn(`[Handshake] Prefetch failed for ${key}:`, res.reason.message);
                     fetchedData[key] = null;
@@ -341,6 +349,8 @@ export const DashboardProvider = ({ children }) => {
                             setDashboardState('RESULTS');
                             setRightPanelOpen(true);
                         }, 1500);
+                        // Refresh profile to update credits
+                        prefetchAllData();
                     } else if (res.data.status === 'FAILED') {
                         clearInterval(interval);
                         setDashboardState('UPLOAD');
@@ -356,7 +366,7 @@ export const DashboardProvider = ({ children }) => {
             setDashboardState('UPLOAD');
             notify.error("Upload Failed");
         }
-    }, [session?.access_token, notify]);
+    }, [session?.access_token, notify, prefetchAllData]);
 
     const deleteAnalysis = useCallback(async (id) => {
         if (!session?.access_token) return;
@@ -378,7 +388,76 @@ export const DashboardProvider = ({ children }) => {
             console.error('Delete failed:', err);
             notify.error("Failed to delete analysis");
         }
-    }, [session?.access_token, activeFile?.id, notify]);
+    }, [session?.access_token, activeFile?.id, notify, fetchHistory]);
+
+    const translateSummary = useCallback(async (id, targetLang) => {
+        if (!session?.access_token) return;
+        try {
+            const response = await axios.post(
+                `${import.meta.env.VITE_API_BASE_URL}/api/analyses/${id}/translate-summary`,
+                { language: targetLang },
+                {
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                        'ngrok-skip-browser-warning': '69420'
+                    }
+                }
+            );
+
+            const translatedSummary = response.data.translatedSummary;
+
+            // Update local state
+            setActiveFile(prev => {
+                if (prev?.id === id) {
+                    return { ...prev, summary: translatedSummary };
+                }
+                return prev;
+            });
+
+            setFiles(prev => prev.map(f => {
+                if (f.id === id) {
+                    return { ...f, summary: translatedSummary };
+                }
+                return f;
+            }));
+
+            notify.success(`Summary translated to ${targetLang === 'tl' ? 'Tagalog' : 'English'}`);
+        } catch (err) {
+            console.error('Translation failed:', err);
+            notify.error("Failed to translate summary");
+            throw err;
+        }
+    }, [session?.access_token, notify]);
+
+    // Sync language with user profile
+    const { userProfile, fetchProfile } = useAuth();
+    useEffect(() => {
+        if (userProfile?.preferred_language) {
+            setLanguageInternal(userProfile.preferred_language);
+        }
+    }, [userProfile?.preferred_language]);
+
+    const setLanguage = useCallback(async (lang) => {
+        setLanguageInternal(lang);
+        if (session?.access_token) {
+            try {
+                await axios.post(
+                    `${import.meta.env.VITE_API_BASE_URL}/api/user/profile`,
+                    { preferred_language: lang },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${session.access_token}`,
+                            'ngrok-skip-browser-warning': '69420'
+                        }
+                    }
+                );
+                // Refresh profile to keep AuthContext in sync
+                await fetchProfile(session);
+            } catch (err) {
+                console.error('[DashboardContext] Failed to save language preference:', err.message);
+            }
+        }
+    }, [session, fetchProfile]);
 
     // Initial Handshake
     useEffect(() => {
@@ -401,12 +480,12 @@ export const DashboardProvider = ({ children }) => {
 
     // --- Context Value Memoization ---
     const uiValue = React.useMemo(() => ({
-        dashboardState, rightPanelOpen, isSubscriptionOpen, isChatOpen, focusedIssue, isHandshaking, lagMetrics
-    }), [dashboardState, rightPanelOpen, isSubscriptionOpen, isChatOpen, focusedIssue, isHandshaking, lagMetrics]);
+        dashboardState, rightPanelOpen, isSubscriptionOpen, isChatOpen, focusedIssue, isHandshaking, lagMetrics, language
+    }), [dashboardState, rightPanelOpen, isSubscriptionOpen, isChatOpen, focusedIssue, isHandshaking, lagMetrics, language]);
 
     const dataValue = React.useMemo(() => ({
-        files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory, prefetchedData
-    }), [files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory, prefetchedData]);
+        files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory, prefetchedData, credits, creditsTotal
+    }), [files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory, prefetchedData, credits, creditsTotal]);
 
     const scanValue = React.useMemo(() => ({
         scanStatus, hasMore, loadingMore
@@ -414,9 +493,10 @@ export const DashboardProvider = ({ children }) => {
 
     const actionValue = React.useMemo(() => ({
         setDashboardState, setRightPanelOpen, setSubscriptionOpen, setIsChatOpen, setFocusedIssue, setSearchTerm, setActiveFile,
-        loadFile, fetchHistory, loadMore, startScan: inputScan, deleteAnalysis
+        loadFile, fetchHistory, loadMore, startScan: inputScan, deleteAnalysis, updateCredits: prefetchAllData, setLanguage,
+        translateSummary
     }), [setDashboardState, setRightPanelOpen, setSubscriptionOpen, setIsChatOpen, setFocusedIssue, setSearchTerm, setActiveFile,
-        loadFile, fetchHistory, loadMore, inputScan, deleteAnalysis]);
+        loadFile, fetchHistory, loadMore, inputScan, deleteAnalysis, prefetchAllData, setLanguage, translateSummary]);
 
     return (
         <UIContext.Provider value={uiValue}>
