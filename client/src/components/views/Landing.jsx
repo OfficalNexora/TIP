@@ -86,11 +86,11 @@ const Landing = ({ videoLoaded, randomText, onStart }) => {
                 {/* Trust Indicators */}
                 <div className="hero-element mt-16 pt-8 border-t border-white/5 w-full max-w-md flex justify-center gap-8 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
                     <div className="flex items-center gap-2 text-[10px] font-bold text-white uppercase tracking-widest">
-                        <Icons.Shield size={14} className="text-blue-400" />
+                        <Icons.Shield size={14} className="text-emerald-400" />
                         Forensic Grade
                     </div>
                     <div className="flex items-center gap-2 text-[10px] font-bold text-white uppercase tracking-widest">
-                        <Icons.Cpu size={14} className="text-indigo-400" />
+                        <Icons.Cpu size={14} className="text-teal-400" />
                         AI Verified
                     </div>
                 </div>

@@ -32,7 +32,7 @@ const initialUrl = window.location.href;
 const isEmailConfirmationRedirect = initialUrl.includes('type=email_change') || initialUrl.includes('type=signup') || initialUrl.includes('type=recovery');
 
 function AppContent() {
-  const { session, loading: authLoading } = useAuth();
+  const { session, userProfile, loading: authLoading } = useAuth();
   const { dashboardState, rightPanelOpen, isHandshaking, lagMetrics, isChatOpen } = useUI();
   const { files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory } = useData();
   const { setDashboardState, setRightPanelOpen, setSubscriptionOpen, setIsChatOpen, loadFile, setSearchTerm, startScan } = useActions();

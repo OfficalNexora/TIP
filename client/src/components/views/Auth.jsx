@@ -7,6 +7,7 @@ const Auth = () => {
     const [authMode, setAuthMode] = useState('LOGIN');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -91,14 +92,23 @@ const Auth = () => {
 
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-slate-300">Password</label>
-                        <input
-                            type="password"
-                            placeholder="Ilagay ang iyong password"
-                            className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all placeholder:text-slate-600"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                placeholder="Ilagay ang iyong password"
+                                className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all placeholder:text-slate-600 pr-10"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                            >
+                                {showPassword ? <Icons.EyeOff size={16} /> : <Icons.Eye size={16} />}
+                            </button>
+                        </div>
                     </div>
 
                     <button
