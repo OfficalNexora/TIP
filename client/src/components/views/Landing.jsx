@@ -36,21 +36,21 @@ const Landing = ({ videoLoaded, randomText, onStart }) => {
     return (
         <div className="fixed inset-0 z-10 flex flex-col items-center justify-center overflow-hidden">
             {/* Background Glows */}
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-600/10 rounded-full blur-[120px] animate-pulse"></div>
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-600/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#C9A227]/15 rounded-full blur-[120px] animate-pulse"></div>
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#002147]/40 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
 
             <LandingNav />
             
             <div className="text-center relative max-w-5xl px-6 flex flex-col items-center">
                 {/* Institutional Badge */}
                 <div className="hero-element mb-8 py-1.5 px-4 rounded-full bg-white/5 border border-white/10 backdrop-blur-md flex items-center gap-2 shadow-2xl">
-                    <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-100/80">UNESCO Ethics Compliant AI</span>
+                    <div className="w-2 h-2 rounded-full bg-[#C9A227] animate-pulse"></div>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-100/80">UNESCO Ethics Compliant AI</span>
                 </div>
 
                 {/* Primary Branding */}
                 <h1 className="hero-element text-6xl md:text-8xl font-black tracking-tighter text-white mb-4 leading-tight">
-                    TIP <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400">AI</span>
+                    TIP <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C9A227] to-amber-200">AI</span>
                 </h1>
 
                 {/* Full Name with Gradient Line */}
@@ -58,7 +58,7 @@ const Landing = ({ videoLoaded, randomText, onStart }) => {
                     <p className="text-lg md:text-xl text-slate-100 font-bold tracking-tight max-w-2xl px-4">
                         Tamang Integridad at Pananagutan sa Artificial Intelligence
                     </p>
-                    <div className="w-24 h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent mt-4 opacity-50"></div>
+                    <div className="w-24 h-1 bg-gradient-to-r from-transparent via-[#C9A227] to-transparent mt-4 opacity-50"></div>
                 </div>
 
                 {/* Explanatory Paragraph */}
@@ -70,7 +70,7 @@ const Landing = ({ videoLoaded, randomText, onStart }) => {
                 <div className="hero-element flex flex-col sm:flex-row items-center gap-4">
                     <button
                         onClick={onStart}
-                        className="px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(5,150,105,0.3)] hover:shadow-[0_0_30px_rgba(5,150,105,0.5)] transform active:scale-95 flex items-center gap-3"
+                        className="px-10 py-4 bg-[#C9A227] hover:bg-amber-500 text-slate-900 text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(201,162,39,0.3)] hover:shadow-[0_0_30px_rgba(201,162,39,0.5)] transform active:scale-95 flex items-center gap-3"
                     >
                         Simulan na ngayon
                         <Icons.ArrowRight size={16} />
@@ -86,11 +86,11 @@ const Landing = ({ videoLoaded, randomText, onStart }) => {
                 {/* Trust Indicators */}
                 <div className="hero-element mt-16 pt-8 border-t border-white/5 w-full max-w-md flex justify-center gap-8 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
                     <div className="flex items-center gap-2 text-[10px] font-bold text-white uppercase tracking-widest">
-                        <Icons.Shield size={14} className="text-emerald-400" />
+                        <Icons.Shield size={14} className="text-[#C9A227]" />
                         Forensic Grade
                     </div>
                     <div className="flex items-center gap-2 text-[10px] font-bold text-white uppercase tracking-widest">
-                        <Icons.Cpu size={14} className="text-teal-400" />
+                        <Icons.Cpu size={14} className="text-[#C9A227]" />
                         AI Verified
                     </div>
                 </div>

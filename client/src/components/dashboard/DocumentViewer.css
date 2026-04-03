@@ -1,0 +1,76 @@
+/* DocumentViewer.css - High Fidelity Institutional Styling for DOCX */
+
+.docx-wrapper {
+    background: transparent !important;
+    padding: 0 !important;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.docx-render-container {
+    width: 100%;
+    background: transparent;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    /* Required to fit smoothly within the scaled container */
+    transform-origin: top center;
+    padding-top: 2rem !important;
+}
+
+.docx-render-container section.docx {
+    color: #0F172A !important;
+    background: #FFFFFF !important;
+    margin-bottom: 2rem !important;
+    /* Soft premium shadow */
+    box-shadow: 0 10px 25px -5px rgba(0, 33, 71, 0.1), 0 8px 10px -6px rgba(0, 33, 71, 0.05) !important;
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 6px !important;
+    padding: 4rem !important;
+    width: 100% !important;
+    /* Standard A4 specs */
+    max-width: 21cm !important;
+    min-height: 29.7cm !important;
+    position: relative !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    transition: background-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Dark Mode Overrides */
+.dark .docx-render-container section.docx {
+    background: #0F172A !important;
+    color: #F8FAFC !important;
+    box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.8), 0 8px 15px -6px rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid #1E293B !important;
+}
+
+/* Image adjustments inside DOCX */
+.docx-render-container img {
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 4px;
+    transition: filter 0.4s ease;
+}
+
+.dark .docx-render-container img {
+    filter: brightness(0.9) contrast(1.1);
+}
+
+/* Audit Highlights for Foreground Extraction */
+.audit-highlight {
+    position: relative;
+    z-index: 10;
+    background-color: rgba(59, 130, 246, 0.2);
+    border-bottom: 2px solid #3b82f6;
+    border-radius: 2px;
+    padding: 0 2px;
+}
+
+.dark .audit-highlight {
+    background-color: rgba(59, 130, 246, 0.3);
+    border-bottom: 2px solid #60a5fa;
+}

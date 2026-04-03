@@ -83,7 +83,7 @@ const Auth = () => {
                         <input
                             type="email"
                             placeholder="pangalan@institusyon.edu"
-                            className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all placeholder:text-slate-600"
+                            className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-[#C9A227] focus:ring-1 focus:ring-[#C9A227] transition-all placeholder:text-slate-600"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
@@ -96,7 +96,7 @@ const Auth = () => {
                             <input
                                 type={showPassword ? "text" : "password"}
                                 placeholder="Ilagay ang iyong password"
-                                className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition-all placeholder:text-slate-600 pr-10"
+                                className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-[#C9A227] focus:ring-1 focus:ring-[#C9A227] transition-all placeholder:text-slate-600 pr-10"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -113,7 +113,7 @@ const Auth = () => {
 
                     <button
                         type="submit"
-                        className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2 mt-2"
+                        className="w-full py-2.5 bg-[#C9A227] hover:bg-amber-600 text-slate-900 text-sm font-bold rounded-lg transition-colors shadow-lg shadow-[#C9A227]/20 flex items-center justify-center gap-2 mt-2"
                         disabled={loading}
                     >
                         {loading ? 'Nag-si-sign in...' : (authMode === 'LOGIN' ? 'Mag-sign In' : 'Gumawa ng Account')}

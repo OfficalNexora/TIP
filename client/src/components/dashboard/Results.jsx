@@ -3,6 +3,7 @@ import Icons from '../ui/Icons';
 import { renderAsync } from 'docx-preview';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useUI, useData, useActions } from '../../contexts/DashboardContext';
+import './DocumentViewer.css';
 
 const Results = React.memo(() => {
     const docxContainerRef = useRef(null);
@@ -22,6 +23,7 @@ const Results = React.memo(() => {
 
     const isPDF = activeFile?.mimeType === 'application/pdf';
     const isDocx = activeFile?.mimeType?.includes('officedocument.wordprocessingml.document');
+    const isLegacyDoc = activeFile?.mimeType === 'application/msword';
     const isImage = activeFile?.mimeType?.startsWith('image/');
 
     // DRAGGABLE WINDOW STATE
@@ -397,7 +399,7 @@ const Results = React.memo(() => {
                     >
                         <div className="flex items-center gap-3">
                             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                <span className={`w-1.5 h-1.5 rounded-full ${isDocxRendered || !isDocx ? 'bg-emerald-500' : 'bg-blue-500 animate-pulse'}`} />
+                                <span className={`w-1.5 h-1.5 rounded-full ${isDocxRendered || isImage || isPDF ? 'bg-emerald-500' : (isLegacyDoc ? 'bg-amber-500' : 'bg-blue-500 animate-pulse')}`} />
                                 Institusyonal na Pagsusuri
                             </span>
                         </div>
@@ -414,70 +416,42 @@ const Results = React.memo(() => {
                             </div>
                         )}
 
-                        <div
-                            className="HighFidelityContainer animate-fade-in-up origin-top relative"
-                            style={{
-                                transform: `scale(${zoomScale})`,
-                                width: isDocx ? '794px' : '800px',
-                                marginBottom: isDocx ? `${(zoomScale * 1400) - 1400}px` : '0px',
-                                transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
-                            }}
-                        >
+                        {/* We use a wrapper to handle the exact scaled height to prevent overflow bugs */}
+                        <div className="w-full flex justify-center" style={{ 
+                            height: isDocx ? `calc(${zoomScale} * 100%)` : 'auto', 
+                            minHeight: isDocx ? `${Math.max(1400 * zoomScale, 800)}px` : 'auto' 
+                        }}>
+                            <div
+                                className="HighFidelityContainer animate-fade-in-up relative"
+                                style={{
+                                    transform: `scale(${zoomScale})`,
+                                    transformOrigin: 'top center',
+                                    width: isDocx ? '794px' : '800px',
+                                    transition: 'transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)'
+                                }}
+                            >
                             {isPDF && activeFile.fileUrl ? (
                                 <div className={`w-full h-[1400px] rounded shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden ${isDark ? 'invert grayscale opacity-80' : ''}`}>
                                     <embed src={activeFile.fileUrl} type="application/pdf" className="w-full h-full" />
                                 </div>
                             ) : isDocx ? (
-                                <div className="docx-wrapper w-full flex flex-col items-center" style={{ backgroundColor: isDark ? '#020617' : '#f1f5f9' }}>
+                                <div className="docx-wrapper">
                                     <div
                                         ref={docxContainerRef}
-                                        className="docx-render-container w-full bg-transparent p-0 flex flex-col items-center"
+                                        className="docx-render-container"
                                     />
-                                    <style dangerouslySetInnerHTML={{
-                                        __html: `
-                                        .docx-render-container section.docx {
-                                            background: ${isDark ? '#0f172a' : 'white'} !important;
-                                            color: ${isDark ? '#e2e8f0' : '#0f172a'} !important;
-                                            margin-bottom: 2rem !important;
-                                            box-shadow: ${isDark ? '0 25px 50px -12px rgb(0 0 0 / 0.8)' : '0 25px 50px -12px rgb(0 0 0 / 0.25)'} !important;
-                                            border: ${isDark ? '1px solid #1e293b' : 'none'} !important;
-                                            border-radius: 4px !important;
-                                            padding: 4rem !important;
-                                            width: 100% !important;
-                                            max-width: 21cm !important;
-                                            min-height: 29.7cm !important;
-                                            position: relative !important;
-                                            font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-                                            transition: background 0.3s, color 0.3s;
-                                        }
-                                        .docx-wrapper {
-                                            background: transparent !important;
-                                            padding: 0 !important;
-                                        }
-                                        .docx-render-container {
-                                            padding-top: 2rem !important;
-                                        }
-                                        .docx-render-container img {
-                                            max-width: 100% !important;
-                                            height: auto !important;
-                                            border-radius: 4px;
-                                            ${isDark ? 'filter: brightness(0.9) contrast(1.1);' : ''}
-                                        }
-                                        /* Highlighting styles */
-                                        .audit-highlight {
-                                            position: relative;
-                                            z-index: 10;
-                                            background-color: rgba(59, 130, 246, 0.2);
-                                            border-bottom: 2px solid #3b82f6;
-                                        }
-                                    `}} />
                                 </div>
                             ) : isImage && activeFile.fileUrl ? (
                                 <div className="w-full h-auto rounded-lg shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900 p-8">
                                     <img src={activeFile.fileUrl} alt={activeFile.title} className="w-full h-auto object-contain" />
                                 </div>
                             ) : (
-                                <div className="w-full rounded-xl p-12 text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl min-h-[1000px] whitespace-pre-wrap">
+                                <div className="w-full rounded-xl p-12 text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl min-h-[1000px] whitespace-pre-wrap relative">
+                                    {isLegacyDoc && (
+                                        <div className="absolute top-4 right-4 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 px-3 py-1 rounded text-xs font-bold border border-amber-200 dark:border-amber-800/50">
+                                            Legacy .doc Text Mode
+                                        </div>
+                                    )}
                                     {isDocx && !isDocxRendered ? (
                                         <div className="flex-1 flex flex-col items-center justify-center py-20">
                                             <Icons.Loader className="w-8 h-8 text-blue-500 animate-spin mb-4" />
@@ -506,6 +480,7 @@ const Results = React.memo(() => {
                                     ) : (activeFile.fullText || "Kasalukuyang ini-index ang nilalaman...")}
                                 </div>
                             )}
+                        </div>
                         </div>
                     </div>
                 </div>
