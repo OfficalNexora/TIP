@@ -96,7 +96,9 @@ function AppContent() {
         
         {/* Institutional Branding Splash */}
         <div className="mt-12 text-center animate-in fade-in zoom-in duration-1000">
-           <h2 className="text-xl font-black text-white tracking-[0.2em] mb-2 uppercase">TIP <span className="text-blue-500">AI</span></h2>
+           <h2 className="text-xl font-black tracking-[0.2em] mb-2 uppercase">
+             <span className="text-transparent bg-clip-text bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500">TIP</span> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C9A227] to-amber-200">AI</span>
+           </h2>
            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.4em] max-w-xs leading-relaxed opacity-80">
              Tamang Integridad at Pananagutan sa Artificial Intelligence
            </p>
@@ -161,8 +163,8 @@ function AppContent() {
       {appState === 'EMAIL_CONFIRMED' && (
         <div className="fixed inset-0 z-20 flex items-center justify-center bg-transparent animate-in fade-in duration-700 p-6">
           <div className="bg-slate-900/60 backdrop-blur-md border border-white/10 p-10 w-full max-w-md rounded-2xl shadow-2xl relative z-10 animate-in zoom-in-95 duration-700 text-center">
-            <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-500/30">
-              <svg className="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-16 h-16 bg-[#C9A227]/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-[#C9A227]/30">
+              <svg className="w-8 h-8 text-[#C9A227]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -176,7 +178,7 @@ function AppContent() {
                 window.history.replaceState(null, null, window.location.pathname);
                 setAppState('AUTH');
               }}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors shadow-lg shadow-blue-900/20"
+              className="w-full py-3 bg-[#C9A227] hover:bg-amber-500 text-slate-900 text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(201,162,39,0.3)] hover:shadow-[0_0_30px_rgba(201,162,39,0.5)] transform active:scale-95"
             >
               Back to Login
             </button>

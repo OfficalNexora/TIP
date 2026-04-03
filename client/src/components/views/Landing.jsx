@@ -49,8 +49,8 @@ const Landing = ({ videoLoaded, randomText, onStart }) => {
                 </div>
 
                 {/* Primary Branding */}
-                <h1 className="hero-element text-6xl md:text-8xl font-black tracking-tighter text-white mb-4 leading-tight">
-                    TIP <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C9A227] to-amber-200">AI</span>
+                <h1 className="hero-element text-6xl md:text-8xl font-black tracking-tighter mb-4 leading-tight">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500">TIP</span> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C9A227] to-amber-200">AI</span>
                 </h1>
 
                 {/* Full Name with Gradient Line */}

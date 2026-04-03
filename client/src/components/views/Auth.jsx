@@ -46,10 +46,13 @@ const Auth = () => {
 
                 {/* Header Section */}
                 <div className="text-center mb-8">
-                    <h2 className="text-2xl font-bold text-white mb-2">
-                        {authMode === 'LOGIN' ? 'Maligayang pagbabalik' : 'Gumawa ng account'}
+                    <h2 className="text-3xl font-black tracking-[0.2em] mb-4 uppercase">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500">TIP</span> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C9A227] to-amber-200">AI</span>
                     </h2>
-                    <p className="text-sm text-slate-400">
+                    <h3 className="text-lg font-bold text-white mb-2">
+                        {authMode === 'LOGIN' ? 'Maligayang pagbabalik' : 'Gumawa ng account'}
+                    </h3>
+                    <p className="text-xs text-slate-400 font-medium">
                         {authMode === 'LOGIN' ? 'Mag-sign in upang ma-access ang platform.' : 'Ilagay ang iyong mga detalye upang magsimula.'}
                     </p>
                 </div>
@@ -113,10 +116,10 @@ const Auth = () => {
 
                     <button
                         type="submit"
-                        className="w-full py-2.5 bg-[#C9A227] hover:bg-amber-600 text-slate-900 text-sm font-bold rounded-lg transition-colors shadow-lg shadow-[#C9A227]/20 flex items-center justify-center gap-2 mt-2"
+                        className="w-full py-3 bg-[#C9A227] hover:bg-amber-500 text-slate-900 text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(201,162,39,0.3)] hover:shadow-[0_0_30px_rgba(201,162,39,0.5)] transform active:scale-95 flex items-center justify-center gap-2 mt-4"
                         disabled={loading}
                     >
-                        {loading ? 'Nag-si-sign in...' : (authMode === 'LOGIN' ? 'Mag-sign In' : 'Gumawa ng Account')}
+                        {loading ? 'NAG-SI-SIGN IN...' : (authMode === 'LOGIN' ? 'MAG-SIGN IN' : 'GUMAWA NG ACCOUNT')}
                     </button>
                 </form>
 
@@ -143,7 +146,7 @@ const Auth = () => {
                             setLoading(false);
                         }}
                         disabled={loading}
-                        className="flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white text-xs font-semibold transition-all"
+                        className="flex items-center justify-center gap-2 py-3 bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md rounded-xl text-white text-xs font-black uppercase tracking-widest transition-all"
                     >
                         <Icons.Google size={14} />
                         Google
@@ -159,7 +162,7 @@ const Auth = () => {
                             setLoading(false);
                         }}
                         disabled={loading}
-                        className="flex items-center justify-center gap-2 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white text-xs font-semibold transition-all"
+                        className="flex items-center justify-center gap-2 py-3 bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-md rounded-xl text-white text-xs font-black uppercase tracking-widest transition-all"
                     >
                         <Icons.Facebook size={14} />
                         Facebook

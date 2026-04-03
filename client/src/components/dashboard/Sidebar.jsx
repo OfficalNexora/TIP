@@ -83,7 +83,9 @@ const Sidebar = React.memo(() => {
             <div className="h-20 flex items-center px-6">
                 <div className="flex items-center gap-2.5">
                     <img src={tipLogo} alt="TIP AI" className="w-7 h-7 object-contain" />
-                    <span className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">TIP <span className="text-blue-700 dark:text-blue-400">AI</span></span>
+                    <span className="text-lg font-bold tracking-tight">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-br from-slate-100 via-slate-300 to-slate-500">TIP</span> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C9A227] to-amber-200">AI</span>
+                    </span>
                 </div>
             </div>
 
