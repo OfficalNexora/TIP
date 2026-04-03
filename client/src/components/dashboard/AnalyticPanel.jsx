@@ -118,6 +118,8 @@ const AnalyticPanel = React.memo(() => {
     const [showPatterns, setShowPatterns] = useState(false);
     const [showOmissions, setShowOmissions] = useState(false);
 
+    const [isDeleting, setIsDeleting] = useState(false);
+
     if (!isOpen || !activeFile) return null;
 
     const formatKey = (key) => key.replace(/_/g, ' ').toUpperCase();
@@ -169,8 +171,6 @@ const AnalyticPanel = React.memo(() => {
         : confidenceScore >= 30
             ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-500 dark:text-amber-400'
             : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400';
-
-    const [isDeleting, setIsDeleting] = useState(false);
 
     const handleDelete = async () => {
         if (!window.confirm("Sigurado ka bang gusto mong burahin ang pagsusuring ito? (Are you sure you want to delete this analysis?)")) return;
