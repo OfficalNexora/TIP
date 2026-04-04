@@ -197,7 +197,7 @@ const Auth = () => {
             {/* FULL SCREEN OVERLAY FOR AUTH TRANSITIONS */}
             {loading && (
                 <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
-                    <Loader />
+                    <Icons.Loader className="animate-spin text-[#C9A227] mb-4" size={48} />
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-8 animate-pulse">
                         {authMode === 'LOGIN' ? t('auth.verifyingCredentials') : t('auth.registeringIdentity')}
                     </p>
