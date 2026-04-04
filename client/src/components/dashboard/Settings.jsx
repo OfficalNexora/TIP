@@ -7,6 +7,8 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import SubscriptionModal from './SubscriptionModal';
 import BillingPage from './billing/BillingPage';
+import { useTranslation } from '../../utils/useTranslation';
+import { useUI } from '../../contexts/DashboardContext';
 
 // --- Configuration ---
 const SECTIONS = [
@@ -313,6 +315,9 @@ const UpdateEmailModal = ({ isOpen, onClose }) => {
 
 const ProfileContent = ({ userProfile, handleUpdateProfile }) => {
     const { session } = useAuth();
+    const { t } = useTranslation();
+    const { language, setDashboardState } = useUI();
+    
     // State for modals
     const [isNameModalOpen, setIsNameModalOpen] = useState(false);
     const [activeModal, setActiveModal] = useState(null); // 'email', 'recovery', 'org', 'role', 'desc' or null
@@ -398,11 +403,11 @@ const ProfileContent = ({ userProfile, handleUpdateProfile }) => {
 
     return (
         <div className="animate-fade-in max-w-3xl space-y-12">
-            <SectionHeader title="Profile" subtitle="I-manage ang iyong personal na impormasyon at account." />
+            <SectionHeader title={t('settings.profile') || "Profile"} subtitle={t('settings.profileSubtitle') || "Manage your personal information and account."} />
 
             {/* 1. IDENTITY INFORMATION (Supabase Managed) */}
             <section className="space-y-6">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2">Identity Information</h3>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2">{t('settings.identityInfo') || 'Identity Information'}</h3>
 
                 <div className="flex items-start gap-8">
                     {/* Avatar */}
@@ -438,7 +443,7 @@ const ProfileContent = ({ userProfile, handleUpdateProfile }) => {
                     </div>
 
                     <div className="flex-1 space-y-5">
-                        <FieldGroup label="Buong Pangalan">
+                        <FieldGroup label={t('settings.fullName') || "Full Name"}>
                             <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800/50">
                                 <span className="text-base font-medium text-slate-900 dark:text-slate-100">
                                     {userProfile.firstName} {userProfile.lastName}
@@ -447,13 +452,13 @@ const ProfileContent = ({ userProfile, handleUpdateProfile }) => {
                                     onClick={() => setIsNameModalOpen(true)}
                                     className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                                 >
-                                    I-update
+                                    {t('settings.update') || 'Update'}
                                 </button>
                             </div>
                         </FieldGroup>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FieldGroup label="Email Address">
+                            <FieldGroup label={t('settings.email') || "Email Address"}>
                                 <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 px-3 py-2 rounded border border-slate-100 dark:border-slate-800 group hover:border-blue-200 dark:hover:border-blue-900/50 transition-colors">
                                     <span className="text-sm text-slate-600 dark:text-slate-400 font-mono">{userProfile.email}</span>
                                     <div className="flex items-center gap-2">
@@ -461,7 +466,7 @@ const ProfileContent = ({ userProfile, handleUpdateProfile }) => {
                                             onClick={() => setActiveModal('email')}
                                             className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline transition-opacity"
                                         >
-                                            I-update
+                                            {t('settings.update') || 'Update'}
                                         </button>
                                     </div>
                                 </div>
@@ -486,26 +491,26 @@ const ProfileContent = ({ userProfile, handleUpdateProfile }) => {
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2">Organization & Role</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <FieldGroup label="Organisasyon / Ahensya">
+                    <FieldGroup label={t('settings.organization') || "Organization / Agency"}>
                         <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800/50">
                             <span className="text-base text-slate-800 dark:text-slate-200">{userProfile.organization}</span>
                             <button
                                 onClick={() => setActiveModal('org')}
                                 className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                             >
-                                I-update
+                                {t('settings.update') || 'Update'}
                             </button>
                         </div>
                     </FieldGroup>
 
-                    <FieldGroup label="Role / Titulo">
+                    <FieldGroup label={t('settings.role') || "Role / Title"}>
                         <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800/50">
                             <span className="text-base text-slate-800 dark:text-slate-200">{userProfile.role}</span>
                             <button
                                 onClick={() => setActiveModal('role')}
                                 className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                             >
-                                I-update
+                                {t('settings.update') || 'Update'}
                             </button>
                         </div>
                     </FieldGroup>
@@ -540,18 +545,18 @@ const ProfileContent = ({ userProfile, handleUpdateProfile }) => {
                         />
                     </FieldGroup>
 
-                    <FieldGroup label="Lengguwahe">
-                        <div className="relative group/tooltip">
+                    <FieldGroup label={t('settings.language') || "Language"}>
+                        <div className="relative">
                             <select
-                                disabled
-                                className="w-full bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm text-slate-400 dark:text-slate-500 cursor-not-allowed opacity-70 appearance-none"
+                                value={language}
+                                onChange={(e) => setDashboardState(state => ({ ...state, language: e.target.value }))}
+                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors appearance-none cursor-pointer"
                             >
-                                <option value="en-US">English (United States)</option>
+                                <option value="en">English</option>
+                                <option value="tl">Tagalog</option>
                             </select>
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                <span className="text-[10px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                                    Coming Soon
-                                </span>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                <Icons.ChevronDown size={14} className="text-slate-400" />
                             </div>
                         </div>
                     </FieldGroup>

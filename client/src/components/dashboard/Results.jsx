@@ -3,6 +3,7 @@ import Icons from '../ui/Icons';
 import { renderAsync } from 'docx-preview';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useUI, useData, useActions } from '../../contexts/DashboardContext';
+import { useTranslation } from '../../utils/useTranslation';
 import './DocumentViewer.css';
 
 const Results = React.memo(() => {
@@ -12,6 +13,7 @@ const Results = React.memo(() => {
     const { activeFile } = useData();
     const { focusedIssue } = useUI();
     const { setFocusedIssue } = useActions();
+    const { t } = useTranslation();
 
     const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
@@ -284,7 +286,7 @@ const Results = React.memo(() => {
             <div className="w-full flex-1 flex flex-col items-center justify-center min-h-[400px]">
                 <Icons.Cpu className="w-12 h-12 text-blue-500 animate-spin mb-4" />
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest animate-pulse">
-                    Bumubuo ng Link sa Institusyon...
+                    {t('results.linking') || 'Linking to Institution...'}
                 </p>
             </div>
         );
@@ -310,7 +312,7 @@ const Results = React.memo(() => {
                             className="bg-tip-primary dark:bg-blue-600 px-4 py-2 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
                             onMouseDown={handleMouseDown}
                         >
-                            <span className="text-[10px] font-black text-white uppercase tracking-widest">Gabay sa Pagrerebisa</span>
+                            <span className="text-[10px] font-black text-white uppercase tracking-widest">{t('results.guide') || 'Revision Guide'}</span>
                             <div className="flex items-center gap-2">
                                 <button onClick={() => setFocusedIssue(null)} className="text-white hover:bg-white/20 p-1 rounded transition-colors">
                                     <Icons.X size={12} />
@@ -321,31 +323,31 @@ const Results = React.memo(() => {
                             <div className="flex items-center gap-2 mb-3">
                                 {focusedIssue.snippet ? (
                                     <span className="text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full font-bold border border-blue-100 dark:border-blue-800">
-                                        Nakitang Katibayan ng Institusyon
+                                        {t('results.evidence') || 'Institutional Evidence Found'}
                                     </span>
                                 ) : (
                                     <span className="text-[10px] bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full font-bold border border-slate-100 dark:border-slate-700">
-                                        May Nakitang Pagkukulang sa Pamamaraan
+                                        {t('results.deficiency') || 'Methodological Deficiency Found'}
                                     </span>
                                 )}
                             </div>
 
-                            {focusedIssue.suggestion ? (
+                              {focusedIssue.suggestion ? (
                                 <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                                    <h4 className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase mb-1">Mungkahi ng Institusyon</h4>
+                                    <h4 className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase mb-1">{t('results.suggestion') || 'Institutional Suggestion'}</h4>
                                     <p className="text-xs text-emerald-800 dark:text-emerald-200 leading-relaxed">
                                         {focusedIssue.suggestion}
                                     </p>
                                 </div>
                             ) : (
-                                <p className="text-xs text-slate-500 italic">Walang available na mungkahi.</p>
+                                <p className="text-xs text-slate-500 italic">{t('results.noSuggestion') || 'No suggestions available.'}</p>
                             )}
                             <div className="flex justify-end pt-2">
                                 <button
                                     className="text-[10px] font-bold text-tip-primary dark:text-blue-400 uppercase tracking-wider"
                                     onClick={() => setFocusedIssue(null)}
                                 >
-                                    Naintindihan ko
+                                    {t('results.understood') || 'I understand'}
                                 </button>
                             </div>
                         </div>
@@ -400,7 +402,7 @@ const Results = React.memo(() => {
                         <div className="flex items-center gap-3">
                             <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-2">
                                 <span className={`w-1.5 h-1.5 rounded-full ${isDocxRendered || isImage || isPDF ? 'bg-emerald-500' : (isLegacyDoc ? 'bg-amber-500' : 'bg-blue-500 animate-pulse')}`} />
-                                Institusyonal na Pagsusuri
+                                {t('results.institutionalAnalysis') || 'Institutional Analysis'}
                             </span>
                         </div>
                     </div>
@@ -455,7 +457,7 @@ const Results = React.memo(() => {
                                     {isDocx && !isDocxRendered ? (
                                         <div className="flex-1 flex flex-col items-center justify-center py-20">
                                             <Icons.Loader className="w-8 h-8 text-blue-500 animate-spin mb-4" />
-                                            <span className="text-xs text-slate-500 font-bold uppercase tracking-widest">Nilalathala ang Konteksto ng Institusyon...</span>
+                                            <span className="text-xs text-slate-500 font-bold uppercase tracking-widest">{t('results.rendering') || 'Rendering Institutional Context...'}</span>
                                         </div>
                                     ) : focusedIssue?.snippet ? (
                                         (() => {
@@ -477,7 +479,7 @@ const Results = React.memo(() => {
                                             } catch (e) { }
                                             return text;
                                         })()
-                                    ) : (activeFile.fullText || "Kasalukuyang ini-index ang nilalaman...")}
+                                    ) : (activeFile.fullText || t('results.indexing') || "Currently indexing content...")}
                                 </div>
                             )}
                         </div>

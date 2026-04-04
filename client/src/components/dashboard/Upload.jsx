@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import Icons from '../ui/Icons';
 import { useActions } from '../../contexts/DashboardContext';
+import { useTranslation } from '../../utils/useTranslation';
 
 const Upload = () => {
     const { startScan } = useActions();
     const [isDragging, setIsDragging] = useState(false);
+    const { t } = useTranslation();
 
     const onStartScan = startScan;
 
@@ -37,10 +39,10 @@ const Upload = () => {
                 {/* Header Section */}
                 <div className="text-center space-y-3">
                     <h1 className="text-5xl font-bold text-[#002147] dark:text-white tracking-tight">
-                        Audit ng Dokumento
+                        {t('upload.title')}
                     </h1>
                     <p className="text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-                        I-submit ang mga dokumento para sa evaluation gamit ang{' '}
+                        {t('upload.subtitle')}{' '}
                         <span className="text-[#002147] dark:text-blue-400 font-semibold">AI ETHICS</span>
                     </p>
                 </div>
@@ -71,10 +73,10 @@ const Upload = () => {
                     {/* Upload Text */}
                     <div className="space-y-3 text-center">
                         <h3 className="text-2xl font-bold text-[#002147] dark:text-white">
-                            I-pasa ang Dokumento para sa Verification
+                            {t('upload.dropTitle')}
                         </h3>
                         <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md">
-                            I-drag and drop ang iyong file dito, o mag-click para mag-browse.
+                            {t('upload.dropHint')}
                         </p>
                     </div>
 
@@ -91,12 +93,12 @@ const Upload = () => {
                     <div className="flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
                         <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-500 uppercase tracking-widest">
-                            Mode ng Pag-proseso
+                            {t('upload.processingMode')}
                         </span>
                     </div>
                     <span className="text-slate-300 dark:text-slate-700">•</span>
                     <span className="text-sm font-bold text-[#002147] dark:text-blue-400 uppercase tracking-wide">
-                        Manggagawa sa Institusyon
+                        {t('upload.institutionWorker')}
                     </span>
                 </div>
             </div>

@@ -72,11 +72,23 @@ export const AuthProvider = ({ children }) => {
 
         try {
             console.log(`[Auth] Fetching Profile for ${currentSession.user?.email}`);
-            const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/user/profile`, {
+            
+            // Reachability Diagnostic
+            const baseUrl = import.meta.env.VITE_API_BASE_URL;
+            if (!baseUrl) {
+                console.error("[Auth] CRITICAL: VITE_API_BASE_URL is not defined in environment.");
+            }
+
+            const response = await axios.get(`${baseUrl}/api/user/profile`, {
                 headers: {
                     Authorization: `Bearer ${tokenStr}`,
                     'ngrok-skip-browser-warning': '69420'
                 }
+            }).catch(err => {
+                if (!err.response) {
+                    console.error(`[Auth] BACKEND UNREACHABLE: ${baseUrl}. Check if your ngrok tunnel is active.`);
+                }
+                throw err;
             });
             setUserProfile(response.data);
         } catch (error) {

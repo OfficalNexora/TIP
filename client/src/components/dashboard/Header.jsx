@@ -4,6 +4,7 @@ import InsightCard from '../ui/InsightCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useUI, useData, useActions } from '../../contexts/DashboardContext';
+import { useTranslation } from '../../utils/useTranslation';
 
 const Header = ({ setAppState }) => {
     const { theme } = useTheme();
@@ -13,24 +14,25 @@ const Header = ({ setAppState }) => {
 
     const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
     const { userProfile, session, signOut } = useAuth();
+    const { t } = useTranslation();
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
 
-    const displayName = userProfile?.name || userProfile?.full_name || "Awtorisadong User";
-    const displayEmail = userProfile?.email || session?.user?.email || "Account ng Institusyon";
+    const displayName = userProfile?.name || userProfile?.full_name || t('header.authorizedUser');
+    const displayEmail = userProfile?.email || session?.user?.email || t('header.institutionAccount');
     const displayInitials = userProfile?.initials || (displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()) || "IA";
 
     const getTitle = () => {
         switch (dashboardState) {
-            case 'OVERVIEW': return 'Overview ng Dashboard';
-            case 'HISTORY': return 'Archive ng Scan';
-            case 'COMPLIANCE': return 'Profile ng Auditor';
-            case 'SETTINGS': return 'Mga Setting ng Platform';
-            case 'UPLOAD': return 'Mag-upload ng Dokumento';
-            case 'SCANNING': return 'Ongoing na Analysis';
-            case 'RESULTS': return 'Resulta ng Analysis';
-            default: return 'Dashboard';
+            case 'OVERVIEW': return t('header.overview');
+            case 'HISTORY': return t('header.history');
+            case 'COMPLIANCE': return t('header.compliance');
+            case 'SETTINGS': return t('header.settings');
+            case 'UPLOAD': return t('header.upload');
+            case 'SCANNING': return t('header.scanning');
+            case 'RESULTS': return t('header.results');
+            default: return t('header.dashboard');
         }
     };
 
@@ -87,7 +89,7 @@ const Header = ({ setAppState }) => {
                         <Icons.Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 group-focus-within:text-slate-600 dark:group-focus-within:text-slate-300 transition-colors" size={14} />
                         <input
                             type="text"
-                            placeholder="Maghanap ng report"
+                            placeholder={t('header.searchPlaceholder')}
                             value={searchTerm}
                             onChange={(e) => {
                                 setSearchTerm(e.target.value);
@@ -112,8 +114,8 @@ const Header = ({ setAppState }) => {
                             >
                                 {!searchTerm ? (
                                     <div className="p-4 text-center">
-                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Mabilisang Search</p>
-                                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Hanapin gamit ang pangalan o petsa</p>
+                                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">{t('header.quickSearch')}</p>
+                                        <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">{t('header.searchHint')}</p>
                                     </div>
                                 ) : filteredResults.length > 0 ? (
                                     <div className="max-h-[320px] overflow-y-auto py-1">
@@ -134,7 +136,7 @@ const Header = ({ setAppState }) => {
                                                 </div>
                                                 <div className="shrink-0">
                                                     <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${parseInt(result.confidence) < 30 ? 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400' : parseInt(result.confidence) < 60 ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-500 dark:text-amber-400' : 'bg-rose-100 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400'}`}>
-                                                        {parseInt(result.confidence) < 30 ? 'Pasado' : parseInt(result.confidence) < 60 ? 'Rebyu' : 'Bagsak'}
+                                                        {parseInt(result.confidence) < 30 ? t('header.pass') : parseInt(result.confidence) < 60 ? t('header.review') : t('header.fail')}
                                                     </span>
                                                 </div>
                                             </div>
@@ -142,7 +144,7 @@ const Header = ({ setAppState }) => {
                                     </div>
                                 ) : (
                                     <div className="p-4 text-center">
-                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Walang nakitang analysis na tugma.</p>
+                                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{t('header.noResults')}</p>
                                     </div>
                                 )}
                             </div>
@@ -217,7 +219,7 @@ const Header = ({ setAppState }) => {
 
                             <div className="py-1">
                                 <button className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200 flex items-center gap-2 transition-colors">
-                                    <Icons.Settings size={16} /> Mga Kagustuhan
+                                    <Icons.Settings size={16} /> {t('header.preferences')}
                                 </button>
                                 <div className="my-1 border-t border-slate-100 dark:border-slate-800"></div>
                                 <button
@@ -228,7 +230,7 @@ const Header = ({ setAppState }) => {
                                     }}
                                     className="w-full text-left px-4 py-2.5 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 flex items-center gap-2 transition-colors"
                                 >
-                                    <Icons.LogOut size={16} /> Mag-sign Out
+                                    <Icons.LogOut size={16} /> {t('header.signOut')}
                                 </button>
                             </div>
                         </div>

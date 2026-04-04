@@ -7,6 +7,7 @@ import { useGSAP } from '@gsap/react';
 import InsightCard from '../ui/InsightCard';
 import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 import { normalizeConfidence } from '../../utils/confidenceUtils';
+import { useTranslation } from '../../utils/useTranslation';
 
 const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handleDeleteClick }) => {
     const cardRef = React.useRef(null);
@@ -178,6 +179,7 @@ const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handl
 const Overview = () => {
     const { files, searchTerm, integrityAvg, totalAudits, loadingHistory } = useData();
     const { setDashboardState, loadFile, deleteAnalysis } = useActions();
+    const { t } = useTranslation();
     const loading = loadingHistory;
 
     const [openMenuId, setOpenMenuId] = useState(null);
@@ -235,7 +237,7 @@ const Overview = () => {
         return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
                 <Loader />
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-8 animate-pulse">Sini-sync ang Database ng Institusyon</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-8 animate-pulse">{t('overview.syncingDatabase') || 'Syncing Institution Database'}</p>
             </div>
         );
     }
@@ -280,14 +282,14 @@ const Overview = () => {
                 <div className="space-y-6 fade-in-item opacity-0">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Mga AI Assistant</h3>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">Pumili ng tool para sa iyong institutional audit</p>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">{t('overview.aiAssistants') || 'AI Assistants'}</h3>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">{t('overview.aiAssistantsDesc') || 'Choose a tool for your institutional audit'}</p>
                         </div>
                         <button 
                             onClick={() => setDashboardState('UPLOAD')}
                             className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1.5"
                         >
-                            Tignan lahat <Icons.ChevronRight size={14} />
+                            {t('overview.viewAll')} <Icons.ChevronRight size={14} />
                         </button>
                     </div>
 
@@ -296,7 +298,7 @@ const Overview = () => {
                             {
                                 id: 'auditor',
                                 title: 'Research Auditor',
-                                desc: 'Malalim na pagsusuri ng akademikong integridad.',
+                                desc: t('overview.auditorDesc') || 'Deep analysis of academic integrity.',
                                 icon: Icons.ShieldCheck,
                                 color: 'blue',
                                 lottie: 'https://lottie.host/8908b664-402b-4f65-ab5f-122e42a0eaff/lJD6OSQpKY.lottie'
@@ -304,7 +306,7 @@ const Overview = () => {
                             {
                                 id: 'plagiarism',
                                 title: 'Plagiarism Checker',
-                                desc: 'Paghahambing sa mga global na database.',
+                                desc: t('overview.plagiarismDesc') || 'Comparison against global databases.',
                                 icon: Icons.Copy,
                                 color: 'rose',
                                 lottie: 'https://lottie.host/6771ba6c-4ac3-463d-8411-84bb4f0819b5/lJD6OSQpKY.lottie'
@@ -312,7 +314,7 @@ const Overview = () => {
                             {
                                 id: 'ethical',
                                 title: 'Ethical AI Audit',
-                                desc: 'Pagsunod sa UNESCO ethics at bias standards.',
+                                desc: t('overview.ethicalDesc') || 'UNESCO ethics and bias standards compliance.',
                                 icon: Icons.Scale,
                                 color: 'emerald',
                                 lottie: 'https://lottie.host/4101998b-f74e-4c77-a318-de4377d81d2a/lJD6OSQpKY.lottie'
@@ -320,7 +322,7 @@ const Overview = () => {
                             {
                                 id: 'forensic',
                                 title: 'Forensic Reporter',
-                                desc: 'Detalyadong pattern at linguistic footprint.',
+                                desc: t('overview.forensicDesc') || 'Detailed pattern and linguistic footprint.',
                                 icon: Icons.Search,
                                 color: 'amber',
                                 lottie: 'https://lottie.host/2992a316-b15c-4cbf-844a-63a7046edb25/lJD6OSQpKY.lottie'
@@ -353,7 +355,7 @@ const Overview = () => {
                                 </p>
 
                                 <div className="mt-4 flex items-center gap-1 text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
-                                    Gamitin Ngayon <Icons.ArrowRight size={10} />
+                                    {t('overview.useNow') || 'Use Now'} <Icons.ArrowRight size={10} />
                                 </div>
                             </div>
                         ))}
@@ -376,7 +378,7 @@ const Overview = () => {
                         </div>
                         <div>
                             <span className="block text-2xl font-bold text-slate-900 dark:text-tip-text-main">{integrityAvg}%</span>
-                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Average na Risk</span>
+                            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{t('overview.avgRisk') || 'Average Risk'}</span>
                         </div>
                     </div>
                 </div>
@@ -401,7 +403,7 @@ const Overview = () => {
                             <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-blue-500 dark:group-hover:bg-blue-600 group-hover:text-white transition-all mb-3 shadow-inner">
                                 <Icons.Plus size={24} />
                             </div>
-                            <span className="text-sm font-bold text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors uppercase tracking-wider">Bagong Analysis</span>
+                            <span className="text-sm font-bold text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors uppercase tracking-wider">{t('nav.newAnalysis')}</span>
                         </div>
                     </div>
                 </div>

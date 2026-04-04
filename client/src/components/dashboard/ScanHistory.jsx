@@ -4,6 +4,7 @@ import Icons from '../ui/Icons';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { normalizeConfidence, getComplianceLabel } from '../../utils/confidenceUtils';
+import { useTranslation } from '../../utils/useTranslation';
 
 import { useUI, useData, useActions, useScan } from '../../contexts/DashboardContext';
 
@@ -14,6 +15,7 @@ const ScanHistory = () => {
     const { hasMore, loadingMore } = useScan();
     const [searchTerm, setSearchTerm] = useState("");
     const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+    const { t } = useTranslation();
 
     const handleSort = (key) => {
         let direction = 'asc';
@@ -54,7 +56,9 @@ const ScanHistory = () => {
         return (
             <div className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
                 <Loader />
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-8 animate-pulse">Syncing Institutional Archive</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-8 animate-pulse">
+                    {t('history.syncingArchive') || 'Syncing Institutional Archive'}
+                </p>
             </div>
         );
     }
@@ -63,14 +67,18 @@ const ScanHistory = () => {
         <div className="flex flex-col h-full space-y-6 animate-fade-in p-8 md:p-12 pb-0">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-tip-primary tracking-tight transition-colors">Audit Archive</h1>
-                    <p className="text-sm text-tip-text-muted mt-1 transition-colors">Listahan ng mga nakaraang compliance assessment</p>
+                    <h1 className="text-2xl font-bold text-tip-primary tracking-tight transition-colors">
+                        {t('history.title') || 'Audit Archive'}
+                    </h1>
+                    <p className="text-sm text-tip-text-muted mt-1 transition-colors">
+                        {t('history.subtitle') || 'List of previous compliance assessments'}
+                    </p>
                 </div>
                 <div className="relative w-72 group">
                     <Icons.Search className="absolute left-3 top-1/2 -translate-y-1/2 text-tip-text-muted group-focus-within:text-tip-primary transition-colors" size={16} />
                     <input
                         type="text"
-                        placeholder="Maghanap ng record..."
+                        placeholder={t('history.searchPlaceholder') || "Search records..."}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full bg-tip-surface border border-tip-border rounded-md py-2 pl-10 pr-4 text-xs text-tip-text-main focus:outline-none focus:border-tip-primary focus:ring-1 focus:ring-tip-primary/20 transition-all font-sans"
@@ -85,24 +93,24 @@ const ScanHistory = () => {
                             <tr>
                                 <th className="w-[40%] px-6 py-4 cursor-pointer hover:bg-[#003366] transition-colors" onClick={() => handleSort('title')}>
                                     <div className="flex items-center gap-2">
-                                        Pangalan ng Dokumento
+                                        {t('history.tableDocName') || 'Document Name'}
                                         {sortConfig.key === 'title' && (sortConfig.direction === 'asc' ? <Icons.ArrowUp size={12} /> : <Icons.ArrowDown size={12} />)}
                                     </div>
                                 </th>
                                 <th className="w-[18%] px-6 py-4 cursor-pointer hover:bg-[#003366] transition-colors" onClick={() => handleSort('date')}>
                                     <div className="flex items-center gap-2">
-                                        Petsa ng Verification
+                                        {t('history.tableDate') || 'Verification Date'}
                                         {sortConfig.key === 'date' && (sortConfig.direction === 'asc' ? <Icons.ArrowUp size={12} /> : <Icons.ArrowDown size={12} />)}
                                     </div>
                                 </th>
                                 <th className="w-[15%] px-6 py-4 cursor-pointer hover:bg-[#003366] transition-colors" onClick={() => handleSort('confidence')}>
                                     <div className="flex items-center gap-2">
-                                        Risk Score
+                                        {t('history.tableRisk') || 'Risk Score'}
                                         {sortConfig.key === 'confidence' && (sortConfig.direction === 'asc' ? <Icons.ArrowUp size={12} /> : <Icons.ArrowDown size={12} />)}
                                     </div>
                                 </th>
-                                <th className="w-[17%] px-6 py-4">Assessment</th>
-                                <th className="w-[10%] px-6 py-4 text-right">Records</th>
+                                <th className="w-[17%] px-6 py-4">{t('history.tableAssessment') || 'Assessment'}</th>
+                                <th className="w-[10%] px-6 py-4 text-right">{t('history.tableRecords') || 'Records'}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-tip-border">
@@ -142,7 +150,7 @@ const ScanHistory = () => {
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    if (window.confirm("Sigurado ka bang gusto mong burahin ang audit record na ito? Hindi na ito mababawi.")) {
+                                                    if (window.confirm(t('history.deleteConfirm') || "Are you sure?")) {
                                                         deleteAnalysis(file.id);
                                                     }
                                                 }}
@@ -155,7 +163,7 @@ const ScanHistory = () => {
                                                 onClick={() => loadFile(file)}
                                                 className="btn-institutional px-4 py-1.5 text-[10px] shadow-sm transform translate-x-1 group-hover:translate-x-0 opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap"
                                             >
-                                                Tingnan ang Report
+                                                {t('history.viewReport') || 'View Report'}
                                             </button>
                                         </div>
                                     </td>
@@ -164,7 +172,7 @@ const ScanHistory = () => {
                             {filteredFiles.length === 0 && (
                                 <tr>
                                     <td colSpan="5" className="px-6 py-12 text-center text-tip-text-muted italic">
-                                        Walang nakitang records na tumutugma sa search.
+                                        {t('history.noResults') || 'No records matching search.'}
                                     </td>
                                 </tr>
                             )}
@@ -182,10 +190,10 @@ const ScanHistory = () => {
                         className="px-6 py-2 bg-white dark:bg-tip-bg border border-tip-border rounded-full text-xs font-bold text-tip-text-main shadow-sm hover:shadow-md hover:border-tip-primary/50 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {loadingMore ? <Loader size={12} /> : <Icons.ChevronDown size={14} />}
-                        {loadingMore ? 'Syncing...' : 'Load More Records'}
+                        {loadingMore ? 'Syncing...' : (t('history.loadMore') || 'Load More Records')}
                     </button>
                 ) : (
-                    <p className="text-[10px] text-tip-text-muted italic">End of institutional records</p>
+                    <p className="text-[10px] text-tip-text-muted italic">{t('history.endOfRecords') || 'End of institutional records'}</p>
                 )}
             </div>
 

@@ -4,11 +4,13 @@ import Icons from '../ui/Icons';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { useUI, useData, useActions } from '../../contexts/DashboardContext';
+import { useTranslation } from '../../utils/useTranslation';
 
 const Sidebar = React.memo(() => {
     const { dashboardState, isChatOpen, rightPanelOpen } = useUI();
     const { activeFile, files, credits, creditsTotal } = useData();
     const { setDashboardState, setIsChatOpen, setRightPanelOpen, loadFile, setActiveFile, setSubscriptionOpen } = useActions();
+    const { t } = useTranslation();
 
     const onUpgrade = () => setSubscriptionOpen(true);
     const aiSectionRef = React.useRef(null);
@@ -92,11 +94,11 @@ const Sidebar = React.memo(() => {
             {/* Navigation */}
             <nav className="flex-1 px-3 space-y-1">
                 <div className="pt-4 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider sidebar-item">
-                    Mga Tool
+                    {t('nav.tools')}
                 </div>
                 <NavItem
                     icon={Icons.LayoutDashboard}
-                    label="Dashboard"
+                    label={t('nav.dashboard')}
                     isActive={dashboardState === 'OVERVIEW'}
                     onClick={() => handleNavigation('OVERVIEW', true)}
                     className="sidebar-item"
@@ -104,7 +106,7 @@ const Sidebar = React.memo(() => {
 
                 <NavItem
                     icon={Icons.Plus}
-                    label="Bagong Analysis"
+                    label={t('nav.newAnalysis')}
                     isActive={dashboardState === 'UPLOAD'}
                     onClick={() => handleNavigation('UPLOAD')}
                     count="+"
@@ -113,7 +115,7 @@ const Sidebar = React.memo(() => {
 
                 <NavItem
                     icon={Icons.Grid}
-                    label="Kasaysayan ng Scan"
+                    label={t('nav.scanHistory')}
                     isActive={dashboardState === 'HISTORY'}
                     onClick={() => handleNavigation('HISTORY', true)}
                     className="sidebar-item"
@@ -123,11 +125,11 @@ const Sidebar = React.memo(() => {
                 {dashboardState === 'RESULTS' && activeFile && (
                     <div ref={aiSectionRef}>
                         <div className="pt-4 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider ai-item">
-                            AI at mga Insight
+                            {t('nav.aiInsights')}
                         </div>
                         <NavItem
                             icon={Icons.FileText}
-                            label="Tignan ang Report"
+                            label={t('nav.viewReport')}
                             isActive={rightPanelOpen && dashboardState === 'RESULTS'}
                             onClick={() => {
                                 if (rightPanelOpen) {
@@ -142,7 +144,7 @@ const Sidebar = React.memo(() => {
                         />
                         <NavItem
                             icon={Icons.MessageCircle}
-                            label="AI Assistant"
+                            label={t('nav.aiAssistant')}
                             isActive={isChatOpen}
                             onClick={() => {
                                 if (isChatOpen) {
@@ -159,18 +161,18 @@ const Sidebar = React.memo(() => {
                 )}
 
                 <div className="pt-4 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider sidebar-item">
-                    Account
+                    {t('nav.account')}
                 </div>
                 <NavItem
                     icon={Icons.Shield}
-                    label="Profile ng Pagsunod"
+                    label={t('nav.complianceProfile')}
                     isActive={dashboardState === 'COMPLIANCE'}
                     onClick={() => handleNavigation('COMPLIANCE')}
                     className="sidebar-item"
                 />
                 <NavItem
                     icon={Icons.Settings}
-                    label="Mga Setting"
+                    label={t('nav.settings')}
                     isActive={dashboardState === 'SETTINGS'}
                     onClick={() => handleNavigation('SETTINGS')}
                     className="sidebar-item"
@@ -187,7 +189,7 @@ const Sidebar = React.memo(() => {
                     <div className="absolute -right-4 -top-4 w-12 h-12 bg-blue-50 dark:bg-blue-900/10 rounded-full blur-2xl group-hover:bg-blue-100 dark:group-hover:bg-blue-500/20 transition-all duration-700"></div>
 
                     <div className="flex items-center justify-between mb-3 relative z-10">
-                        <p className="text-[10px] uppercase font-bold tracking-widest text-slate-500 dark:text-slate-400">Paggamit ng Institusyon</p>
+                        <p className="text-[10px] uppercase font-bold tracking-widest text-slate-500 dark:text-slate-400">{t('nav.institutionUsage')}</p>
                         <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-black px-2 py-0.5 rounded-full ring-1 ring-blue-100 dark:ring-blue-800/50">
                             <div className="w-1 h-1 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse"></div>
                             ACTIVE
@@ -199,7 +201,7 @@ const Sidebar = React.memo(() => {
                             <span className="text-2xl font-black text-slate-900 dark:text-white tabular-nums leading-none">{credits.toLocaleString()}</span>
                             <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold ml-1">TOKENS</span>
                         </div>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-1">mula sa {creditsTotal.toLocaleString()}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mb-1">{t('nav.outOf')} {creditsTotal.toLocaleString()}</span>
                     </div>
 
                     {/* Progress Bar */}
@@ -215,13 +217,13 @@ const Sidebar = React.memo(() => {
                         className="w-full bg-[#001c3d] dark:bg-blue-600 hover:bg-[#002f66] dark:hover:bg-blue-500 text-white text-[11px] font-black py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] shadow-sm hover:shadow-md"
                     >
                         <Icons.Zap size={13} className="text-yellow-400 fill-yellow-400" />
-                        Dagdagan ang Tokens
+                        {t('nav.addTokens')}
                     </button>
                 </div>
 
                 <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md transition-colors">
                     <Icons.HelpCircle size={18} />
-                    Suporta
+                    {t('nav.support')}
                 </button>
             </div>
         </aside>
