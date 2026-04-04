@@ -13,13 +13,13 @@ import { useUI } from '../contexts/DashboardContext';
  * Falls back to the raw key if missing in both languages.
  */
 export function useTranslation() {
-  const { language } = useUI();
+  const { language, setLanguage } = useUI();
   
   const t = useCallback((key) => {
     return translations[language]?.[key] || translations['en']?.[key] || key;
   }, [language]);
 
-  return { t, language };
+  return { t, language, setLanguage };
 }
 
 /**

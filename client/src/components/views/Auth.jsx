@@ -32,11 +32,10 @@ const Auth = () => {
                 if (error) throw error;
             } else {
                 const { error } = await supabase.auth.signUp({
-                    email,
-                    password,
+                    email: cleanEmail,
+                    password: cleanPassword,
                     options: {
-                        data: { full_name: email.split('@')[0] },
-                        emailRedirectTo: window.location.origin
+                        data: { full_name: cleanEmail.split('@')[0] }
                     }
                 });
                 if (error) throw error;
