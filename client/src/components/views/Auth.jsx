@@ -69,7 +69,13 @@ const Auth = () => {
                 {/* Language Toggle */}
                 <div className="absolute top-4 right-4 group">
                     <button 
-                        onClick={() => setLanguage(language === 'en' ? 'tl' : 'en')}
+                        onClick={() => {
+                            if (typeof setLanguage === 'function') {
+                                setLanguage(language === 'en' ? 'tl' : 'en');
+                            } else {
+                                console.warn('[Auth] setLanguage is not available');
+                            }
+                        }}
                         className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-[10px] font-bold text-slate-400 hover:text-white transition-all uppercase tracking-widest"
                     >
                         <Icons.Globe size={12} />
@@ -112,6 +118,7 @@ const Auth = () => {
                             className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-[#C9A227] focus:ring-1 focus:ring-[#C9A227] transition-all placeholder:text-slate-600"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            autoComplete="email"
                             required
                         />
                     </div>
@@ -125,6 +132,7 @@ const Auth = () => {
                                 className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm outline-none focus:border-[#C9A227] focus:ring-1 focus:ring-[#C9A227] transition-all placeholder:text-slate-600 pr-10"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                autoComplete={authMode === 'LOGIN' ? 'current-password' : 'new-password'}
                                 required
                             />
                             <button

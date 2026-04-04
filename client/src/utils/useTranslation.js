@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { translations } from './translations';
-import { useUI } from '../contexts/DashboardContext';
+import { useUI, useActions } from '../contexts/DashboardContext';
 
 /**
  * TIP AI — Translation Hook
@@ -13,7 +13,8 @@ import { useUI } from '../contexts/DashboardContext';
  * Falls back to the raw key if missing in both languages.
  */
 export function useTranslation() {
-  const { language, setLanguage } = useUI();
+  const { language } = useUI();
+  const { setLanguage } = useActions();
   
   const t = useCallback((key) => {
     return translations[language]?.[key] || translations['en']?.[key] || key;
