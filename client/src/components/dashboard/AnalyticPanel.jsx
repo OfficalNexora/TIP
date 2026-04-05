@@ -4,6 +4,7 @@ import InsightCard from '../ui/InsightCard';
 import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { normalizeConfidence } from '../../utils/confidenceUtils';
+import { translations } from '../../utils/translations';
 
 // --- ISOLATED SUB-COMPONENTS FOR PERFORMANCE ---
 
@@ -31,7 +32,9 @@ const AnimatedRiskCounter = React.memo(({ targetScore }) => {
     return (
         <div className="flex items-baseline gap-2">
             <span className="text-4xl font-bold text-slate-900 dark:text-tip-text-main transition-colors">{displayScore}</span>
-            <span className="text-sm text-slate-500 dark:text-slate-400 font-medium transition-colors">% Panganib</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400 font-medium transition-colors">
+                {translations?.[window.__TIP_LANG__ || 'tl']?.['analytic.risk_percent'] || '% Risk'}
+            </span>
         </div>
     );
 });
@@ -69,6 +72,15 @@ const AnalyticPanel = React.memo(() => {
     const { theme } = useTheme();
     const { focusedIssue, rightPanelOpen: isOpen, language } = useUI();
     const { setFocusedIssue, setRightPanelOpen, deleteAnalysis, translateSummary } = useActions();
+
+    const t = useCallback((key) => {
+        return translations[language]?.[key] || translations['en']?.[key] || key;
+    }, [language]);
+
+    // Sync language for sub-components (Legacy/Simple approach)
+    useEffect(() => {
+        window.__TIP_LANG__ = language;
+    }, [language]);
 
     const [isTranslating, setIsTranslating] = useState(false);
 
@@ -151,6 +163,49 @@ const AnalyticPanel = React.memo(() => {
         return Icons.Activity;
     };
 
+    // Verdict Logic (Ternary Classification)
+    const getVerdictInfo = (verdict, lang) => {
+        const isEn = lang === 'en';
+        const hasSmokingGun = activeFile?.forensic_analysis?.has_smoking_gun;
+        
+        if (hasSmokingGun) {
+            return {
+                label: t('analytic.forensic_certainty'),
+                color: 'text-rose-700 bg-rose-100 border-rose-300 dark:bg-rose-900/40 dark:border-rose-700 dark:text-rose-300 shadow-md',
+                icon: Icons.Lock,
+                isCertain: true
+            };
+        }
+
+        switch (verdict) {
+            case 'AI_GENERATED':
+                return {
+                    label: t('analytic.verdict.ai_generated'),
+                    color: 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400',
+                    icon: Icons.Cpu
+                };
+            case 'AI_HELPED':
+                return {
+                    label: t('analytic.verdict.ai_helped'),
+                    color: 'text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400',
+                    icon: Icons.Zap
+                };
+            case 'HUMAN_AUTHENTIC':
+            case 'HUMAN_EDITED':
+                return {
+                    label: t('analytic.verdict.human_authentic'),
+                    color: 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400',
+                    icon: Icons.UserCheck
+                };
+            default:
+                return {
+                    label: t('analytic.verdict.under_review'),
+                    color: 'text-slate-500 bg-slate-50 border-slate-200 dark:bg-slate-900/20 dark:border-slate-800 dark:text-slate-400',
+                    icon: Icons.Search
+                };
+        }
+    };
+
     const dimensions = activeFile.dimensions || {};
     const dimensionKeys = Object.keys(dimensions);
 
@@ -161,10 +216,10 @@ const AnalyticPanel = React.memo(() => {
     else if (confidenceScore >= 60) confidenceColor = "bg-rose-500";
     else if (confidenceScore >= 30) confidenceColor = "bg-amber-500";
 
-    const confidenceLabel = confidenceScore >= 85 ? 'Kritikal na Panganib'
-        : confidenceScore >= 60 ? 'Mataas na Panganib'
-            : confidenceScore >= 30 ? 'Katamtamang Panganib'
-                : 'Mababang Panganib / Ligtas';
+    const confidenceLabel = confidenceScore >= 85 ? t('analytic.risk_critical')
+        : confidenceScore >= 60 ? t('analytic.risk_high')
+            : confidenceScore >= 30 ? t('analytic.risk_moderate')
+                : t('analytic.risk_low_safe');
 
     const confidenceBadgeClass = confidenceScore >= 60
         ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'
@@ -173,7 +228,7 @@ const AnalyticPanel = React.memo(() => {
             : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400';
 
     const handleDelete = async () => {
-        if (!window.confirm("Sigurado ka bang gusto mong burahin ang pagsusuring ito? (Are you sure you want to delete this analysis?)")) return;
+        if (!window.confirm(t('analytic.confirm_delete'))) return;
 
         setIsDeleting(true);
         try {
@@ -186,17 +241,19 @@ const AnalyticPanel = React.memo(() => {
         }
     };
 
-    const forensic = activeFile.forensic_analysis || {};
-    const details = forensic.details || {};
+    const forensic = activeFile?.forensic_analysis || {};
+    const details = forensic?.details || {};
 
-    const patternList = forensic.pattern_list
-        || forensic.patterns?.detected_patterns
-        || details.patterns?.detected_patterns
+    const patternList = forensic?.pattern_list
+        || forensic?.patterns?.detected_patterns
+        || details?.patterns?.detected_patterns
+        || details?.patterns?.ultra?.hits // Fix for v9.1 ultra hits
         || [];
 
-    const omissionList = forensic.omission_list
-        || forensic.omissions?.flagged_omissions
-        || details.omissions?.flagged_omissions
+    const omissionList = forensic?.omission_list
+        || forensic?.omissions?.flagged_omissions
+        || details?.omissions?.flagged_omissions
+        || details?.omissions?.hits // Fix for v9.1 omission hits
         || [];
 
     // Debug: Log what we have
@@ -206,7 +263,17 @@ const AnalyticPanel = React.memo(() => {
 
 
     const targetScore = activeFile?.confidence_score || normalizeConfidence(activeFile?.confidence || 0);
-    const fullSummary = activeFile?.summary || "Walang available na summary para sa dokumentong ito.";
+    const fullSummary = activeFile?.summary || t('analytic.no_summary');
+
+    // Categorical Summary Helpers
+    const getForensicCategorySummary = () => {
+        const breakdown = forensic.risk_breakdown || {};
+        return [
+            { label: t('analytic.category.structure'), value: breakdown.structure || 0, icon: Icons.Layout, color: 'text-blue-500', desc: t('analytic.category.structure_desc') },
+            { label: t('analytic.category.style'), value: breakdown.style || 0, icon: Icons.Type, color: 'text-purple-500', desc: t('analytic.category.style_desc') },
+            { label: t('analytic.category.integrity'), value: (breakdown.patterns || 0) + (breakdown.omissions || 0), icon: Icons.ShieldCheck, color: 'text-rose-500', desc: t('analytic.category.integrity_desc') }
+        ];
+    };
 
     return (
         <div
@@ -239,7 +306,7 @@ const AnalyticPanel = React.memo(() => {
                     >
                         <Icons.FileText size={18} />
                     </div>
-                    <span className="font-semibold text-slate-900 dark:text-tip-text-main tracking-tight transition-colors">Report ng Pagsunod</span>
+                    <span className="font-semibold text-slate-900 dark:text-tip-text-main tracking-tight transition-colors">{t('analytic.report_title')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
@@ -262,11 +329,90 @@ const AnalyticPanel = React.memo(() => {
             {/* Content Area */}
             <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar bg-[#F8F9FC] dark:bg-slate-900/50 transition-colors duration-300">
 
+                {/* 0. Verdict Banner (New Section) */}
+                {activeFile.verdict && (
+                    <div className="space-y-4">
+                        <div className={`p-5 rounded-2xl border transition-all duration-500 animate-in fade-in zoom-in-95 ${getVerdictInfo(activeFile.verdict, language).color}`}>
+                            <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-white/20 dark:bg-black/20">
+                                        {React.createElement(getVerdictInfo(activeFile.verdict, language).icon, { size: 20 })}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black uppercase tracking-widest opacity-70">
+                                            {getVerdictInfo(activeFile.verdict, language).isCertain ? t('analytic.forensic_certainty') : t('analytic.verdict_analysis')}
+                                        </span>
+                                        <h4 className="text-xl font-black tracking-tight">{getVerdictInfo(activeFile.verdict, language).label}</h4>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-2xl font-black">{activeFile.confidence_score || 0}%</span>
+                                    <p className="text-[9px] font-bold uppercase opacity-70">{t('analytic.ensemble_risk')}</p>
+                                </div>
+                            </div>
+                            <p className="text-xs font-medium leading-relaxed opacity-90 border-t border-current/10 pt-3 italic">
+                                {activeFile?.forensic_analysis?.has_smoking_gun 
+                                    ? t('analytic.smoking_gun_msg')
+                                    : (activeFile.determination_reason || t('analytic.determination_reason_default'))
+                                }
+                            </p>
+                        </div>
+
+                        {/* 0.1 Human Merits (New Section v8.5) */}
+                        {forensic.human_merits && forensic.human_merits.length > 0 && (
+                            <div className="space-y-2 animate-in fade-in slide-in-from-left-4 duration-700">
+                                <div className="flex items-center gap-2 mb-1">
+                                    <Icons.Award size={14} className="text-emerald-500" />
+                                    <h5 className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">{t('analytic.human_merits')}</h5>
+                                </div>
+                                <div className="grid grid-cols-1 gap-2">
+                                {forensic.human_merits.map((merit, mIdx) => {
+                                    const isHigh = merit.impact === 'Napakataas' || merit.impact === 'Mataas';
+                                    const isLikas = merit.impact === 'Likas na Tao';
+                                    
+                                    return (
+                                        <div key={mIdx} className={`bg-emerald-50/30 dark:bg-emerald-900/10 border ${isHigh ? 'border-emerald-300' : 'border-emerald-100/50'} dark:border-emerald-800/30 p-3 rounded-xl flex gap-3 items-start group hover:translate-x-1 transition-all`}>
+                                            <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-800/50 text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                                {isLikas ? <Icons.UserCheck size={14} /> : <Icons.Award size={14} />}
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{merit.label}</span>
+                                                    <span className="text-[9px] font-black bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full uppercase">
+                                                        +{merit.strength}% Human
+                                                    </span>
+                                                </div>
+                                                <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed italic">
+                                                    {merit.explanation}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Forensic Intelligence Summary Grid */}
+                        <div className="grid grid-cols-3 gap-3">
+                            {getForensicCategorySummary().map((cat, idx) => (
+                                <div key={idx} className="bg-white dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-slate-800/50 shadow-sm flex flex-col items-center text-center group hover:border-blue-200 transition-all">
+                                    <div className={`p-2 rounded-lg mb-2 bg-slate-50 dark:bg-slate-900/50 ${cat.color}`}>
+                                        <cat.icon size={16} />
+                                    </div>
+                                    <span className="text-[9px] font-black uppercase text-slate-400 mb-1">{cat.label}</span>
+                                    <span className="text-lg font-black text-slate-800 dark:text-slate-200">{cat.value}%</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* 1. Summary Card */}
                 <InsightCard>
                     <div className="flex items-start justify-between mb-4">
                         <div>
-                            <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 transition-colors">Pangkalahatang Compliance Risk</h4>
+                            <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 transition-colors">{t('analytic.overall_risk')}</h4>
                             <AnimatedRiskCounter targetScore={targetScore} />
                         </div>
                         <div className={`px-2 py-1 rounded text-xs font-bold uppercase transition-colors ${confidenceBadgeClass}`}>
@@ -285,7 +431,7 @@ const AnalyticPanel = React.memo(() => {
                         <div className="flex items-center justify-between mb-2">
                             <h4 className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest flex items-center gap-2">
                                 <Icons.MessageCircle size={12} />
-                                Buod ng Institusyon
+                                {t('analytic.summary_title')}
                             </h4>
                             <button
                                 onClick={handleTranslate}
@@ -297,17 +443,17 @@ const AnalyticPanel = React.memo(() => {
                                 ) : (
                                     <Icons.Languages size={12} />
                                 )}
-                                {isTranslating ? 'Nagta-translate...' : (language === 'tl' ? 'Translate to EN' : 'Translate to TL')}
+                                {isTranslating ? t('analytic.translating') : (language === 'tl' ? t('analytic.translate_to_en') : t('analytic.translate_to_tl'))}
                             </button>
                         </div>
                         <TypewriterSummary fullSummary={fullSummary} activeFileId={activeFile.id} />
                     </div>
 
                     <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 transition-colors">
-                        <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 transition-colors">Posibilidad ng AI Detection</h4>
+                        <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 transition-colors">{t('analytic.ai_probability')}</h4>
                         <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium transition-colors">
                             <Icons.Cpu size={16} className="text-slate-400 dark:text-slate-500" />
-                            {activeFile.ai_usage || "Pinoproseso..."}
+                            {activeFile.ai_usage || t('analytic.processing')}
                         </div>
                     </div>
                 </InsightCard>
@@ -315,16 +461,16 @@ const AnalyticPanel = React.memo(() => {
                 {/* 2. Forensic Signal Detection */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-tip-text-main transition-colors">Pagsusuring Forensic</h4>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-tip-text-main transition-colors">{t('analytic.forensic_analysis')}</h4>
                     </div>
 
                     <div className="grid grid-cols-1 gap-3">
                         {/* Risk Level Node */}
                         <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-4 rounded-xl shadow-sm">
                             <div className="flex items-center justify-between mb-2">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pagtatasa ng Panganib</span>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('analytic.risk_assessment')}</span>
                                 <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase transition-colors ${activeFile.forensic_analysis?.risk_level === 'Mataas' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
-                                    {activeFile.forensic_analysis?.risk_level || (activeFile.status === 'COMPLETED' ? 'Mababa' : 'Pagsusuri...')}
+                                    {activeFile.forensic_analysis?.risk_level || (activeFile.status === 'COMPLETED' ? t('analytic.risk_low') : t('analytic.analyzing'))}
                                 </span>
                             </div>
                             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed italic">
@@ -339,88 +485,158 @@ const AnalyticPanel = React.memo(() => {
                                 onClick={() => setShowPatterns((prev) => !prev)}
                                 className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center transition hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200"
                             >
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mga Pattern ng Salitang AI</span>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('analytic.ai_patterns')}</span>
                                 <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
                                     {activeFile.forensic_analysis ? (activeFile.forensic_analysis.pattern_hits || 0) : '-'}
                                 </span>
-                                <span className="text-[10px] text-blue-500 mt-1">{showPatterns ? 'I-tago ang listahan' : 'I-pakita ang listahan'}</span>
+                                <span className="text-[10px] text-blue-500 mt-1">{showPatterns ? t('analytic.hide_list') : t('analytic.show_list')}</span>
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setShowOmissions((prev) => !prev)}
                                 className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center transition hover:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-200"
                             >
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mga Flag ng Pagkukulang</span>
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('analytic.omission_flags')}</span>
                                 <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
                                     {activeFile.forensic_analysis ? (activeFile.forensic_analysis.omission_count || 0) : '-'}
                                 </span>
-                                <span className="text-[10px] text-rose-500 mt-1">{showOmissions ? 'I-tago ang listahan' : 'I-pakita ang listahan'}</span>
+                                <span className="text-[10px] text-rose-500 mt-1">{showOmissions ? t('analytic.hide_list') : t('analytic.show_list')}</span>
                             </button>
                         </div>
 
                         {/* Explanations Row - Distinct Cards */}
                         <div className="space-y-4">
                             {showPatterns && (
-                                <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-500">
-                                    <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                                        <Icons.Cpu size={14} />
-                                        <h5 className="text-[11px] font-bold uppercase tracking-wider">Detalyadong Pattern ng AI</h5>
+                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                                            <Icons.Cpu size={14} />
+                                            <h5 className="text-[11px] font-bold uppercase tracking-wider">{t('analytic.detailed_patterns')}</h5>
+                                        </div>
+                                        <span className="text-[9px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">{t('analytic.found')}: {patternList.length}</span>
                                     </div>
                                     {patternList.length > 0 ? (
-                                        <div className="grid grid-cols-1 gap-2">
-                                            {patternList.map((p, idx) => (
-                                                <div key={idx} className="bg-white dark:bg-slate-800/40 border border-blue-50 dark:border-blue-900/20 p-3 rounded-lg shadow-sm group hover:border-blue-300 transition-all">
-                                                    <div className="flex items-start justify-between mb-1">
-                                                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">"{p.pattern || p.text || (typeof p === 'object' ? p.label : p)}"</span>
-                                                        <span className="text-[10px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded">x{p.count || p.hits || 1}</span>
-                                                    </div>
-                                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                                                        {p.explanation || "Nakitang linguistic footprint na karaniwan sa AI language models."}
-                                                    </p>
-                                                </div>
-                                            ))}
+                                        <div className="grid grid-cols-1 gap-2.5">
+                                            {patternList.map((p, idx) => {
+                                                const impactData = p.impact === 'Critical' || p.impact === 'Smoking Gun' 
+                                                    ? { color: 'text-rose-600 bg-rose-50 border-rose-100', label: 'KRITIKAL' }
+                                                    : p.impact === 'High' ? { color: 'text-rose-500 bg-rose-50 border-rose-100', label: 'MATAAS' }
+                                                    : p.impact === 'Medium' || p.impact === 'Moderate' ? { color: 'text-amber-500 bg-amber-50 border-amber-100', label: 'KATAMTAMAN' }
+                                                    : { color: 'text-blue-500 bg-blue-50 border-blue-100', label: 'MABABA' };
+
+                                                return (
+                                                    <button 
+                                                        key={idx} 
+                                                        onClick={() => handleIssueClick({
+                                                            id: `pattern-${idx}`,
+                                                            label: p.pattern || p.label || t('nav.aiInsights'),
+                                                            explanation: p.explanation || t('analytic.pattern_desc_default'),
+                                                            suggestion: p.suggestion || "Iwasan ang paggamit ng mga generic o overused na mga salita.",
+                                                            revision_prompt: p.revision_prompt || `Baguhin ang pariralang "${p.pattern}" gamit ang sariling pananalita.`
+                                                        })}
+                                                        className="w-full text-left bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 p-3.5 rounded-xl shadow-sm group hover:border-blue-300 hover:translate-x-1 transition-all"
+                                                    >
+                                                        <div className="flex items-start justify-between mb-2">
+                                                            <div className="flex flex-col gap-1">
+                                                                <span className="text-[8px] font-black text-slate-400 tracking-widest uppercase">{t('analytic.marker_forensic')}</span>
+                                                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">"{p.pattern || p.text || (typeof p === 'object' ? p.label : p)}"</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5 pt-1">
+                                                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${impactData.color}`}>
+                                                                    {p.impact || impactData.label}
+                                                                </span>
+                                                                {p.count > 1 && (
+                                                                    <span className="text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">x{p.count || p.hits || 1}</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        <div className="bg-slate-50 dark:bg-slate-900/30 p-2.5 rounded-lg border border-slate-100/50 dark:border-slate-800/50 space-y-2">
+                                                            <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed italic line-clamp-2">
+                                                                {p.explanation || t('analytic.pattern_desc_default')}
+                                                            </p>
+                                                            {p.suggestion && (
+                                                                <div className="pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
+                                                                    <div className="flex items-center gap-1.5 mb-1">
+                                                                        <Icons.Zap size={10} className="text-blue-500" />
+                                                                        <span className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">{t('analytic.revision_guide')}</span>
+                                                                    </div>
+                                                                    <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-snug">
+                                                                        {p.suggestion}
+                                                                    </p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     ) : (
-                                        <div className="text-xs text-slate-400 dark:text-slate-500 italic p-4 bg-slate-50 dark:bg-slate-800/20 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 text-center">
-                                            Ligtas: Walang nakitang AI patterns.
+                                        <div className="text-xs text-slate-400 dark:text-slate-500 italic p-6 bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <Icons.CheckCircle className="text-emerald-500" size={24} />
+                                                <span>{t('analytic.safe_no_patterns')}</span>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
                             )}
 
                             {showOmissions && (
-                                <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-500">
-                                    <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
-                                        <Icons.AlertTriangle size={14} />
-                                        <h5 className="text-[11px] font-bold uppercase tracking-wider">Mga Flag ng Pagkukulang</h5>
+                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+                                            <Icons.AlertTriangle size={14} />
+                                            <h5 className="text-[11px] font-bold uppercase tracking-wider">{t('analytic.omission_flags')}</h5>
+                                        </div>
+                                        <span className="text-[9px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">{t('analytic.found')}: {omissionList.length}</span>
                                     </div>
                                     {omissionList.length > 0 ? (
-                                        <div className="grid grid-cols-1 gap-2">
-                                            {omissionList.map((o, idx) => (
-                                                <button
-                                                    key={idx}
-                                                    onClick={() => handleIssueClick({
-                                                        id: `omission-${idx}`,
-                                                        label: o.label || o.pattern || "Pagkukulang sa Konteksto",
-                                                        explanation: o.explanation || `Ang dokumento ay kulang sa sapat na detalye tungkol sa: ${o.label || o.text || 'pangunahing aspeto'}.`,
-                                                        suggestion: o.suggestion || "Magbigay ng karagdagang ebidensya o paliwanag sa bahaging ito.",
-                                                        revision_prompt: o.revision_prompt || `Paunlarin ang diskusyon tungkol sa ${o.label || o.text}.`
-                                                    })}
-                                                    className="w-full text-left bg-white dark:bg-slate-800/40 border border-rose-50 dark:border-rose-900/20 p-3 rounded-lg shadow-sm group hover:border-rose-300 hover:translate-x-1 transition-all"
-                                                >
-                                                    <div className="flex items-start justify-between mb-1">
-                                                        <span className="text-xs font-bold text-slate-900 dark:text-white">{o.label || o.pattern || o.text || "Pagkukulang"}</span>
-                                                        <Icons.ChevronRight size={14} className="text-slate-300 group-hover:text-rose-400 transition-colors" />
-                                                    </div>
-                                                    <p className="text-[10px] text-slate-500 dark:text-slate-400 line-clamp-2">
-                                                        {o.explanation || "Nakitang gaps sa lohikal na daloy o factual support."}
-                                                    </p>
-                                                </button>
-                                            ))}
+                                        <div className="grid grid-cols-1 gap-2.5">
+                                            {omissionList.map((o, idx) => {
+                                                const impactData = o.impact === 'Critical' || o.impact === 'High' 
+                                                    ? { color: 'text-rose-600 bg-rose-50 border-rose-100', label: 'MATAAS' }
+                                                    : o.impact === 'Medium' || o.impact === 'Moderate' ? { color: 'text-amber-500 bg-amber-50 border-amber-100', label: 'KATAMTAMAN' }
+                                                    : { color: 'text-blue-500 bg-blue-50 border-blue-100', label: 'MABABA' };
+
+                                                return (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => handleIssueClick({
+                                                            id: `omission-${idx}`,
+                                                            label: o.label || o.pattern || t('analytic.omission_context'),
+                                                            explanation: o.explanation || `Ang dokumento ay kulang sa sapat na detalye tungkol sa: ${o.label || o.text || 'pangunahing aspeto'}.`,
+                                                            suggestion: o.suggestion || "Magbigay ng karagdagang ebidensya o paliwanag sa bahaging ito.",
+                                                            revision_prompt: o.revision_prompt || `Paunlarin ang diskusyon tungkol sa ${o.label || o.text}.`
+                                                        })}
+                                                        className="w-full text-left bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 p-3.5 rounded-xl shadow-sm group hover:border-rose-300 hover:translate-x-1 transition-all"
+                                                    >
+                                                        <div className="flex items-start justify-between mb-2">
+                                                            <div className="flex flex-col gap-1">
+                                                                <span className="text-[8px] font-black text-rose-400 tracking-widest uppercase">{t('analytic.marker_ethics')}</span>
+                                                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">{o.label || o.pattern || o.text || t('history.noResults')}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5 pt-1">
+                                                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${impactData.color}`}>
+                                                                    {o.impact || impactData.label}
+                                                                </span>
+                                                                <Icons.ChevronRight size={12} className="text-slate-300 group-hover:text-rose-400 transition-colors" />
+                                                            </div>
+                                                        </div>
+                                                        <div className="bg-slate-50 dark:bg-slate-900/30 p-2 rounded-lg border border-slate-100/50 dark:border-slate-800/50">
+                                                            <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed italic line-clamp-2">
+                                                                {o.explanation || "Nakitang gaps sa lohikal na daloy o factual support."}
+                                                            </p>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     ) : (
-                                        <div className="text-xs text-slate-400 dark:text-slate-500 italic p-4 bg-slate-50 dark:bg-slate-800/20 rounded-lg border border-dashed border-slate-200 dark:border-slate-800 text-center">
-                                            Ligtas: Kumpleto ang mga kinakailangang aspeto.
+                                        <div className="text-xs text-slate-400 dark:text-slate-500 italic p-6 bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <Icons.CheckCircle className="text-emerald-500" size={24} />
+                                                <span>{t('analytic.safe_no_omissions')}</span>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -433,7 +649,7 @@ const AnalyticPanel = React.memo(() => {
                                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400/50"></div>
                                         <h5 className="text-[9px] font-black text-amber-600 dark:text-amber-500 uppercase mb-1 pl-2 tracking-widest flex items-center gap-1.5">
                                             <Icons.Info size={10} />
-                                            Interpretasyon ng Pattern
+                                            {t('analytic.pattern_interpretation')}
                                         </h5>
                                         <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed pl-2 font-medium">
                                             {activeFile.forensic_analysis.pattern_explanation}
@@ -446,7 +662,7 @@ const AnalyticPanel = React.memo(() => {
                                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-400/50"></div>
                                         <h5 className="text-[9px] font-black text-rose-600 dark:text-rose-500 uppercase mb-1 pl-2 tracking-widest flex items-center gap-1.5">
                                             <Icons.AlertTriangle size={10} />
-                                            Epekto ng Pagkukulang
+                                            {t('analytic.omission_impact')}
                                         </h5>
                                         <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed pl-2 font-medium">
                                             {activeFile.forensic_analysis.omission_explanation}
@@ -454,35 +670,35 @@ const AnalyticPanel = React.memo(() => {
                                     </div>
                                 )}
 
-                                {/* Forensic Anomalies - Perfection Penalty */}
-                                {activeFile.forensic_analysis?.details?.perfection?.perfection_score > 40 && (
+                                 {/* Forensic Anomalies - Perfection Penalty */}
+                                {activeFile?.forensic_analysis?.details?.perfection?.perfection_score > 40 && (
                                     <div className="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-xl relative overflow-hidden group hover:border-rose-300 dark:hover:border-rose-500 transition-all border-l-4 border-l-rose-500 shadow-sm">
                                         <div className="flex items-center justify-between mb-2">
                                             <h5 className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest flex items-center gap-1.5">
                                                 <Icons.Zap size={12} className="animate-pulse" />
-                                                Perfection Penalty Detected
+                                                {t('analytic.perfection_penalty')}
                                             </h5>
                                             <span className="text-[10px] font-black bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-full">RISK: {activeFile.forensic_analysis.details.perfection.perfection_score}%</span>
                                         </div>
                                         <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                                            Ang dokumento ay nagpapakita ng <span className="text-rose-600 dark:text-rose-400 font-bold underline decoration-rose-200 underline-offset-2">kahina-hinalang uniformity</span> sa haba ng mga pangungusap at estruktura ng talata. Ang "machine-like perfection" na ito ay madalas na marka ng AI-generated na teksto na kulang sa natural na linguistic noise ng tao.
+                                            {t('analytic.perfection_desc')}
                                         </p>
                                     </div>
                                 )}
 
                                 {/* Forensic Anomalies - Lexical Spin */}
-                                {activeFile.forensic_analysis?.details?.lexical_spin?.spin_risk_score > 40 && (
+                                {activeFile?.forensic_analysis?.details?.lexical_spin?.spin_risk_score > 40 && (
                                     <div className="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-xl relative overflow-hidden group hover:border-indigo-300 dark:hover:border-indigo-500 transition-all border-l-4 border-l-indigo-500 shadow-sm">
                                         <div className="flex items-center justify-between mb-2">
                                             <h5 className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
                                                 <Icons.RotateCcw size={12} />
-                                                Lexical Spin Detector
+                                                {t('analytic.lexical_spin')}
                                             </h5>
                                             <span className="text-[10px] font-black bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full">EVASION: {activeFile.forensic_analysis.details.lexical_spin.spin_risk_score}%</span>
                                         </div>
                                         <div className="space-y-2">
                                             <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                                                Mataas ang densidad ng mga bihirang sinonimo na karaniwang ginagamit ng mga <span className="text-indigo-600 dark:text-indigo-400 font-bold underline decoration-indigo-200 underline-offset-2">AI rewriters/spinners</span> upang makaiwas sa plagiarism detection.
+                                                {t('analytic.lexical_spin_desc')}
                                             </p>
                                             <div className="flex flex-wrap gap-1.5 mt-1">
                                                 {activeFile.forensic_analysis.details.lexical_spin.detected_spin_words?.slice(0, 6).map((word, i) => (
