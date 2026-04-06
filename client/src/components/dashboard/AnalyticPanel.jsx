@@ -4,6 +4,7 @@ import InsightCard from '../ui/InsightCard';
 import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { normalizeConfidence } from '../../utils/confidenceUtils';
+import tipLogo from '../../assets/no background logo fnl.png';
 import { translations } from '../../utils/translations';
 
 // --- ISOLATED SUB-COMPONENTS FOR PERFORMANCE ---
@@ -149,17 +150,12 @@ const AnalyticPanel = React.memo(() => {
 
     const getIconForDimension = (key) => {
         const lower = key.toLowerCase();
-        if (lower.includes('karapatan') || lower.includes('human')) return Icons.Heart;
-        if (lower.includes('manakit') || lower.includes('safety')) return Icons.Shield;
-        if (lower.includes('pribasiya') || lower.includes('privacy')) return Icons.Lock;
+        if (lower.includes('fairness')) return Icons.Scale;
         if (lower.includes('transparency')) return Icons.Eye;
-        if (lower.includes('katarungan') || lower.includes('fairness')) return Icons.Scale;
-        if (lower.includes('responsibilidad')) return Icons.UserCheck;
-        if (lower.includes('kaligtasan') || lower.includes('security')) return Icons.Shield;
-        if (lower.includes('sustainability') || lower.includes('kapaligiran')) return Icons.Globe;
+        if (lower.includes('privacy')) return Icons.Lock;
+        if (lower.includes('sustainability')) return Icons.Globe;
+        if (lower.includes('oversight')) return Icons.UserCheck;
         if (lower.includes('inclusiveness')) return Icons.Users;
-        if (lower.includes('kamalayan') || lower.includes('awareness')) return Icons.HelpCircle;
-        if (lower.includes('governance')) return Icons.Briefcase;
         return Icons.Activity;
     };
 
@@ -715,93 +711,7 @@ const AnalyticPanel = React.memo(() => {
                     </div>
                 </div>
 
-                {/* 2.5 Plagiarism / Similarity Detection */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-tip-text-main transition-colors">Pagsusuri ng Pagkakatulad / Plagiarism</h4>
-                    </div>
 
-                    {activeFile.plagiarism ? (
-                        <div className="grid grid-cols-1 gap-3">
-                            {/* Overall Similarity Score */}
-                            <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Internal na Pagkakatulad</span>
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase transition-colors ${(activeFile.plagiarism.similarity || 0) > 40
-                                        ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400'
-                                        : (activeFile.plagiarism.similarity || 0) > 15
-                                            ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400'
-                                            : 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400'
-                                        }`}>
-                                        {(activeFile.plagiarism.similarity || 0) > 40 ? 'Mataas' : (activeFile.plagiarism.similarity || 0) > 15 ? 'Katamtaman' : 'Mababa'}
-                                    </span>
-                                </div>
-                                <div className="flex items-baseline gap-2 mb-2">
-                                    <span className="text-3xl font-bold text-slate-900 dark:text-tip-text-main">{parseFloat(activeFile.plagiarism.similarity || 0).toFixed(1)}</span>
-                                    <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">% pagkakatulad</span>
-                                </div>
-                                <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                    <div
-                                        className={`h-full rounded-full transition-all duration-700 ${(activeFile.plagiarism.similarity || 0) > 40 ? 'bg-rose-500' :
-                                            (activeFile.plagiarism.similarity || 0) > 15 ? 'bg-amber-500' : 'bg-emerald-500'
-                                            }`}
-                                        style={{ width: `${Math.min(activeFile.plagiarism.similarity || 0, 100)}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-
-                            {/* Metrics Row */}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mga Internal na Tugma</span>
-                                    <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
-                                        {activeFile.plagiarism.internal_matches?.length || activeFile.plagiarism.match_count || 0}
-                                    </span>
-                                </div>
-                                <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mga External na Pinagmulan</span>
-                                    <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
-                                        {activeFile.plagiarism.external_sources?.length || 0}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Top Internal Matches */}
-                            {activeFile.plagiarism.internal_matches && activeFile.plagiarism.internal_matches.length > 0 && (
-                                <div className="bg-tip-surface border border-amber-100 dark:border-amber-900/40 p-3 rounded-lg shadow-sm">
-                                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-300 mb-2">
-                                        <h5 className="text-[11px] font-bold uppercase tracking-wide">Mga Pangunahing Tugma (Internal na Database)</h5>
-                                    </div>
-                                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                                        {activeFile.plagiarism.internal_matches.slice(0, 5).map((match, idx) => (
-                                            <div key={idx} className="flex items-start justify-between text-xs text-slate-700 dark:text-slate-200 border-b border-slate-50 dark:border-slate-800 pb-1.5 last:border-0">
-                                                <span className="mr-2 leading-snug truncate flex-1">{match.filename || match.analysis_id || `Document ${idx + 1}`}</span>
-                                                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">{parseFloat(match.similarity || 0).toFixed(1)}%</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Clean Result */}
-                            {(!activeFile.plagiarism.internal_matches || activeFile.plagiarism.internal_matches.length === 0) && (activeFile.plagiarism.similarity || 0) < 15 && (
-                                <div className="bg-tip-surface border border-emerald-100 dark:border-emerald-900/30 p-3 rounded-lg shadow-sm">
-                                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-                                        <Icons.CheckCircle size={14} />
-                                        <span className="text-xs font-medium">Walang makabuluhang pagkakatulad sa ibang dokumento.</span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <InsightCard className="border-slate-100 dark:border-slate-800">
-                            <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-sm">
-                                <Icons.Cpu size={16} className="animate-spin" />
-                                {activeFile.status === 'COMPLETED' ? 'Walang available na plagiarism data.' : 'Isinasagawa ang similarity check...'}
-                            </div>
-                        </InsightCard>
-                    )}
-                </div>
 
                 {/* 2.7. Security & Evasion Mechanics (Tampering Threats) */}
                 <div className="space-y-4">
@@ -988,6 +898,133 @@ const AnalyticPanel = React.memo(() => {
                             );
                         })}
                     </div>
+                </div>
+
+                {/* 6. Optional Metrics - Plagiarism/Similarity (Demoted) */}
+                <div className="mt-20 pt-10 border-t border-slate-50 dark:border-slate-800/30 opacity-50 hover:opacity-100 transition-opacity duration-500">
+                    <div className="flex flex-col gap-1 mb-6">
+                        <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+                            {t('analytic.optional_metrics')}
+                        </h4>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-600 font-medium italic">
+                            {t('analytic.secondary_analysis_desc')}
+                        </p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-300 transition-colors uppercase tracking-tight">
+                                {t('analytic.plagiarism_analysis')}
+                            </h4>
+                        </div>
+
+                        {activeFile.plagiarism ? (
+                            <div className="grid grid-cols-1 gap-3">
+                                {/* Overall Similarity Score */}
+                                <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-4 rounded-xl shadow-sm">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('analytic.internal_similarity')}</span>
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase transition-colors ${(activeFile.plagiarism.similarity || 0) > 40
+                                            ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400'
+                                            : (activeFile.plagiarism.similarity || 0) > 15
+                                                ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400'
+                                                : 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400'
+                                            }`}>
+                                            {(activeFile.plagiarism.similarity || 0) > 40 ? t('analytic.risk_high') : (activeFile.plagiarism.similarity || 0) > 15 ? t('analytic.risk_moderate') : t('analytic.risk_low')}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-baseline gap-2 mb-2">
+                                        <span className="text-3xl font-bold text-slate-900 dark:text-tip-text-main">{parseFloat(activeFile.plagiarism.similarity || 0).toFixed(1)}</span>
+                                        <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">{t('analytic.similarity_percent')}</span>
+                                    </div>
+                                    <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                        <div
+                                            className={`h-full rounded-full transition-all duration-700 ${(activeFile.plagiarism.similarity || 0) > 40 ? 'bg-rose-500' :
+                                                (activeFile.plagiarism.similarity || 0) > 15 ? 'bg-amber-500' : 'bg-emerald-500'
+                                                }`}
+                                            style={{ width: `${Math.min(activeFile.plagiarism.similarity || 0, 100)}%` }}
+                                        ></div>
+                                    </div>
+                                </div>
+
+                                {/* Metrics Row */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('analytic.internal_matches')}</span>
+                                        <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
+                                            {activeFile.plagiarism.internal_matches?.length || activeFile.plagiarism.match_count || 0}
+                                        </span>
+                                    </div>
+                                    <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center">
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('analytic.external_sources')}</span>
+                                        <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
+                                            {activeFile.plagiarism.external_sources?.length || 0}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Top Internal Matches */}
+                                {activeFile.plagiarism.internal_matches && activeFile.plagiarism.internal_matches.length > 0 && (
+                                    <div className="bg-tip-surface border border-amber-100 dark:border-amber-900/40 p-3 rounded-lg shadow-sm">
+                                        <div className="flex items-center gap-2 text-amber-600 dark:text-amber-300 mb-2">
+                                            <h5 className="text-[11px] font-bold uppercase tracking-wide">{t('analytic.top_matches')}</h5>
+                                        </div>
+                                        <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                            {activeFile.plagiarism.internal_matches.slice(0, 5).map((match, idx) => (
+                                                <div key={idx} className="flex items-start justify-between text-xs text-slate-700 dark:text-slate-200 border-b border-slate-50 dark:border-slate-800 pb-1.5 last:border-0">
+                                                    <span className="mr-2 leading-snug truncate flex-1">{match.filename || match.analysis_id || `Document ${idx + 1}`}</span>
+                                                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">{parseFloat(match.similarity || 0).toFixed(1)}%</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Clean Result */}
+                                {(!activeFile.plagiarism.internal_matches || activeFile.plagiarism.internal_matches.length === 0) && (activeFile.plagiarism.similarity || 0) < 15 && (
+                                    <div className="bg-tip-surface border border-emerald-100 dark:border-emerald-900/30 p-3 rounded-lg shadow-sm">
+                                        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                                            <Icons.CheckCircle size={14} />
+                                            <span className="text-xs font-medium">{t('analytic.clean_no_similarity')}</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <InsightCard className="border-slate-100 dark:border-slate-800">
+                                <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-sm">
+                                    <Icons.Cpu size={16} className="animate-spin" />
+                                    {activeFile.status === 'COMPLETED' ? t('analytic.no_plagiarism_data') : t('analytic.checking_similarity')}
+                                </div>
+                            </InsightCard>
+                        )}
+                    </div>
+                </div>
+
+                {/* 5. Institutional Branding & Copyright Footer */}
+                <div className="mt-16 pt-12 border-t border-slate-100 dark:border-slate-800/50 flex flex-col items-center text-center">
+                    <div className="flex items-center gap-3 mb-6 opacity-40 grayscale hover:grayscale-0 transition-all duration-700 cursor-default group">
+                        <img src={tipLogo} alt="TIP AI" className="w-6 h-6 object-contain group-hover:scale-110 transition-transform" />
+                        <div className="h-4 w-[1px] bg-slate-300 dark:bg-slate-700"></div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#C9A227] dark:text-[#E2C669]">
+                            {t('analytic.institutional_footer')}
+                        </span>
+                    </div>
+
+                    <div className="space-y-2">
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                            {t('analytic.verified_institutional')}
+                        </p>
+                        <p className="text-[9px] font-medium text-slate-400 dark:text-slate-600 uppercase tracking-tighter opacity-60 max-w-[280px] mx-auto leading-tight">
+                            {t('analytic.unesco_compliance')}
+                        </p>
+                        <p className="text-[9px] font-medium text-slate-400 dark:text-slate-600 uppercase tracking-tighter opacity-80 mt-2">
+                            {t('analytic.copyright_notice')}
+                        </p>
+                    </div>
+
+                    {/* Decorative Institutional Line */}
+                    <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-[#C9A227]/30 to-transparent mt-8"></div>
                 </div>
 
             </div>
