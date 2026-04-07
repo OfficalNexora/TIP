@@ -93,6 +93,8 @@ export const ShieldCheck = (props) => <Icon {...props}><path d="M12 22s8-4 8-10V
 export const ArrowUpCircle = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"></circle><polyline points="16 12 12 8 8 12"></polyline><line x1="12" y1="16" x2="12" y2="8"></line></Icon>;
 export const List = (props) => <Icon {...props}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></Icon>;
 export const Play = (props) => <Icon {...props}><polygon points="5 3 19 12 5 21 5 3"></polygon></Icon>;
+export const Layout = (props) => <Icon {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></Icon>;
+export const Type = (props) => <Icon {...props}><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></Icon>;
 
 
 
@@ -185,7 +187,9 @@ const Icons = {
     Send,
     MessageCircle,
     LayoutDashboard,
-    Play
+    Play,
+    Layout,
+    Type
 };
 
 export default Icons;

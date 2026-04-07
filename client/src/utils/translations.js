@@ -24,6 +24,7 @@ export const translations = {
     'nav.outOf': 'out of',
     'nav.addTokens': 'Add Tokens',
     'nav.support': 'Support',
+    'nav.adminPanel': 'Admin Hub',
 
     // ── Header ──────────────────────────────────────────
     'header.overview': 'Dashboard Overview',
@@ -314,6 +315,8 @@ export const translations = {
     'analytic.dim.sustainability': 'Environmental Sustainability',
     'analytic.dim.oversight': 'Human Oversight',
     'analytic.dim.inclusiveness': 'Inclusiveness',
+    'analytic.human_indicator': 'Human Indicators',
+    'analytic.no_evidence_found': 'No sufficient evidence discovered.',
 
     // ── Upgrade / Subscription Modal ────────────────────
     'upgrade.title': 'Institutional Access',
@@ -631,6 +634,8 @@ export const translations = {
     'analytic.dim.sustainability': 'Pagpapanatili',
     'analytic.dim.oversight': 'Pangangasiwa',
     'analytic.dim.inclusiveness': 'Pagiging Inklusibo',
+    'analytic.human_indicator': 'Mga Tagapagpahiwatig ng Tao',
+    'analytic.no_evidence_found': 'Walang sapat na ebidensya ang natuklasan.',
 
     // ── Upgrade / Subscription Modal ────────────────────
     'upgrade.title': 'Institusyonal na Access',

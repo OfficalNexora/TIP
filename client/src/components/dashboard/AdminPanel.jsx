@@ -10,6 +10,7 @@ const AdminPanel = () => {
     const { language } = useUI();
     const [users, setUsers] = useState([]);
     const [payments, setPayments] = useState([]);
+    const [usage, setUsage] = useState(null);
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('users');
@@ -25,15 +26,17 @@ const AdminPanel = () => {
                     headers: { Authorization: `Bearer ${session.access_token}` }
                 };
 
-                const [usersRes, paymentsRes, statsRes] = await Promise.all([
+                const [usersRes, paymentsRes, statsRes, usageRes] = await Promise.all([
                     axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/users`, config),
                     axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/payments`, config),
-                    axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/stats`, config)
+                    axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/stats`, config),
+                    axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/admin/usage`, config)
                 ]);
 
                 setUsers(usersRes.data);
                 setPayments(paymentsRes.data);
                 setStats(statsRes.data);
+                setUsage(usageRes.data);
             } catch (error) {
                 console.error('[AdminPanel] Fetch failed:', error);
             } finally {
@@ -77,6 +80,12 @@ const AdminPanel = () => {
                         className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'payments' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'}`}
                     >
                         Payment Feed
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('usage')}
+                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'usage' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200'}`}
+                    >
+                        System Usage
                     </button>
                 </div>
             </div>
@@ -149,7 +158,7 @@ const AdminPanel = () => {
                                 ))}
                             </tbody>
                         </table>
-                    ) : (
+                    ) : activeTab === 'payments' ? (
                         <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
                             {payments.map(log => (
                                 <div key={log.id} className="p-6 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors flex items-center justify-between">
@@ -179,6 +188,79 @@ const AdminPanel = () => {
                                     No payment events detected
                                 </div>
                             )}
+                        </div>
+                    ) : (
+                        <div className="p-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800">
+                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Token Consumption (Last 100)</h3>
+                                    <div className="space-y-4">
+                                        <div className="flex justify-between items-end">
+                                            <div>
+                                                <p className="text-4xl font-black text-slate-900 dark:text-white">{usage?.total_tokens?.toLocaleString() || 0}</p>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Total System Tokens</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-sm font-black text-emerald-600 dark:text-emerald-400">FREE TIER</p>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase">Pool Status</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-3xl border border-slate-100 dark:border-slate-800">
+                                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Model Breakdown</h3>
+                                    <div className="space-y-3">
+                                        {usage?.by_model && Object.entries(usage.by_model).map(([model, count]) => (
+                                            <div key={model} className="flex items-center justify-between">
+                                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-tight">{model}</span>
+                                                <div className="flex items-center gap-3 flex-1 mx-4">
+                                                    <div className="h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full flex-1 overflow-hidden">
+                                                        <div 
+                                                            className="h-full bg-blue-500 rounded-full" 
+                                                            style={{ width: `${Math.min(100, (count / (usage.total_tokens || 1)) * 100)}%` }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <span className="text-[10px] font-black text-slate-900 dark:text-white">{count.toLocaleString()}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-8">
+                                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <Icons.Activity size={12} className="text-blue-500" />
+                                    Live Usage Feed
+                                </h3>
+                                <div className="bg-white/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden">
+                                    <table className="w-full text-left text-[10px] border-collapse">
+                                        <thead className="bg-slate-50/50 dark:bg-slate-800/50">
+                                            <tr>
+                                                <th className="px-4 py-3 font-black text-slate-400 uppercase">Provider</th>
+                                                <th className="px-4 py-3 font-black text-slate-400 uppercase">Model</th>
+                                                <th className="px-4 py-3 font-black text-slate-400 uppercase">Tokens</th>
+                                                <th className="px-4 py-3 font-black text-slate-400 uppercase">Time</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                                            {usage?.recent_logs?.map(log => (
+                                                <tr key={log.id}>
+                                                    <td className="px-4 py-3 font-bold text-slate-600 dark:text-slate-300 uppercase">{log.provider}</td>
+                                                    <td className="px-4 py-3 text-slate-500">{log.model_name}</td>
+                                                    <td className="px-4 py-3 font-black text-blue-600 dark:text-blue-400">{log.total_tokens}</td>
+                                                    <td className="px-4 py-3 text-slate-400">{new Date(log.created_at).toLocaleTimeString()}</td>
+                                                </tr>
+                                            ))}
+                                            {(!usage?.recent_logs || usage.recent_logs.length === 0) && (
+                                                <tr>
+                                                    <td colSpan="4" className="px-4 py-8 text-center text-slate-400 uppercase tracking-widest">No usage tokens recorded yet</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>

@@ -23,10 +23,10 @@ export const NotificationProvider = ({ children }) => {
 
     // Helper functions for common types
     const notify = {
-        success: (title, message) => addToast({ type: 'success', title, message }),
-        error: (title, message) => addToast({ type: 'error', title, message }),
-        info: (title, message) => addToast({ type: 'info', title, message }),
-        warning: (title, message) => addToast({ type: 'warning', title, message }),
+        success: (title, message = '') => addToast({ type: 'success', title, message }),
+        error: (title, message = '') => addToast({ type: 'error', title, message }),
+        info: (title, message = '') => addToast({ type: 'info', title, message }),
+        warning: (title, message = '') => addToast({ type: 'warning', title, message }),
     };
 
     return (

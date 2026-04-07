@@ -175,12 +175,12 @@ const AnalyticPanel = React.memo(() => {
 
     const getIconForDimension = (key) => {
         const lower = key.toLowerCase();
-        if (lower.includes('katarungan')) return Icons.Scale;
-        if (lower.includes('kalinawan')) return Icons.Eye;
-        if (lower.includes('pagkapribado')) return Icons.Lock;
-        if (lower.includes('pagpapanatili')) return Icons.Globe;
-        if (lower.includes('pangangasiwa')) return Icons.UserCheck;
-        if (lower.includes('pagiging_inklusibo')) return Icons.Users;
+        if (lower.includes('fairness') || lower.includes('katarungan')) return Icons.Scale;
+        if (lower.includes('transparency') || lower.includes('kalinawan')) return Icons.Eye;
+        if (lower.includes('privacy') || lower.includes('pagkapribado')) return Icons.Lock;
+        if (lower.includes('sustainability') || lower.includes('pagpapanatili')) return Icons.Globe;
+        if (lower.includes('oversight') || lower.includes('pangangasiwa')) return Icons.UserCheck;
+        if (lower.includes('inclusiveness') || lower.includes('pagiging_inklusibo')) return Icons.Users;
         return Icons.Activity;
     };
 
