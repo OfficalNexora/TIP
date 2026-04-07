@@ -19,6 +19,7 @@ import Results from './components/dashboard/Results';
 import AnalyticPanel from './components/dashboard/AnalyticPanel';
 import ScanHistory from './components/dashboard/ScanHistory';
 import Batching from './components/dashboard/Batching';
+import AdminPanel from './components/dashboard/AdminPanel';
 
 import Settings from './components/dashboard/Settings';
 import SubscriptionModal from './components/dashboard/SubscriptionModal';
@@ -225,6 +226,10 @@ function AppContent() {
 
                 {dashboardState === 'SETTINGS' && (
                   <Settings />
+                )}
+
+                {dashboardState === 'ADMIN' && (
+                  <AdminPanel />
                 )}
 
               </div>

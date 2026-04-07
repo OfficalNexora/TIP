@@ -171,6 +171,15 @@ const Sidebar = React.memo(() => {
                 <div className="pt-4 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider sidebar-item">
                     {t('nav.account')}
                 </div>
+                {userProfile?.role === 'admin' && (
+                    <NavItem
+                        icon={Icons.ShieldCheck}
+                        label={t('nav.adminPanel') || 'Admin Hub'}
+                        isActive={dashboardState === 'ADMIN'}
+                        onClick={() => handleNavigation('ADMIN')}
+                        className="sidebar-item"
+                    />
+                )}
                 <NavItem
                     icon={Icons.Settings}
                     label={t('nav.settings')}

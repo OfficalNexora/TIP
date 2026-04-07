@@ -129,6 +129,22 @@ const AnalyticPanel = React.memo(() => {
     // State for patterns and omissions
     const [showPatterns, setShowPatterns] = useState(false);
     const [showOmissions, setShowOmissions] = useState(false);
+    const [expandedFlags, setExpandedFlags] = useState(new Set());
+    const [expandedDimensions, setExpandedDimensions] = useState(new Set());
+ 
+     const toggleFlag = (id) => {
+         const newSet = new Set(expandedFlags);
+         if (newSet.has(id)) newSet.delete(id);
+         else newSet.add(id);
+         setExpandedFlags(newSet);
+     };
+ 
+     const toggleDimension = (id) => {
+         const newSet = new Set(expandedDimensions);
+         if (newSet.has(id)) newSet.delete(id);
+         else newSet.add(id);
+         setExpandedDimensions(newSet);
+     };
 
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -145,6 +161,16 @@ const AnalyticPanel = React.memo(() => {
         if (lower.includes('obserbasyon')) return 'text-amber-500 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400';
         if (lower.includes('pagnilay') || lower.includes('warning')) return 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400';
         return 'text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400';
+    };
+
+    const localizeStatus = (status) => {
+        if (!status) return status;
+        const s = status.toLowerCase();
+        if (s === 'low') return t('analytic.low');
+        if (s === 'medium' || s === 'moderate') return t('analytic.medium');
+        if (s === 'high') return t('analytic.high');
+        if (s === 'critical' || s === 'very high' || s === 'very_high') return t('analytic.very_high');
+        return status;
     };
 
     const getIconForDimension = (key) => {
@@ -340,9 +366,13 @@ const AnalyticPanel = React.memo(() => {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-2xl font-black">{activeFile.confidence_score || 0}%</span>
-                                    <p className="text-[9px] font-bold uppercase opacity-70">{t('analytic.ensemble_risk')}</p>
+                                    <span className="text-2xl font-black">{activeFile.ai_detection_score || 0}%</span>
+                                    <p className="text-[9px] font-bold uppercase opacity-70">{t('analytic.ai_score')}</p>
                                 </div>
+                            </div>
+                            <div className="flex items-center justify-between px-2 pt-2 pb-1 border-t border-current/10 mt-1">
+                                <span className="text-[10px] font-black uppercase opacity-70">{t('analytic.integrity_score')}</span>
+                                <span className="text-sm font-black">{activeFile.integrity_score || 0}/100</span>
                             </div>
                             <p className="text-xs font-medium leading-relaxed opacity-90 border-t border-current/10 pt-3 italic">
                                 {activeFile?.forensic_analysis?.has_smoking_gun 
@@ -407,7 +437,9 @@ const AnalyticPanel = React.memo(() => {
                     <div className="flex items-start justify-between mb-4">
                         <div>
                             <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 transition-colors">{t('analytic.overall_risk')}</h4>
-                            <AnimatedRiskCounter targetScore={targetScore} />
+                            <div className="flex items-baseline gap-2">
+                                <AnimatedRiskCounter targetScore={targetScore} />
+                            </div>
                         </div>
                         <div className={`px-2 py-1 rounded text-xs font-bold uppercase transition-colors ${confidenceBadgeClass}`}>
                             {confidenceLabel}
@@ -447,7 +479,7 @@ const AnalyticPanel = React.memo(() => {
                         <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 transition-colors">{t('analytic.ai_probability')}</h4>
                         <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium transition-colors">
                             <Icons.Cpu size={16} className="text-slate-400 dark:text-slate-500" />
-                            {activeFile.ai_usage || t('analytic.processing')}
+                            <span className="capitalize">{localizeStatus(activeFile.ai_usage) || t('analytic.processing')}</span>
                         </div>
                     </div>
                 </InsightCard>
@@ -463,8 +495,8 @@ const AnalyticPanel = React.memo(() => {
                         <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-4 rounded-xl shadow-sm">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('analytic.risk_assessment')}</span>
-                                <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase transition-colors ${activeFile.forensic_analysis?.risk_level === 'Mataas' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
-                                    {activeFile.forensic_analysis?.risk_level || (activeFile.status === 'COMPLETED' ? t('analytic.risk_low') : t('analytic.analyzing'))}
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase transition-colors ${activeFile.forensic_analysis?.risk_level === 'Mataas' || activeFile.forensic_analysis?.risk_level === 'High' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
+                                    {localizeStatus(activeFile.forensic_analysis?.risk_level) || (activeFile.status === 'COMPLETED' ? t('analytic.risk_low') : t('analytic.analyzing'))}
                                 </span>
                             </div>
                             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed italic">
@@ -806,35 +838,68 @@ const AnalyticPanel = React.memo(() => {
                 {/* 3. Critical Flags (Interactive) */}
                 <div>
                     <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-tip-text-main transition-colors">Mga Flag ng Kritikal na Pagsusuri</h4>
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-tip-text-main transition-colors">{t('analytic.critical_findings')}</h4>
                         <span className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full transition-colors">{activeFile.flags?.length || 0}</span>
                     </div>
 
                     <div className="space-y-3">
                         {activeFile.flags && activeFile.flags.length > 0 ? (
                             activeFile.flags.map((flag, i) => {
-                                const isFocused = focusedIssue?.id === `flag-${i}`;
+                                const flagId = `flag-${i}`;
+                                const isExpanded = expandedFlags.has(flagId);
                                 return (
                                     <InsightCard
                                         key={i}
-                                        onClick={() => handleIssueClick({
-                                            id: `flag-${i}`,
-                                            label: flag.label || flag.type || "Kritikal na Flag",
-                                            explanation: flag.explanation || flag.detail || flag,
-                                            suggestion: flag.suggestion,
-                                            revision_prompt: flag.revision_prompt,
-                                            snippet: flag.associated_snippet || flag.snippet
-                                        })}
-                                        className={`group transition-all hover:translate-x-1 ${isFocused ? 'ring-2 ring-blue-500 border-blue-500 shadow-lg' : 'border-rose-100 dark:border-rose-900/30'}`}
+                                        onClick={() => toggleFlag(flagId)}
+                                        className={`group transition-all hover:translate-x-1 cursor-pointer overflow-hidden ${isExpanded ? 'ring-1 ring-rose-300 border-rose-300 shadow-md bg-white dark:bg-slate-800/60' : 'border-rose-100 dark:border-rose-900/30'}`}
                                     >
                                         <div className="flex gap-3">
                                             <div className="mt-0.5 text-rose-500 dark:text-rose-400 shrink-0">
                                                 <Icons.AlertTriangle size={18} />
                                             </div>
-                                            <div>
-                                                <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase block mb-1">{flag.type || "Kontekstwal na Pagkukulang"}</span>
-                                                <p className="text-sm text-slate-900 dark:text-slate-200 font-bold mb-1">{flag.label || (typeof flag === 'string' ? flag : 'May Nakitang Panganib')}</p>
-                                                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">{flag.explanation || flag.detail}</p>
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase">{flag.type || t('analytic.category_flag')}</span>
+                                                    <Icons.ChevronRight size={14} className={`text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} />
+                                                </div>
+                                                <p className="text-sm text-slate-900 dark:text-slate-200 font-bold mb-1">{flag.label || (typeof flag === 'string' ? flag : t('analytic.needs_review'))}</p>
+                                                
+                                                {/* Always visible brief part */}
+                                                {!isExpanded && (
+                                                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{flag.explanation || flag.detail}</p>
+                                                )}
+
+                                                {/* Expanded Details */}
+                                                {isExpanded && (
+                                                    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                        <div>
+                                                            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Paliwanag</h5>
+                                                            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{flag.explanation || flag.detail}</p>
+                                                        </div>
+                                                        
+                                                        {flag.associated_snippet && (
+                                                            <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                                                                <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                                                    <Icons.Hash size={10} /> {t('analytic.evidence')}
+                                                                </h5>
+                                                                <p className="text-[11px] text-slate-600 dark:text-slate-400 italic leading-relaxed">
+                                                                    "{flag.associated_snippet}"
+                                                                </p>
+                                                            </div>
+                                                        )}
+
+                                                        {flag.suggestion && (
+                                                            <div className="bg-blue-50/50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800/50">
+                                                                <h5 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                                                                    <Icons.Zap size={10} /> {t('analytic.suggestion')}
+                                                                </h5>
+                                                                <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                                                                    {flag.suggestion}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </InsightCard>
@@ -860,21 +925,15 @@ const AnalyticPanel = React.memo(() => {
                             const status = dim?.status || dim?.alignment || 'N/A';
                             const alignClass = getAlignmentColor(status);
                             const DimensionIcon = getIconForDimension(key);
-                            const isFocused = focusedIssue?.id === `dim-${key}`;
+                            const dimId = `dim-${key}`;
+                            const isExpanded = expandedDimensions.has(dimId);
 
                             return (
                                 <InsightCard
                                     key={i}
                                     noPadding
-                                    onClick={() => handleIssueClick({
-                                        id: `dim-${key}`,
-                                        label: formatKey(key),
-                                        explanation: dim?.reason || dim?.explanation || "Walang sapat na ebidensya ang natuklasan.",
-                                        suggestion: dim?.suggestion,
-                                        revision_prompt: dim?.revision_prompt,
-                                        snippet: dim?.evidence_snippet || dim?.snippet
-                                    })}
-                                    className={`overflow-hidden hover:shadow-md transition-all group ${isFocused ? 'ring-2 ring-blue-500 border-blue-500 shadow-lg' : 'border-slate-100 dark:border-slate-800'}`}
+                                    onClick={() => toggleDimension(dimId)}
+                                    className={`overflow-hidden hover:shadow-md transition-all group cursor-pointer ${isExpanded ? 'ring-1 ring-blue-400 border-blue-400 shadow-lg bg-white dark:bg-slate-800/60' : 'border-slate-100 dark:border-slate-800'}`}
                                 >
                                     <div className="p-4">
                                         <div className="flex items-center justify-between mb-3">
@@ -882,15 +941,56 @@ const AnalyticPanel = React.memo(() => {
                                                 <div className="text-slate-400 group-hover:text-blue-500 transition-colors">
                                                     <DimensionIcon size={18} />
                                                 </div>
-                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{formatKey(key)}</span>
+                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200 capitalize">
+                                                    {t(`analytic.dim.${key}`) || formatKey(key)}
+                                                </span>
                                             </div>
-                                            <span className={`text-[9px] px-2 py-0.5 rounded-full border font-black uppercase transition-colors ${alignClass}`}>
-                                                {status}
-                                            </span>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-[9px] px-2 py-0.5 rounded-full border font-black uppercase transition-colors ${alignClass}`}>
+                                                    {status}
+                                                </span>
+                                                <Icons.ChevronRight size={14} className={`text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} />
+                                            </div>
                                         </div>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed italic">
-                                            {dim?.reason || dim?.explanation || "Walang sapat na ebidensya ang natuklasan."}
-                                        </p>
+                                        
+                                        {!isExpanded && (
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed italic line-clamp-1">
+                                                {dim?.reason || dim?.explanation || "Walang sapat na ebidensya ang natuklasan."}
+                                            </p>
+                                        )}
+
+                                        {isExpanded && (
+                                            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <div>
+                                                    <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pagsusuri</h5>
+                                                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                                                        {dim?.reason || dim?.explanation || "Walang sapat na ebidensya ang natuklasan."}
+                                                    </p>
+                                                </div>
+
+                                                {(dim?.evidence_snippet || dim?.snippet) && (
+                                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                                                        <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                                            <Icons.Hash size={10} /> {t('analytic.evidence')}
+                                                        </h5>
+                                                        <p className="text-[11px] text-slate-600 dark:text-slate-400 italic leading-relaxed">
+                                                            "{dim?.evidence_snippet || dim?.snippet}"
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {dim?.suggestion && (
+                                                    <div className="bg-emerald-50/50 dark:bg-emerald-900/20 p-3 rounded-lg border border-emerald-100 dark:border-emerald-800/50">
+                                                        <h5 className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                                                            <Icons.Zap size={10} /> {t('analytic.suggestion')}
+                                                        </h5>
+                                                        <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                                                            {dim?.suggestion}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </InsightCard>
                             );
