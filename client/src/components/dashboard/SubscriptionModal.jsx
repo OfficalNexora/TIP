@@ -3,10 +3,12 @@ import { createPortal } from 'react-dom';
 import Icons from '../ui/Icons';
 import InsightCard from '../ui/InsightCard';
 import { useUI, useActions } from '../../contexts/DashboardContext';
+import { useTranslation } from '../../utils/useTranslation';
 
 const SubscriptionModal = () => {
     const { isSubscriptionOpen: isOpen } = useUI();
     const { setSubscriptionOpen } = useActions();
+    const { t } = useTranslation();
 
     const onClose = () => setSubscriptionOpen(false);
     const onUpgrade = () => alert("Contact Sales for Institutional Access.");
@@ -28,137 +30,179 @@ const SubscriptionModal = () => {
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 md:p-8">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300"
+                className="absolute inset-0 bg-slate-900/80 backdrop-blur-md transition-opacity duration-300"
                 onClick={onClose}
             ></div>
 
             {/* Modal Content */}
-            <div className="relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-4xl overflow-hidden animate-fade-in flex flex-col md:flex-row font-sans transition-colors duration-300">
+            <div className="relative bg-[#000812] border border-blue-900/40 rounded-3xl shadow-[0_0_100px_rgba(0,33,71,0.5)] w-full max-w-6xl overflow-hidden animate-fade-in flex flex-col font-sans transition-colors duration-300 max-h-[95vh] overflow-y-auto custom-scrollbar">
 
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all z-20"
+                    className="absolute top-6 right-6 p-2 text-slate-400 hover:text-white bg-slate-800/50 hover:bg-slate-700/80 rounded-full transition-all z-20"
                 >
                     <Icons.X size={20} />
                 </button>
 
-                {/* Left Side: Institutional Context */}
-                <div className="bg-[#002147] text-white p-10 md:w-5/12 flex flex-col justify-between relative">
-                    <div className="relative z-10">
-                        <div className="mb-8 opacity-80">
-                            <Icons.Shield size={32} className="text-blue-200" />
+                <div className="p-8 md:p-14">
+                    {/* Header */}
+                    <div className="text-center mb-14">
+                        <div className="flex justify-center mb-6">
+                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#002147] to-[#00142D] flex items-center justify-center ring-1 ring-blue-500/20 shadow-lg transform rotate-3">
+                                <Icons.Shield size={32} className="text-[#C9A227] transform -rotate-3" />
+                            </div>
                         </div>
-                        <h3 className="text-2xl font-bold mb-4 tracking-tight drop-shadow-sm" style={{ color: '#C9A227' }}>
-                            Institutional Access & <br />Advanced Capabilities
-                        </h3>
-                        <p className="text-sm text-blue-200/80 leading-7 mb-8 font-light">
-                            Enable extended analysis capacity, API interoperability, and priority audit support for regulatory workflows.
+                        <h2 className="text-3xl md:text-5xl font-black text-white mb-4 tracking-tight">
+                            {t('upgrade.title')}
+                        </h2>
+                        <p className="text-blue-200/60 text-sm md:text-base font-medium max-w-xl mx-auto leading-relaxed">
+                            {t('upgrade.subtitle')}
                         </p>
-                        <div className="space-y-4">
-                            {[
-                                "Extended document analysis capacity",
-                                "Programmatic access via secure API",
-                                "Customizable compliance frameworks",
-                                "Priority audit review support",
-                                "Team roles and access control"
-                            ].map((item, i) => (
-                                <div key={i} className="flex items-start gap-3">
-                                    <div className="mt-0.5 opacity-60">
-                                        <Icons.CheckCircle size={16} className="text-blue-200" />
-                                    </div>
-                                    <span className="text-sm font-light text-blue-100/90">{item}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Side: Plan Selection */}
-                <div className="p-10 md:w-7/12 bg-white dark:bg-tip-surface flex flex-col justify-center transition-colors">
-                    <div className="mb-8 font-sans">
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-tip-text-main transition-colors">Select Subscription Plan</h3>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1 font-light transition-colors">Transparent pricing for compliance capabilities.</p>
                     </div>
 
-                    <div className="space-y-4">
-                        {/* Free Tier */}
-                        <div className={`border rounded-lg p-5 flex items-center justify-between transition-colors ${currentPlan === 'Audit Basic' ? 'bg-emerald-50/20 border-emerald-500/30 ring-1 ring-emerald-500/20' : 'bg-slate-50/50 dark:bg-slate-900/50 border-slate-100 dark:border-slate-800 opacity-60'}`}>
-                            <div>
-                                <h4 className="font-bold text-slate-700 dark:text-slate-300 text-sm transition-colors uppercase tracking-widest">Audit Basic</h4>
-                                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 transition-colors">Individual research use • 3 Scans/mo</p>
+                    {/* Pricing Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                        
+                        {/* Audit Basic - Free Tier */}
+                        <div className="bg-[#001124] border border-blue-900/40 rounded-3xl p-8 flex flex-col relative transition-all hover:border-blue-700/40 hover:bg-[#00152b]">
+                            <div className="mb-6">
+                                <h3 className="text-slate-300 text-xl font-bold mb-3 tracking-wide">{t('upgrade.basic.title')}</h3>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-4xl font-black text-white">₱0</span>
+                                    <span className="text-slate-500 text-sm font-bold">{t('upgrade.perMo')}</span>
+                                </div>
+                                <p className="text-xs text-slate-400 mt-3 font-medium">{t('upgrade.basic.desc')}</p>
                             </div>
-                            <div className="text-right">
-                                <span className="block text-slate-900 dark:text-tip-text-main font-bold text-sm transition-colors">₱0/mo</span>
-                                {currentPlan === 'Audit Basic' && <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider transition-colors">Active Plan</span>}
-                            </div>
-                        </div>
-
-                        {/* Enterprise Tier */}
-                        <div className={`border rounded-lg p-6 relative transition-all ${currentPlan === 'Enterprise' ? 'border-emerald-500/30 bg-emerald-50/10 ring-1 ring-emerald-500/20' : 'border-[#002147]/20 dark:border-blue-900/40 bg-white dark:bg-slate-900/50 hover:border-[#C9A227] shadow-sm'}`}>
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h4 className="font-bold text-[#002147] dark:text-blue-400 text-lg flex items-center gap-2 transition-colors uppercase tracking-tight">
-                                        Institutional Enterprise
-                                    </h4>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed max-w-xs transition-colors font-medium">
-                                        150 scans, PDF export, team orchestration, and direct institutional API link.
-                                    </p>
+                            
+                            <div className="flex-1 space-y-4 mt-4 mb-10">
+                                <div className="flex items-center gap-3">
+                                    <div className="min-w-5 flex justify-center"><Icons.CheckCircle size={18} className="text-slate-300" /></div>
+                                    <span className="text-sm text-slate-300 font-medium">{t('upgrade.basic.f1')}</span>
                                 </div>
-                                <div className="text-right">
-                                    <span className="text-[#002147] dark:text-blue-400 font-bold text-lg transition-colors">₱1,650/mo</span>
+                                <div className="flex items-center gap-3">
+                                    <div className="min-w-5 flex justify-center"><Icons.CheckCircle size={18} className="text-slate-300" /></div>
+                                    <span className="text-sm text-slate-300 font-medium">{t('upgrade.basic.f2')}</span>
                                 </div>
-                            </div>
-
-                            {currentPlan !== 'Enterprise' ? (
-                                <button
-                                    onClick={() => handleUpgrade('Enterprise')}
-                                    disabled={isUpgrading}
-                                    className="w-full py-3 rounded-md bg-[#C9A227] text-[#002147] font-bold text-sm hover:translate-y-[-1px] active:translate-y-0 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
-                                >
-                                    {isUpgrading ? (
-                                        <div className="w-4 h-4 border-2 border-[#002147] border-t-transparent rounded-full animate-spin"></div>
-                                    ) : (
-                                        <>Upgrade to Enterprise <Icons.ArrowRight size={16} /></>
-                                    )}
-                                </button>
-                            ) : (
-                                <div className="w-full py-3 rounded-md bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-bold text-sm flex items-center justify-center gap-2 border border-emerald-500/20">
-                                    <Icons.CheckCircle size={16} /> Current Active Plan
+                                <div className="flex items-center gap-3 opacity-40">
+                                    <div className="min-w-5 flex justify-center"><Icons.X size={18} className="text-slate-500" /></div>
+                                    <span className="text-sm text-slate-400 font-medium">{t('upgrade.basic.f3')}</span>
                                 </div>
-                            )}
-                        </div>
-
-                        {/* Enterprise++ Tier */}
-                        <div className={`border rounded-lg p-6 relative transition-all border-blue-600/30 bg-blue-50/5 dark:bg-blue-900/10 hover:border-blue-500 shadow-sm`}>
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h4 className="font-bold text-blue-700 dark:text-blue-300 text-lg flex items-center gap-2 transition-colors uppercase tracking-tight">
-                                        Enterprise++ Unlimited
-                                    </h4>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed max-w-xs transition-colors font-medium">
-                                        Unlimited forensic scans, priority institutional support, and advanced security panels.
-                                    </p>
-                                </div>
-                                <div className="text-right">
-                                    <span className="text-blue-700 dark:text-blue-300 font-bold text-lg transition-colors">₱4,999/mo</span>
+                                <div className="flex items-center gap-3 opacity-40">
+                                    <div className="min-w-5 flex justify-center"><Icons.X size={18} className="text-slate-500" /></div>
+                                    <span className="text-sm text-slate-400 font-medium">{t('upgrade.basic.f4')}</span>
                                 </div>
                             </div>
 
-                            <button
-                                onClick={() => handleUpgrade('EnterprisePlus')}
-                                disabled={isUpgrading}
-                                className="w-full py-3 rounded-md bg-blue-600 text-white font-bold text-sm hover:translate-y-[-1px] active:translate-y-0 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
-                            >
-                                Get Enterprise++ Unlimited
+                            <button className="w-full py-4 rounded-2xl bg-slate-800/50 text-slate-400 font-bold text-sm cursor-not-allowed border border-slate-700/50">
+                                {t('upgrade.currentPlan')}
                             </button>
                         </div>
+
+                        {/* Enterprise - Most Popular Tier */}
+                        <div className="bg-gradient-to-b from-[#1a1400] to-[#00162d] border border-[#C9A227] rounded-3xl p-8 flex flex-col relative transform md:-translate-y-6 shadow-[0_0_50px_rgba(201,162,39,0.15)] ring-2 ring-[#C9A227]/20 transition-all hover:shadow-[0_0_60px_rgba(201,162,39,0.25)] hover:-translate-y-8 duration-300 z-10">
+                            
+                            {/* Glow behind the badge */}
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-8 bg-amber-500/40 blur-xl rounded-full"></div>
+                            
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-amber-400 via-[#C9A227] to-amber-500 text-[#000812] px-5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-widest shadow-[0_0_15px_rgba(201,162,39,0.5)] whitespace-nowrap">
+                                {t('upgrade.mostPopular')}
+                            </div>
+                            
+                            <div className="mb-6 mt-4">
+                                <h3 className="text-[#C9A227] text-xl font-bold mb-3 tracking-wide">{t('upgrade.ent.title')}</h3>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-4xl font-black text-white">₱1,650</span>
+                                    <span className="text-amber-500/60 text-sm font-bold">{t('upgrade.perMo')}</span>
+                                </div>
+                                <p className="text-xs text-amber-200/60 mt-3 font-medium">{t('upgrade.ent.desc')}</p>
+                            </div>
+                            
+                            <div className="flex-1 space-y-4 mt-4 mb-10">
+                                <div className="flex items-center gap-3">
+                                    <div className="min-w-5 flex justify-center"><Icons.CheckCircle size={18} className="text-[#C9A227]" /></div>
+                                    <span className="text-sm text-slate-100 font-medium">{t('upgrade.ent.f1')}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="min-w-5 flex justify-center"><Icons.CheckCircle size={18} className="text-[#C9A227]" /></div>
+                                    <span className="text-sm text-slate-100 font-medium">{t('upgrade.ent.f2')}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="min-w-5 flex justify-center"><Icons.CheckCircle size={18} className="text-[#C9A227]" /></div>
+                                    <span className="text-sm text-slate-100 font-medium">{t('upgrade.ent.f3')}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="min-w-5 flex justify-center"><Icons.CheckCircle size={18} className="text-[#C9A227]" /></div>
+                                    <span className="text-sm text-slate-100 font-medium">{t('upgrade.ent.f4')}</span>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={() => handleUpgrade('Enterprise')}
+                                disabled={isUpgrading}
+                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 via-[#C9A227] to-amber-600 hover:from-amber-400 hover:to-amber-500 text-[#000812] font-black text-sm flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(201,162,39,0.3)] disabled:opacity-50 transition-all hover:scale-[1.03] active:scale-[0.98] uppercase tracking-wider"
+                            >
+                                {isUpgrading ? (
+                                    <div className="w-5 h-5 border-2 border-[#000812] border-t-transparent rounded-full animate-spin"></div>
+                                ) : t('upgrade.ent.btn')}
+                            </button>
+                        </div>
+
+                        {/* Enterprise++ - Best Value Tier */}
+                        <div className="bg-gradient-to-b from-[#001736] to-[#001124] border border-blue-500/40 rounded-3xl p-8 flex flex-col relative shadow-[0_0_30px_rgba(59,130,246,0.1)] transition-all hover:border-blue-400/60 hover:shadow-[0_0_40px_rgba(59,130,246,0.15)] overflow-hidden">
+                            
+                            {/* Inner ambient glow */}
+                            <div className="absolute top-0 right-0 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                            <div className="absolute top-0 right-6 -translate-y-1/2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-1.5 rounded-b-lg text-[9px] font-black uppercase tracking-widest shadow-lg border-x border-b border-blue-400/30">
+                                {t('upgrade.bestValue')}
+                            </div>
+
+                            <div className="mb-6">
+                                <h3 className="text-blue-400 text-xl font-bold mb-3 tracking-wide flex items-center gap-1">
+                                    {t('upgrade.entplus.title')}
+                                </h3>
+                                <div className="flex items-baseline gap-1">
+                                    <span className="text-4xl font-black text-white">₱4,999</span>
+                                    <span className="text-blue-400/60 text-sm font-bold">{t('upgrade.perMo')}</span>
+                                </div>
+                                <p className="text-xs text-blue-200/60 mt-3 font-medium">{t('upgrade.entplus.desc')}</p>
+                            </div>
+                            
+                            <div className="flex-1 space-y-4 mt-4 mb-10 relative z-10">
+                                <div className="flex items-center gap-3">
+                                    <div className="min-w-5 flex justify-center"><Icons.CheckCircle size={18} className="text-blue-400" /></div>
+                                    <span className="text-sm text-slate-100 font-medium">{t('upgrade.entplus.f1')}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="min-w-5 flex justify-center"><Icons.CheckCircle size={18} className="text-blue-400" /></div>
+                                    <span className="text-sm text-slate-100 font-medium">{t('upgrade.entplus.f2')}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="min-w-5 flex justify-center"><Icons.CheckCircle size={18} className="text-blue-400" /></div>
+                                    <span className="text-sm text-slate-100 font-medium">{t('upgrade.entplus.f3')}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="min-w-5 flex justify-center"><Icons.CheckCircle size={18} className="text-blue-400" /></div>
+                                    <span className="text-sm text-slate-100 font-medium">{t('upgrade.entplus.f4')}</span>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={() => handleUpgrade('EnterprisePlus')}
+                                disabled={isUpgrading}
+                                className="w-full py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-sm flex items-center justify-center gap-2 shadow-[0_10px_20px_rgba(37,99,235,0.2)] disabled:opacity-50 transition-all hover:scale-[1.02] active:scale-[0.98] uppercase tracking-wider relative z-10"
+                            >
+                                {isUpgrading ? (
+                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                ) : t('upgrade.entplus.btn')}
+                            </button>
+                        </div>
+
                     </div>
-
-
                 </div>
             </div>
         </div>,
