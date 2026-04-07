@@ -157,7 +157,7 @@ const Header = ({ setAppState }) => {
                 <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-blue-50/50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-full transition-all">
                     <Icons.Zap size={12} className="text-blue-600 dark:text-blue-400 fill-blue-600 dark:fill-blue-400" />
                     <span className="text-[11px] font-bold text-blue-700 dark:text-blue-300">
-                        {credits} <span className="opacity-60 font-medium">tokens</span>
+                        {credits} <span className="opacity-60 font-medium">{t('header.tokens')}</span>
                     </span>
                 </div>
 

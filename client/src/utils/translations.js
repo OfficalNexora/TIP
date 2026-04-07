@@ -311,7 +311,7 @@ export const translations = {
     'nav.support': 'Suporta',
 
     // ── Header ──────────────────────────────────────────
-    'header.overview': 'Overview ng Dashboard',
+    'header.overview': 'Resulta ng Pagsusuri',
     'header.history': 'Talaan ng Pagsusuri',
     'header.compliance': 'Profile ng Auditor',
     'header.settings': 'Mga Setting ng Platform',
