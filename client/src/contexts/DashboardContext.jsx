@@ -489,7 +489,6 @@ export const DashboardProvider = ({ children }) => {
             return () => clearTimeout(safetyTimeout);
         }
     }, [session?.access_token, fetchHistory, prefetchAllData]);
- bitumen
 
     // Cleanup lag message
     useEffect(() => {
