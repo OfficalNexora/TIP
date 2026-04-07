@@ -328,6 +328,7 @@ export const translations = {
     // ── Header ──────────────────────────────────────────
     'header.overview': 'Resulta ng Pagsusuri',
     'header.history': 'Talaan ng Pagsusuri',
+    'header.batching': 'Operasyong Pagpapangkat',
     'header.compliance': 'Profile ng Auditor',
     'header.settings': 'Mga Setting ng Platform',
     'header.upload': 'Mag-upload ng Dokumento',

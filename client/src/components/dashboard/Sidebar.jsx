@@ -121,6 +121,14 @@ const Sidebar = React.memo(() => {
                     className="sidebar-item"
                 />
 
+                <NavItem
+                    icon={Icons.Layers}
+                    label={t('nav.batching')}
+                    isActive={dashboardState === 'BATCH'}
+                    onClick={() => handleNavigation('BATCH', true)}
+                    className="sidebar-item"
+                />
+
                 {/* AI & Insights Section - Strictly visible only in RESULTS mode with active file */}
                 {dashboardState === 'RESULTS' && activeFile && (
                     <div ref={aiSectionRef}>

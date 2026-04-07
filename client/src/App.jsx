@@ -18,6 +18,7 @@ import Scanning from './components/dashboard/Scanning';
 import Results from './components/dashboard/Results';
 import AnalyticPanel from './components/dashboard/AnalyticPanel';
 import ScanHistory from './components/dashboard/ScanHistory';
+import Batching from './components/dashboard/Batching';
 
 import Settings from './components/dashboard/Settings';
 import SubscriptionModal from './components/dashboard/SubscriptionModal';
@@ -218,7 +219,9 @@ function AppContent() {
                   <Results />
                 )}
 
-
+                {dashboardState === 'BATCH' && (
+                  <Batching />
+                )}
 
                 {dashboardState === 'SETTINGS' && (
                   <Settings />
