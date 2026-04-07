@@ -402,31 +402,35 @@ const ProfileContent = ({ userProfile, handleUpdateProfile }) => {
     };
 
     return (
-        <div className="animate-fade-in max-w-3xl space-y-12">
-            <SectionHeader title={t('settings.profile') || "Profile"} subtitle={t('settings.profileSubtitle') || "Manage your personal information and account."} />
+        <div className="animate-fade-in w-full max-w-4xl mx-auto space-y-6 pt-2">
+            
+            {/* Profile Card Container with Animation */}
+            <div className="bg-white dark:bg-[#000d1a] border border-slate-200 dark:border-blue-900/40 rounded-3xl overflow-hidden shadow-xl relative transition-all duration-500 hover:shadow-2xl hover:border-blue-500/30 hover:-translate-y-1 group/maincard">
+                
+                {/* 1. Banner */}
+                <div className="h-32 md:h-48 w-full bg-gradient-to-br from-[#00142D] via-[#002147] to-[#C9A227]/80 relative flex items-end overflow-hidden">
+                    <div className="absolute inset-0 bg-blue-900 mix-blend-overlay opacity-20"></div>
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 transition-transform duration-1000 group-hover/maincard:scale-105"></div>
+                </div>
 
-            {/* 1. IDENTITY INFORMATION (Supabase Managed) */}
-            <section className="space-y-6">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2">{t('settings.identityInfo') || 'Identity Information'}</h3>
-
-                <div className="flex items-start gap-8">
-                    {/* Avatar */}
-                    <div className="group relative">
-                        <div className="w-24 h-24 rounded-full bg-slate-200 dark:bg-slate-800 flex items-center justify-center overflow-hidden border-2 border-slate-100 dark:border-slate-700 shadow-sm relative">
+                {/* Content Below Banner */}
+                <div className="px-6 md:px-10 pb-10 relative">
+                    {/* 2. Avatar (Overlapping banner) */}
+                    <div className="relative -mt-16 md:-mt-24 mb-4 flex justify-between items-end">
+                        <div className="group relative z-10 w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-[#000d1a] bg-slate-200 dark:bg-slate-800 flex items-center justify-center overflow-hidden shadow-xl transition-transform duration-300 hover:scale-105">
                             {avatarUploading ? (
                                 <Icons.Loader className="animate-spin text-slate-400" size={32} />
                             ) : localAvatarUrl ? (
-                                <img src={localAvatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                                <img src={localAvatarUrl} alt="Profile" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
                             ) : (
-                                <span className="text-3xl font-bold text-slate-400 dark:text-slate-500">
+                                <span className="text-4xl font-black text-slate-400 dark:text-slate-500 uppercase">
                                     {userProfile.firstName?.[0]}{userProfile.lastName?.[0]}
                                 </span>
                             )}
-
                             {/* Upload Overlay */}
                             {!avatarUploading && (
-                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                                    <Icons.Camera className="text-white" size={24} />
+                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer backdrop-blur-sm">
+                                    <Icons.Camera className="text-white transform scale-90 group-hover:scale-100 transition-transform duration-300" size={28} />
                                 </div>
                             )}
                             <input
@@ -437,175 +441,138 @@ const ProfileContent = ({ userProfile, handleUpdateProfile }) => {
                                 disabled={avatarUploading}
                             />
                         </div>
-                        <button className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            {avatarUploading ? 'Uploading...' : 'Palitan ang Litrato'}
-                        </button>
                     </div>
 
-                    <div className="flex-1 space-y-5">
-                        <FieldGroup label={t('settings.fullName') || "Full Name"}>
-                            <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800/50">
-                                <span className="text-base font-medium text-slate-900 dark:text-slate-100">
+                    {/* 3. Main Info Split */}
+                    <div className="flex flex-col md:flex-row md:justify-between gap-8 mt-4">
+                        {/* Left Side: Name, Role, Location, Buttons */}
+                        <div className="flex-1 space-y-4">
+                            <div className="transition-all duration-300 translate-y-0 opacity-100">
+                                <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-2">
                                     {userProfile.firstName} {userProfile.lastName}
-                                </span>
+                                </h2>
+                                <p className="text-base md:text-lg text-slate-600 dark:text-slate-300 font-bold">
+                                    {userProfile.role || t('settings.institutionWorker')}
+                                </p>
+                                <div className="flex items-center gap-2 mt-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
+                                    <Icons.MapPin size={16} className="text-blue-500 dark:text-blue-400" />
+                                    {userProfile.organization || t('settings.noOrganizationSet')}
+                                </div>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-3 pt-2">
                                 <button
                                     onClick={() => setIsNameModalOpen(true)}
-                                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                                    className="px-6 py-2.5 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs shadow-[0_4px_14px_0_rgb(0,0,0,0.1)] transition-all hover:scale-105 hover:shadow-lg active:scale-95"
                                 >
-                                    {t('settings.update') || 'Update'}
+                                    {t('settings.updateProfile')}
+                                </button>
+                                <button
+                                    onClick={() => setActiveModal('role')}
+                                    className="px-6 py-2.5 rounded-full border-2 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs shadow-sm bg-white dark:bg-transparent transition-all hover:scale-105 active:scale-95"
+                                >
+                                    {t('settings.settingsBtn')}
+                                </button>
+                                <button
+                                    onClick={() => setActiveModal('org')}
+                                    className="px-6 py-2.5 rounded-full border-2 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs shadow-sm bg-white dark:bg-transparent transition-all hover:scale-105 active:scale-95"
+                                >
+                                    {t('settings.editOrg')}
                                 </button>
                             </div>
-                        </FieldGroup>
+                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <FieldGroup label={t('settings.email') || "Email Address"}>
-                                <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 px-3 py-2 rounded border border-slate-100 dark:border-slate-800 group hover:border-blue-200 dark:hover:border-blue-900/50 transition-colors">
-                                    <span className="text-sm text-slate-600 dark:text-slate-400 font-mono">{userProfile.email}</span>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={() => setActiveModal('email')}
-                                            className="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline transition-opacity"
-                                        >
-                                            {t('settings.update') || 'Update'}
-                                        </button>
-                                    </div>
+                        {/* Right Side: Meta tags disguised as Skills */}
+                        <div className="md:w-72 space-y-6">
+                            {/* Role Tag Placeholder */}
+                            <div className="transform transition-all duration-500 delay-100">
+                                <div className="flex justify-between items-center mb-3 border-b border-slate-100 dark:border-slate-800 pb-2">
+                                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded">{t('settings.accessTier')}</span>
                                 </div>
-                            </FieldGroup>
-
-                            <FieldGroup label="Account ID">
-                                <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900/50 px-3 py-2 rounded border border-slate-100 dark:border-slate-800">
-                                    <span className="text-xs text-slate-500 dark:text-slate-500 font-mono truncate max-w-[140px]" title={sessionData.id}>{sessionData.id}</span>
-                                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-slate-200 dark:bg-slate-800 rounded text-[10px] font-bold text-slate-600 dark:text-slate-400">
-                                        <Icons.Lock size={10} />
-                                        Supabase
-                                    </div>
+                                <div className="flex gap-2">
+                                    <span className="px-4 py-1.5 bg-gradient-to-r from-amber-500/10 to-amber-600/10 dark:from-[#C9A227]/20 dark:to-[#002147]/40 text-amber-700 dark:text-[#C9A227] rounded-full text-xs font-black border border-amber-200/50 dark:border-[#C9A227]/30 shadow-sm flex items-center gap-1.5 transition-transform hover:-translate-y-0.5">
+                                        <Icons.Shield size={14} className="animate-pulse" /> {t('settings.auditorProfile')}
+                                    </span>
                                 </div>
-                            </FieldGroup>
-                        </div>
-                    </div>
-                </div>
-            </section>
+                            </div>
 
-            {/* 2. ORGANIZATION & ROLE (User Editable) */}
-            <section className="space-y-6">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2">Organization & Role</h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <FieldGroup label={t('settings.organization') || "Organization / Agency"}>
-                        <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800/50">
-                            <span className="text-base text-slate-800 dark:text-slate-200">{userProfile.organization}</span>
-                            <button
-                                onClick={() => setActiveModal('org')}
-                                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                            >
-                                {t('settings.update') || 'Update'}
-                            </button>
-                        </div>
-                    </FieldGroup>
-
-                    <FieldGroup label={t('settings.role') || "Role / Title"}>
-                        <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800/50">
-                            <span className="text-base text-slate-800 dark:text-slate-200">{userProfile.role}</span>
-                            <button
-                                onClick={() => setActiveModal('role')}
-                                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                            >
-                                {t('settings.update') || 'Update'}
-                            </button>
-                        </div>
-                    </FieldGroup>
-                </div>
-
-                <FieldGroup label="Deskripsyon ng Role (Optional)">
-                    <div className="flex items-center justify-between py-1 border-b border-slate-100 dark:border-slate-800/50">
-                        <span className="text-base text-slate-500 dark:text-slate-400 italic">
-                            {userProfile.roleDescription || "No description set"}
-                        </span>
-                        <button
-                            onClick={() => setActiveModal('desc')}
-                            className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-                        >
-                            I-update
-                        </button>
-                    </div>
-                </FieldGroup>
-            </section>
-
-            {/* 3. PREFERENCES */}
-            <section className="space-y-6">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2">Preferences</h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FieldGroup label="Display Name">
-                        <input
-                            type="text"
-                            value={preferences.displayName}
-                            onChange={(e) => handlePreferenceUpdate('displayName', e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors"
-                        />
-                    </FieldGroup>
-
-                    <FieldGroup label={t('settings.language') || "Language"}>
-                        <div className="relative">
-                            <select
-                                value={language}
-                                onChange={(e) => setDashboardState(state => ({ ...state, language: e.target.value }))}
-                                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors appearance-none cursor-pointer"
-                            >
-                                <option value="en">English</option>
-                                <option value="tl">Tagalog</option>
-                            </select>
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                <Icons.ChevronDown size={14} className="text-slate-400" />
+                            {/* Skills Tag Area -> Meta Tags */}
+                            <div className="transform transition-all duration-500 delay-200">
+                                <div className="flex justify-between items-center mb-3 pb-2">
+                                    <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest bg-slate-100 dark:bg-slate-800/50 px-2 py-0.5 rounded">{t('settings.metadata')}</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    <span className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 rounded-full text-[10px] font-bold border border-emerald-200/50 dark:border-emerald-800/50 shadow-sm transition-transform hover:-translate-y-0.5">
+                                        {t('settings.active')}
+                                    </span>
+                                    <span className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 rounded-full text-[10px] font-bold border border-slate-200/50 dark:border-slate-700 shadow-sm transition-transform hover:-translate-y-0.5">
+                                        {t('settings.supabaseAuth')}
+                                    </span>
+                                    <span className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 rounded-full text-[10px] font-bold border border-slate-200/50 dark:border-slate-700 shadow-sm transition-transform hover:-translate-y-0.5">
+                                        ID: {sessionData.id.slice(0,6)}...
+                                    </span>
+                                    <span className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-full text-[10px] font-bold border border-blue-200/50 dark:border-blue-800/50 shadow-sm transition-transform hover:-translate-y-0.5">
+                                        {language.toUpperCase()} Locale
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </FieldGroup>
+                    </div>
 
-                    <FieldGroup label="Timezone">
-                        <select
-                            value={preferences.timezone}
-                            onChange={(e) => handlePreferenceUpdate('timezone', e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors appearance-none cursor-pointer"
+                    {/* 4. Bottom Grid Cards */}
+                    <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-5 border-t border-slate-100 dark:border-slate-800/50 pt-8">
+                        {/* Card 1: Preferences */}
+                        <div className="bg-slate-50 dark:bg-slate-900/40 rounded-2xl p-5 hover:bg-white dark:hover:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 group flex flex-col justify-between h-36 border border-transparent dark:border-slate-800/50">
+                            <div>
+                                <h3 className="text-sm font-black text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 transition-colors">{t('settings.localSettings')}</h3>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{t('settings.localSettingsDesc')}</p>
+                            </div>
+                            <div className="flex justify-between items-center mt-4">
+                                <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{preferences.timezone}</div>
+                                <div className="p-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600 dark:group-hover:bg-blue-900/50 dark:group-hover:text-blue-400 transition-all group-hover:rotate-12 group-hover:scale-110">
+                                    <Icons.Globe size={14} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Card 2: Email Details */}
+                        <div 
+                            className="bg-slate-50 dark:bg-slate-900/40 rounded-2xl p-5 hover:bg-white dark:hover:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 group flex flex-col justify-between h-36 border border-transparent dark:border-slate-800/50 cursor-pointer relative overflow-hidden" 
+                            onClick={() => setActiveModal('email')}
                         >
-                            <option value="Asia/Manila">Asia/Manila (UTC+08:00)</option>
-                            <option value="UTC">UTC (UTC+00:00)</option>
-                            <option value="America/New_York">Eastern Time (UTC-05:00)</option>
-                        </select>
-                    </FieldGroup>
+                            <div className="relative z-10">
+                                <h3 className="text-sm font-black text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 transition-colors">{t('settings.updateEmail')}</h3>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{t('settings.updateEmailDesc')}</p>
+                            </div>
+                            <div className="flex justify-between items-center mt-4 relative z-10">
+                                <div className="text-xs font-mono text-slate-600 dark:text-slate-300 truncate pr-4 transition-colors group-hover:text-slate-900 dark:group-hover:text-white">{userProfile.email}</div>
+                                <div className="p-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600 dark:group-hover:bg-blue-900/50 dark:group-hover:text-blue-400 transition-all group-hover:rotate-12 group-hover:scale-110 shrink-0">
+                                    <Icons.Send size={14} />
+                                </div>
+                            </div>
+                        </div>
 
-                    <FieldGroup label="Format ng Petsa">
-                        <select
-                            value={preferences.dateFormat}
-                            onChange={(e) => handlePreferenceUpdate('dateFormat', e.target.value)}
-                            className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none transition-colors appearance-none cursor-pointer"
+                        {/* Card 3: Biography */}
+                        <div 
+                            className="bg-slate-50 dark:bg-slate-900/40 rounded-2xl p-5 hover:bg-white dark:hover:bg-slate-900 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 group flex flex-col justify-between h-36 border border-transparent dark:border-slate-800/50 cursor-pointer" 
+                            onClick={() => setActiveModal('desc')}
                         >
-                            <option value="MM/DD/YYYY">MM/DD/YYYY (12/31/2024)</option>
-                            <option value="DD/MM/YYYY">DD/MM/YYYY (31/12/2024)</option>
-                            <option value="YYYY-MM-DD">YYYY-MM-DD (2024-12-31)</option>
-                        </select>
-                    </FieldGroup>
-                </div>
-            </section>
+                            <div>
+                                <h3 className="text-sm font-black text-slate-900 dark:text-white mb-1 group-hover:text-blue-600 transition-colors">{t('settings.biography')}</h3>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium line-clamp-2">
+                                    {userProfile.roleDescription || t('settings.biographyDesc')}
+                                </p>
+                            </div>
+                            <div className="flex justify-end items-center mt-4">
+                                <div className="p-1.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-blue-100 group-hover:text-blue-600 dark:group-hover:bg-blue-900/50 dark:group-hover:text-blue-400 transition-all group-hover:rotate-12 group-hover:scale-110">
+                                    <Icons.FileText size={14} />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-            {/* 4. AUDIT METADATA */}
-            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-lg p-4 border border-slate-100 dark:border-slate-800">
-                <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Detalye ng Account</h4>
-                <div className="space-y-2 text-xs">
-                    <div className="flex justify-between">
-                        <span className="text-slate-500">Ginawa ang Account</span>
-                        <span className="font-mono text-slate-700 dark:text-slate-300">{new Date(sessionData.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-slate-500">Huling Update</span>
-                        <span className="font-mono text-slate-700 dark:text-slate-300">{new Date().toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-slate-500">Status ng Account</span>
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400 uppercase">Active</span>
-                    </div>
                 </div>
             </div>
-
 
             {/* Modals */}
             <UpdateNameModal
