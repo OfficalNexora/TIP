@@ -181,7 +181,7 @@ export const DashboardProvider = ({ children }) => {
                         setCreditsTotal(res.value.data.credits_total || 0);
                     }
                 } else {
-                    console.warn(`[Handshake] Prefetch failed for ${key}:`, res.reason.message);
+                    console.warn(`[Handshake] Non-critical prefetch failed for ${key}:`, res.reason? (res.reason.response?.data?.error || res.reason.message) : 'Unknown error');
                     fetchedData[key] = null;
                 }
             });
@@ -463,12 +463,33 @@ export const DashboardProvider = ({ children }) => {
     useEffect(() => {
         if (session?.access_token) {
             const start = performance.now();
+            
+            // Safety timeout: 5 seconds maximum for handshake
+            const safetyTimeout = setTimeout(() => {
+                setIsHandshaking(isCurrentlyHandshaking => {
+                    if (isCurrentlyHandshaking) {
+                        console.warn("[Handshake] Safety timeout reached. Forcing dashboard entry.");
+                        return false;
+                    }
+                    return false;
+                });
+            }, 5000);
+
             Promise.all([fetchHistory(), prefetchAllData()]).then(() => {
+                clearTimeout(safetyTimeout);
                 const elapsed = performance.now() - start;
+                // Minimum splash duration of 2s for brand recognition
                 setTimeout(() => setIsHandshaking(false), Math.max(0, 2000 - elapsed));
+            }).catch(err => {
+                console.error("[Handshake] Critical failure:", err);
+                clearTimeout(safetyTimeout);
+                setIsHandshaking(false);
             });
+
+            return () => clearTimeout(safetyTimeout);
         }
     }, [session?.access_token, fetchHistory, prefetchAllData]);
+ bitumen
 
     // Cleanup lag message
     useEffect(() => {
