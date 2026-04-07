@@ -5,12 +5,14 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 import { useTranslation } from '../../utils/useTranslation';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Sidebar = React.memo(() => {
     const { dashboardState, isChatOpen, rightPanelOpen } = useUI();
     const { activeFile, files, credits, creditsTotal } = useData();
     const { setDashboardState, setIsChatOpen, setRightPanelOpen, loadFile, setActiveFile, setSubscriptionOpen } = useActions();
     const { t } = useTranslation();
+    const { userProfile } = useAuth();
 
     const onUpgrade = () => setSubscriptionOpen(true);
     const aiSectionRef = React.useRef(null);
