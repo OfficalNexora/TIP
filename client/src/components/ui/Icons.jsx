@@ -92,6 +92,8 @@ export const Minimize = (props) => <Icon {...props}><path d="M8 3v3a2 2 0 0 1-2 
 export const ShieldCheck = (props) => <Icon {...props}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 11 11 13 15 9"></polyline></Icon>;
 export const ArrowUpCircle = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"></circle><polyline points="16 12 12 8 8 12"></polyline><line x1="12" y1="16" x2="12" y2="8"></line></Icon>;
 export const List = (props) => <Icon {...props}><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></Icon>;
+export const Play = (props) => <Icon {...props}><polygon points="5 3 19 12 5 21 5 3"></polygon></Icon>;
+
 
 
 const PayPal = (props) => <Icon {...props}><path d="M7.076 21.337l.886-5.617h3.111c3.55 0 5.485-1.748 6.008-5.074.22-.128.423-.293.606-.492.203.11.41.206.621.286.732.277 1.393.18 1.964-.32.062-.516.27-1.46.208-2.617-.678 2.064-2.158 3.235-4.484 3.235h-3.41l1.503-9.524H8.76L6.2 21.337h.876z"></path></Icon>;
@@ -180,7 +182,8 @@ const Icons = {
     Facebook,
     Send,
     MessageCircle,
-    LayoutDashboard
+    LayoutDashboard,
+    Play
 };
 
 export default Icons;

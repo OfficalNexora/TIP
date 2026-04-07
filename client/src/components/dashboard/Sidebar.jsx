@@ -172,13 +172,6 @@ const Sidebar = React.memo(() => {
                     {t('nav.account')}
                 </div>
                 <NavItem
-                    icon={Icons.Layers}
-                    label={t('nav.batching') || 'Batch Processing'}
-                    isActive={dashboardState === 'BATCH'}
-                    onClick={() => handleNavigation('BATCH')}
-                    className="sidebar-item"
-                />
-                <NavItem
                     icon={Icons.Settings}
                     label={t('nav.settings')}
                     isActive={dashboardState === 'SETTINGS'}
