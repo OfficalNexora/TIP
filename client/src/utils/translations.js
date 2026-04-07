@@ -266,9 +266,9 @@ export const translations = {
   tl: {
     // ── Sidebar Navigation ──────────────────────────────
     'nav.tools': 'Mga Tool',
-    'nav.dashboard': 'Dashboard',
-    'nav.newAnalysis': 'Bagong Analysis',
-    'nav.scanHistory': 'Kasaysayan ng Scan',
+    'nav.dashboard': 'Resulta ng Pagsusuri',
+    'nav.newAnalysis': 'Bagong Pagsusuri',
+    'nav.scanHistory': 'Talaan ng Pagsusuri',
     'nav.aiInsights': 'AI at mga Insight',
     'nav.viewReport': 'Tignan ang Report',
     'nav.aiAssistant': 'AI Assistant',
@@ -283,13 +283,13 @@ export const translations = {
 
     // ── Header ──────────────────────────────────────────
     'header.overview': 'Overview ng Dashboard',
-    'header.history': 'Archive ng Scan',
+    'header.history': 'Talaan ng Pagsusuri',
     'header.compliance': 'Profile ng Auditor',
     'header.settings': 'Mga Setting ng Platform',
     'header.upload': 'Mag-upload ng Dokumento',
     'header.scanning': 'Ongoing na Analysis',
     'header.results': 'Resulta ng Analysis',
-    'header.dashboard': 'Dashboard',
+    'header.dashboard': 'Resulta ng Pagsusuri',
     'header.searchPlaceholder': 'Maghanap ng report',
     'header.tokens': 'tokens',
     'header.quickSearch': 'Mabilisang Search',

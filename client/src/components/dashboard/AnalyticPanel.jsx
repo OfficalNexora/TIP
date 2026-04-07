@@ -13,7 +13,6 @@ const AnimatedRiskCounter = React.memo(({ targetScore }) => {
     const [displayScore, setDisplayScore] = useState(0);
 
     useEffect(() => {
-        let start = 0;
         const duration = 1500;
         const startTime = performance.now();
 
@@ -161,7 +160,6 @@ const AnalyticPanel = React.memo(() => {
 
     // Verdict Logic (Ternary Classification)
     const getVerdictInfo = (verdict, lang) => {
-        const isEn = lang === 'en';
         const hasSmokingGun = activeFile?.forensic_analysis?.has_smoking_gun;
         
         if (hasSmokingGun) {
