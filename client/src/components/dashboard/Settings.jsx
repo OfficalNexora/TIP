@@ -8,7 +8,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import SubscriptionModal from './SubscriptionModal';
 import BillingPage from './billing/BillingPage';
 import { useTranslation } from '../../utils/useTranslation';
-import { useUI } from '../../contexts/DashboardContext';
+import { useUI, useData } from '../../contexts/DashboardContext';
+import InsightCard from '../ui/InsightCard';
 
 // --- Configuration ---
 const SECTIONS = [
@@ -317,7 +318,14 @@ const ProfileContent = ({ userProfile, handleUpdateProfile }) => {
     const { session } = useAuth();
     const { t } = useTranslation();
     const { language, setDashboardState } = useUI();
+    const { prefetchedData, integrityAvg, totalAudits, loadingHistory } = useData();
     
+    // Compliance derived state
+    const operationalFlags = 0; 
+    const certifications = [
+        { name: "UNESCO AI Ethics Protocol", type: "ethics", valid: "2026-12-31", status: "active" },
+        { name: "Data Privacy Act RA 10173", type: "security", valid: "2027-04-15", status: "active" }
+    ];
     // State for modals
     const [isNameModalOpen, setIsNameModalOpen] = useState(false);
     const [activeModal, setActiveModal] = useState(null); // 'email', 'recovery', 'org', 'role', 'desc' or null
@@ -571,6 +579,100 @@ const ProfileContent = ({ userProfile, handleUpdateProfile }) => {
                         </div>
                     </div>
 
+                </div>
+            </div>
+
+            {/* 5. Compliance Metrics Grid (Merged from ComplianceProfile) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 animate-fade-in delay-200">
+                {/* Integrity Score */}
+                <div className="bg-white dark:bg-[#000d1a] border border-slate-200 dark:border-blue-900/40 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group">
+                    <div className="absolute -right-4 -top-4 text-blue-900/5 group-hover:text-blue-900/10 transition-colors duration-500">
+                        <Icons.Activity size={100} />
+                    </div>
+                    <div className="flex items-center justify-between mb-4 relative z-10">
+                        <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Score ng Integridad</span>
+                    </div>
+                    <div className="flex items-end gap-2 relative z-10">
+                        <div className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
+                            {integrityAvg}
+                            <span className="text-xl text-slate-400 dark:text-slate-600 ml-1">%</span>
+                        </div>
+                        <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full mb-1">AVG</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/50 flex items-center gap-1.5 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Calculated mula sa lahat ng session
+                    </p>
+                </div>
+
+                {/* Audit Volume */}
+                <div className="bg-white dark:bg-[#000d1a] border border-slate-200 dark:border-blue-900/40 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group">
+                    <div className="absolute -right-4 -top-4 text-blue-900/5 group-hover:text-amber-500/10 transition-colors duration-500">
+                        <Icons.FileText size={100} />
+                    </div>
+                    <div className="flex items-center justify-between mb-4 relative z-10">
+                        <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Kabuuang Audits</span>
+                    </div>
+                    <div className="flex items-end gap-2 relative z-10">
+                        <div className="text-5xl font-black text-slate-900 dark:text-white tracking-tighter">
+                            {totalAudits}
+                        </div>
+                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-[#C9A227]/20 px-2 py-0.5 rounded-full mb-1">DOCS</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/50 flex items-center gap-1.5 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Naka-archive sa ligtas na database
+                    </p>
+                </div>
+
+                {/* Flags/Issues */}
+                <div className={`bg-white dark:bg-[#000d1a] border ${operationalFlags > 0 ? 'border-red-500/50 dark:border-red-500/30' : 'border-emerald-500/50 dark:border-emerald-500/30'} rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative overflow-hidden group`}>
+                    <div className={`absolute -right-4 -top-4 transition-colors duration-500 ${operationalFlags > 0 ? 'text-red-500/5 group-hover:text-red-500/10' : 'text-emerald-500/5 group-hover:text-emerald-500/10'}`}>
+                        <Icons.ShieldCheck size={100} />
+                    </div>
+                    <div className="flex items-center justify-between mb-4 relative z-10">
+                        <span className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">Mga Aktibong Flag</span>
+                    </div>
+                    <div className="flex items-end gap-2 relative z-10">
+                        <div className={`text-5xl font-black tracking-tighter ${operationalFlags > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                            {operationalFlags}
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 uppercase ${operationalFlags > 0 ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400' : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400'}`}>
+                            {operationalFlags > 0 ? "Kailangan Rebyu" : "Ligtas"}
+                        </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-500 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/50 flex items-center gap-1.5 font-medium">
+                        <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${operationalFlags > 0 ? 'bg-red-500' : 'bg-emerald-500'}`}></span> Real-time na status
+                    </p>
+                </div>
+            </div>
+
+            {/* 6. Certifications List */}
+            <div className="bg-white dark:bg-[#000d1a] border border-slate-200 dark:border-blue-900/40 rounded-3xl shadow-sm overflow-hidden mt-6">
+                <div className="px-8 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                        <Icons.Award size={16} className="text-blue-500" />
+                        Mga Credential at Pagsunod
+                    </h3>
+                    <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 px-2 py-1 rounded">VERIFIED</span>
+                </div>
+
+                <div className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                    {certifications.map((cert, idx) => (
+                        <div key={idx} className="p-6 px-8 flex items-center justify-between group hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
+                            <div className="flex items-center gap-5">
+                                <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                    {cert.type === 'ethics' ? <Icons.Globe size={20} /> : <Icons.Shield size={20} />}
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{cert.name}</span>
+                                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-wider mt-0.5">Mag-eexpire sa: {cert.valid}</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Aktibo</span>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
 

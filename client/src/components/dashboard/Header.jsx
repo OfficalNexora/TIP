@@ -27,7 +27,6 @@ const Header = ({ setAppState }) => {
         switch (dashboardState) {
             case 'OVERVIEW': return t('header.overview');
             case 'HISTORY': return t('header.history');
-            case 'COMPLIANCE': return t('header.compliance');
             case 'SETTINGS': return t('header.settings');
             case 'UPLOAD': return t('header.upload');
             case 'SCANNING': return t('header.scanning');

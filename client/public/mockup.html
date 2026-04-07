@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --maroon: #7B1113;
+            --gold: #FDB813;
+            --dark: #1a1a1a;
+            --light: #ffffff;
+            --bg: #fafafa;
+            --border: #e0e0e0;
+            --text: #333;
+            
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text);
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 850px;
+            background: var(--light);
+            padding: 50px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border-top: 10px solid var(--maroon);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .brand-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .logo-placeholder {
+            height: 60px;
+            width: 8px;
+            background: var(--gold);
+        }
+        .brand-text {
+            padding-left: 10px;
+        }
+        .brand-text h1 {
+            color: var(--maroon);
+            margin: 0;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+        .brand-text p {
+            color: var(--dark);
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .meta-data {
+            text-align: right;
+            font-size: 12px;
+            color: #777;
+        }
+        
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .score-card {
+            background: #fff;
+            border: 2px solid var(--maroon);
+            border-radius: 16px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        .score-card::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 80px; height: 80px;
+            background: var(--gold);
+            clip-path: polygon(100% 0, 0 0, 100% 100%);
+        }
+        .score-title {
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--maroon);
+            margin-bottom: 5px;
+        }
+        .score-val {
+            font-size: 64px;
+            font-weight: 900;
+            letter-spacing: -4px;
+            line-height: 1;
+            margin: 10px 0;
+            color: var(--success);
+        }
+        .score-desc {
+            font-size: 14px;
+            font-weight: 700;
+            color: #444;
+        }
+        .grade-ribbon {
+            background: var(--maroon);
+            color: var(--gold);
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            font-weight: 900;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        .justification-box {
+            background: rgba(123, 17, 19, 0.03);
+            border: 1px solid var(--border);
+            border-left: 8px solid var(--maroon);
+            padding: 25px;
+            border-radius: 0 12px 12px 0;
+            margin-bottom: 40px;
+        }
+        .justification-title {
+            font-weight: 900;
+            color: var(--maroon);
+            text-transform: uppercase;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-header {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--maroon);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 3px solid var(--gold);
+            padding-bottom: 5px;
+            width: fit-content;
+        }
+
+        .dimension-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .dim-box {
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+        }
+        .dim-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #666;
+        }
+        .dim-val {
+            font-size: 13px;
+            font-weight: 900;
+            margin-top: 5px;
+        }
+
+        .forensic-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .metric-bar-group {
+            margin-bottom: 15px;
+        }
+        .metric-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .bar-outer {
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .bar-inner {
+            height: 100%;
+            background: var(--maroon);
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid var(--gold);
+            text-align: center;
+            font-size: 11px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="brand-section">
+                <div class="logo-placeholder"></div>
+                <div class="brand-text">
+                    <h1>TIP AI INTEGRITY</h1>
+                    <p>Tamang Integridad at Pananagutan sa Artificial Intelligence</p>
+                </div>
+            </div>
+            <div class="meta-data">
+                ID ng Pagsusuri: <strong>DOC-1249A1</strong><br>
+                Petsa: Abril 7, 2026, 11:30 AM<br>
+                Versyon: 4.1-PH
+            </div>
+        </div>
+
+        <div class="hero-grid">
+            <div class="score-card">
+                <div class="score-title">Pandaigdigang Marka ng Risko</div>
+                <div class="score-val" style="color: var(--success)">
+                    11%
+                </div>
+                <div class="score-desc">Antas ng Pagsunod sa Pamantayang Akademiko</div>
+                <div class="grade-ribbon">A (Napakahusay)</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div class="dim-box" style="border-color: var(--maroon);">
+                    <div class="dim-label">Probabilidad ng AI</div>
+                    <div class="dim-val" style="font-size: 24px; color: var(--success)">4%</div>
+                </div>
+                <div class="dim-box">
+                    <div class="dim-label">Antas ng Katiyakan</div>
+                    <div class="dim-val">MABABA</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="justification-box">
+            <div class="justification-title">
+                <span>🛡️</span> Paliwanag sa Marka (Justification)
+            </div>
+            <div style="font-size: 14px; font-weight: 500; color: #222; line-height: 1.7;">
+                Ang dokumentong ito ay nagpapakita ng natatanging daloy ng pag-iisip at wika ng tao. Nakitaan ng mataas na kalidad sa pagiging inklusibo at mahusay na pangangasiwa (Oversight). Mababa ang indicators na ginamitan ito ng generatibong artificial intelligence.
+            </div>
+        </div>
+
+        <div class="section-header">Audit sa Etika ng UNESCO</div>
+        <div class="dimension-row">
+            
+                <div class="dim-box">
+                    <div class="dim-label">Katarungan (Fairness)</div>
+                    <div class="dim-val" style="color: var(--success)">
+                        Nakatugma
+                    </div>
+                </div>
+                
+                <div class="dim-box">
+                    <div class="dim-label">Kalinawan (Transparency)</div>
+                    <div class="dim-val" style="color: var(--success)">
+                        Nakatugma
+                    </div>
+                </div>
+                
+                <div class="dim-box">
+                    <div class="dim-label">Pagkapribado (Privacy)</div>
+                    <div class="dim-val" style="color: var(--success)">
+                        Nakatugma
+                    </div>
+                </div>
+                
+                <div class="dim-box">
+                    <div class="dim-label">Pagpapanatili (Sustainability)</div>
+                    <div class="dim-val" style="color: var(--danger)">
+                        Kritikal
+                    </div>
+                </div>
+                
+                <div class="dim-box">
+                    <div class="dim-label">Pangangasiwa (Oversight)</div>
+                    <div class="dim-val" style="color: var(--success)">
+                        Nakatugma
+                    </div>
+                </div>
+                
+                <div class="dim-box">
+                    <div class="dim-label">Pagiging Inklusibo (Inclusiveness)</div>
+                    <div class="dim-val" style="color: var(--warning)">
+                        May Obserbasyon
+                    </div>
+                </div>
+                
+        </div>
+
+        <div class="section-header">Pagsusuri sa Estruktura ng Wika</div>
+        <div class="forensic-metrics">
+            <div>
+                <div class="metric-bar-group">
+                    <div class="metric-info"><span>Klisey sa Padron</span> <span>18%</span></div>
+                    <div class="bar-outer"><div class="bar-inner" style="width: 18%;"></div></div>
+                </div>
+                <div class="metric-bar-group">
+                    <div class="metric-info"><span>Typograpikong "Entropy"</span> <span>0%</span></div>
+                    <div class="bar-outer"><div class="bar-inner" style="width: 0%;"></div></div>
+                </div>
+            </div>
+            <div>
+                <div class="metric-bar-group">
+                    <div class="metric-info"><span>Sintaktikong Perpeksyon</span> <span>0%</span></div>
+                    <div class="bar-outer"><div class="bar-inner" style="width: 0%;"></div></div>
+                </div>
+                <div class="metric-bar-group">
+                    <div class="metric-info"><span>Pagkakaulit ng Estruktura</span> <span>5%</span></div>
+                    <div class="bar-outer"><div class="bar-inner" style="width: 5%;"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Ang ulat na ito ay binuo bilang bahagi ng UNESCO Ethical AI Integration Framework (v4.1). 
+            Nakatataas na Pag-aari (Copyright) ng TIP AI. <br>
+            <strong>Mababa ang Marka = Mataas ang Integridad (Human-Authentic)</strong>
+        </div>
+    </div>
+</body>
+</html>

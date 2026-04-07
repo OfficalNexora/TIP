@@ -18,7 +18,7 @@ import Scanning from './components/dashboard/Scanning';
 import Results from './components/dashboard/Results';
 import AnalyticPanel from './components/dashboard/AnalyticPanel';
 import ScanHistory from './components/dashboard/ScanHistory';
-import ComplianceProfile from './components/dashboard/ComplianceProfile';
+
 import Settings from './components/dashboard/Settings';
 import SubscriptionModal from './components/dashboard/SubscriptionModal';
 import OnboardingModal from './components/dashboard/OnboardingModal';
@@ -218,13 +218,7 @@ function AppContent() {
                   <Results />
                 )}
 
-                {dashboardState === 'PROFILE' && (
-                  <ComplianceProfile />
-                )}
 
-                {dashboardState === 'COMPLIANCE' && (
-                  <ComplianceProfile />
-                )}
 
                 {dashboardState === 'SETTINGS' && (
                   <Settings />

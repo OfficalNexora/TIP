@@ -36,8 +36,8 @@ export const normalizeConfidence = (rating) => {
  */
 export const getComplianceLabel = (confidence) => {
     const score = normalizeConfidence(confidence);
-    if (score >= 85) return 'Kritikal_na_Panganib';
-    if (score >= 60) return 'Mataas_na_Panganib';
-    if (score >= 30) return 'Katamtamang_Panganib';
-    return 'Ligtas_na_Dokumento';
+    if (score >= 85) return 'Kritikal';
+    if (score >= 60) return 'Mataas na Panganib';
+    if (score >= 30) return 'Kailangan ng Rebyu';
+    return 'Nakatugma';
 };

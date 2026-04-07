@@ -164,10 +164,10 @@ const Sidebar = React.memo(() => {
                     {t('nav.account')}
                 </div>
                 <NavItem
-                    icon={Icons.Shield}
-                    label={t('nav.complianceProfile')}
-                    isActive={dashboardState === 'COMPLIANCE'}
-                    onClick={() => handleNavigation('COMPLIANCE')}
+                    icon={Icons.Layers}
+                    label={t('nav.batching') || 'Batch Processing'}
+                    isActive={dashboardState === 'BATCH'}
+                    onClick={() => handleNavigation('BATCH')}
                     className="sidebar-item"
                 />
                 <NavItem
