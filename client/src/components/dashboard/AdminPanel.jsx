@@ -23,7 +23,10 @@ const AdminPanel = () => {
             setLoading(true);
             try {
                 const config = {
-                    headers: { Authorization: `Bearer ${session.access_token}` }
+                    headers: { 
+                        Authorization: `Bearer ${session.access_token}`,
+                        'ngrok-skip-browser-warning': '69420'
+                    }
                 };
 
                 const [usersRes, paymentsRes, statsRes, usageRes] = await Promise.all([

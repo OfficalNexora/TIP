@@ -1,10 +1,35 @@
-# Dependencies
+# root .gitignore
+# Ignore all loose files in the root folder
+/*
+# But don't ignore these directories/files
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/client/
+!/.vscode/
+
+# Explicitly ignore these directories
+/app/
+/server/
+/supabase/
+client_secret_*.json
+
+/flutter_app/
+/save/
+/temp_preserved/
+/temp_search/
+/temp_search_oldest/
+/stitch_export/
+
+# Global Ignore Patterns
 node_modules/
-client/node_modules/
-server/node_modules/
-app/node_modules/
-apps/mobile/node_modules/
-save/node_modules/
+*.zip
+*.apk
+*.log
+.env
+*.env
+.env.*local
+.DS_Store
 
 # Build outputs
 dist/
