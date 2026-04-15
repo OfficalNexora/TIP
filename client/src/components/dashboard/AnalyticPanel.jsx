@@ -3,6 +3,9 @@ import Icons from '../ui/Icons';
 import InsightCard from '../ui/InsightCard';
 import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
+import axios from 'axios';
+import ComparisonModal from './ComparisonModal';
 import { normalizeConfidence } from '../../utils/confidenceUtils';
 import tipLogo from '../../assets/no background logo fnl.png';
 import { translations } from '../../utils/translations';
@@ -68,10 +71,15 @@ const TypewriterSummary = React.memo(({ fullSummary, activeFileId }) => {
 });
 
 const AnalyticPanel = React.memo(() => {
-    const { activeFile } = useData();
+    const { activeFile, files: historyFiles } = useData();
+    const { session } = useAuth();
     const { theme } = useTheme();
     const { focusedIssue, rightPanelOpen: isOpen, language } = useUI();
     const { setFocusedIssue, setRightPanelOpen, deleteAnalysis, translateSummary } = useActions();
+
+    // Comparison State
+    const [isSelectingComparison, setIsSelectingComparison] = useState(false);
+    const [verificationResult, setVerificationResult] = useState(null);
 
     const t = useCallback((key) => {
         return translations[language]?.[key] || translations['en']?.[key] || key;
@@ -101,6 +109,26 @@ const AnalyticPanel = React.memo(() => {
     const handleIssueClick = useCallback((issue) => {
         setFocusedIssue(issue);
     }, [setFocusedIssue]);
+
+    const runComparison = async (trial1Id) => {
+        setIsSelectingComparison(false);
+        try {
+            const response = await axios.post(
+                `${import.meta.env.VITE_API_BASE_URL}/api/compare/rerun-verify`,
+                { trial1Ids: [trial1Id], trial2Ids: [activeFile.id] },
+                {
+                    headers: {
+                        Authorization: `Bearer ${session.access_token}`,
+                        'ngrok-skip-browser-warning': '69420'
+                    }
+                }
+            );
+            setVerificationResult(response.data);
+        } catch (e) {
+            console.error("Comparison endpoint failed:", e);
+            alert("Comparison failed. " + (e.response?.data?.error || e.message));
+        }
+    };
 
     const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
@@ -313,7 +341,7 @@ const AnalyticPanel = React.memo(() => {
 
             {/* Header - Clean, Document Style */}
             <div
-                className="h-16 px-6 flex items-center justify-between border-b flex-shrink-0 transition-colors"
+                className="h-16 px-6 flex items-center justify-between border-b flex-shrink-0 transition-colors relative z-[80]"
                 style={{
                     backgroundColor: isDark ? '#020617' : '#ffffff',
                     borderColor: isDark ? '#1e293b' : '#f1f5f9'
@@ -329,6 +357,14 @@ const AnalyticPanel = React.memo(() => {
                     <span className="font-semibold text-slate-900 dark:text-tip-text-main tracking-tight transition-colors">{t('analytic.report_title')}</span>
                 </div>
                 <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setIsSelectingComparison(!isSelectingComparison)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 mx-1 text-[10px] font-black uppercase tracking-widest rounded-lg border border-purple-200 bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/20 dark:border-purple-800/50 dark:text-purple-400 dark:hover:bg-purple-900/40 transition-colors"
+                        title="Compare to Initial Draft"
+                    >
+                        <Icons.GitMerge size={14} />
+                        Compare
+                    </button>
                     <button
                         onClick={handleDelete}
                         disabled={isDeleting}
@@ -1125,6 +1161,33 @@ const AnalyticPanel = React.memo(() => {
                     <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-[#C9A227]/30 to-transparent mt-8"></div>
                 </div>
 
+        {/* Solo Comparison Selection Modal */}
+        {isSelectingComparison && (
+            <div className="absolute top-16 right-4 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-2xl p-4 max-h-96 flex flex-col z-[70] animate-in slide-in-from-top-2">
+                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Piliin ang Orihinal Base (Trial 1)</h3>
+                <div className="overflow-y-auto space-y-2 flex-1 custom-scrollbar">
+                    {historyFiles?.filter(hf => hf.id !== activeFile.id).map(hf => (
+                        <button 
+                            key={hf.id} 
+                            onClick={() => runComparison(hf.id)} 
+                            className="w-full text-left p-2.5 rounded-xl border border-slate-100 hover:border-purple-300 dark:border-slate-700 dark:hover:border-purple-500/50 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-all flex flex-col gap-1"
+                        >
+                            <span className="truncate text-xs font-bold text-slate-700 dark:text-slate-300">{hf.filename}</span>
+                            <span className="text-[9px] font-bold text-slate-400 capitalize">{new Date(hf.created_at || Date.now()).toLocaleDateString()}</span>
+                        </button>
+                    ))}
+                    {(!historyFiles || historyFiles.filter(hf => hf.id !== activeFile.id).length === 0) && (
+                        <div className="text-xs text-slate-400 py-4 text-center italic">Walang mahanap na history.</div>
+                    )}
+                </div>
+            </div>
+        )}
+
+        <ComparisonModal 
+            result={verificationResult} 
+            onClose={() => setVerificationResult(null)} 
+        />
+        
             </div>
         </div>
     );
