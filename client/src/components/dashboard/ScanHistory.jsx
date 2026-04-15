@@ -91,7 +91,7 @@ const ScanHistory = () => {
                     <table className="w-full text-left text-xs text-tip-text-main table-fixed">
                         <thead className="bg-[#002147] text-white uppercase font-bold tracking-[0.1em] transition-colors border-b border-tip-primary">
                             <tr>
-                                <th className="w-[40%] px-6 py-4 cursor-pointer hover:bg-[#003366] transition-colors" onClick={() => handleSort('title')}>
+                                <th className="w-[35%] px-6 py-4 cursor-pointer hover:bg-[#003366] transition-colors" onClick={() => handleSort('title')}>
                                     <div className="flex items-center gap-2">
                                         {t('history.tableDocName') || 'Document Name'}
                                         {sortConfig.key === 'title' && (sortConfig.direction === 'asc' ? <Icons.ArrowUp size={12} /> : <Icons.ArrowDown size={12} />)}
@@ -110,7 +110,7 @@ const ScanHistory = () => {
                                     </div>
                                 </th>
                                 <th className="w-[17%] px-6 py-4">{t('history.tableAssessment') || 'Assessment'}</th>
-                                <th className="w-[10%] px-6 py-4 text-right">{t('history.tableRecords') || 'Records'}</th>
+                                <th className="w-[15%] px-6 py-4 text-right">{t('history.tableRecords') || 'Records'}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-tip-border">
