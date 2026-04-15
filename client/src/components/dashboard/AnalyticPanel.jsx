@@ -71,15 +71,22 @@ const TypewriterSummary = React.memo(({ fullSummary, activeFileId }) => {
 });
 
 const AnalyticPanel = React.memo(() => {
-    const { activeFile, files: historyFiles } = useData();
+    const { activeFile, files: historyFiles, revisionResult } = useData();
     const { session } = useAuth();
     const { theme } = useTheme();
     const { focusedIssue, rightPanelOpen: isOpen, language } = useUI();
-    const { setFocusedIssue, setRightPanelOpen, deleteAnalysis, translateSummary } = useActions();
+    const { setFocusedIssue, setRightPanelOpen, deleteAnalysis, translateSummary, setRevisionResult } = useActions();
 
     // Comparison State
     const [isSelectingComparison, setIsSelectingComparison] = useState(false);
     const [verificationResult, setVerificationResult] = useState(null);
+
+    // Auto-show revision comparison modal when revisionResult arrives
+    useEffect(() => {
+        if (revisionResult) {
+            setVerificationResult(revisionResult);
+        }
+    }, [revisionResult]);
 
     const t = useCallback((key) => {
         return translations[language]?.[key] || translations['en']?.[key] || key;
@@ -1185,7 +1192,7 @@ const AnalyticPanel = React.memo(() => {
 
         <ComparisonModal 
             result={verificationResult} 
-            onClose={() => setVerificationResult(null)} 
+            onClose={() => { setVerificationResult(null); setRevisionResult(null); }} 
         />
         
             </div>

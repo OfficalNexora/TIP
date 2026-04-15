@@ -9,7 +9,7 @@ import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 import { normalizeConfidence } from '../../utils/confidenceUtils';
 import { useTranslation } from '../../utils/useTranslation';
 
-const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handleDeleteClick }) => {
+const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handleDeleteClick, handleRevisionClick }) => {
     const cardRef = React.useRef(null);
     const confidenceScore = normalizeConfidence(file.confidence);
     const isScanning = file.status?.toLowerCase() === 'scanning' || file.status?.toLowerCase() === 'processing';
@@ -70,7 +70,7 @@ const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handl
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); alert("Darating na ang Comparison Mode"); }}
+                                onClick={(e) => { e.stopPropagation(); handleRevisionClick(e, file.id); }}
                                     className="w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-3 transition-colors"
                                 >
                                     <Icons.RefreshCw size={14} className="opacity-70" /> I-upload Ulit
@@ -178,12 +178,33 @@ const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handl
 
 const Overview = () => {
     const { files, searchTerm, integrityAvg, totalAudits, loadingHistory } = useData();
-    const { setDashboardState, loadFile, deleteAnalysis } = useActions();
+    const { setDashboardState, loadFile, deleteAnalysis, startRevisionScan } = useActions();
     const { t } = useTranslation();
     const loading = loadingHistory;
 
     const [openMenuId, setOpenMenuId] = useState(null);
     const [deleteConfirmId, setDeleteConfirmId] = useState(null);
+    const revisionInputRef = React.useRef(null);
+    const [revisionTargetId, setRevisionTargetId] = useState(null);
+
+    const handleRevisionClick = useCallback((e, fileId) => {
+        e.stopPropagation();
+        setOpenMenuId(null);
+        setRevisionTargetId(fileId);
+        // Open hidden file input
+        if (revisionInputRef.current) {
+            revisionInputRef.current.value = '';
+            revisionInputRef.current.click();
+        }
+    }, []);
+
+    const handleRevisionFileSelected = useCallback((e) => {
+        const newFile = e.target.files?.[0];
+        if (newFile && revisionTargetId) {
+            startRevisionScan(revisionTargetId, newFile);
+            setRevisionTargetId(null);
+        }
+    }, [revisionTargetId, startRevisionScan]);
 
     // Filter files based on search term
     const filteredFiles = useMemo(() => {
@@ -245,6 +266,15 @@ const Overview = () => {
     return (
         <div className="flex flex-col h-full bg-tip-bg transition-colors duration-300" onClick={handleBackgroundClick}>
             {/* ... rest of the component ... */}
+
+            {/* Hidden file input for revision uploads */}
+            <input
+                ref={revisionInputRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,.doc,.docx"
+                onChange={handleRevisionFileSelected}
+            />
 
             {deleteConfirmId && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-[2px] animate-fade-in" onClick={(e) => e.stopPropagation()}>
@@ -393,6 +423,7 @@ const Overview = () => {
                                 toggleMenu={toggleMenu}
                                 loadFile={loadFile}
                                 handleDeleteClick={handleDeleteClick}
+                                handleRevisionClick={handleRevisionClick}
                             />
                         ))}
 

@@ -95,7 +95,10 @@ export const List = (props) => <Icon {...props}><line x1="8" y1="6" x2="21" y2="
 export const Play = (props) => <Icon {...props}><polygon points="5 3 19 12 5 21 5 3"></polygon></Icon>;
 export const Layout = (props) => <Icon {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></Icon>;
 export const Type = (props) => <Icon {...props}><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></Icon>;
-
+export const GitCompare = (props) => <Icon {...props}><circle cx="18" cy="18" r="3"></circle><circle cx="6" cy="6" r="3"></circle><path d="M13 6h3a2 2 0 0 1 2 2v7"></path><path d="M11 18H8a2 2 0 0 1-2-2V9"></path></Icon>;
+export const MinusCircle = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></Icon>;
+export const XCircle = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></Icon>;
+export const BarChart2 = (props) => <Icon {...props}><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></Icon>;
 
 
 const PayPal = (props) => <Icon {...props}><path d="M7.076 21.337l.886-5.617h3.111c3.55 0 5.485-1.748 6.008-5.074.22-.128.423-.293.606-.492.203.11.41.206.621.286.732.277 1.393.18 1.964-.32.062-.516.27-1.46.208-2.617-.678 2.064-2.158 3.235-4.484 3.235h-3.41l1.503-9.524H8.76L6.2 21.337h.876z"></path></Icon>;
@@ -189,7 +192,11 @@ const Icons = {
     LayoutDashboard,
     Play,
     Layout,
-    Type
+    Type,
+    GitCompare,
+    MinusCircle,
+    XCircle,
+    BarChart2
 };
 
 export default Icons;

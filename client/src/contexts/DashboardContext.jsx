@@ -58,6 +58,10 @@ export const DashboardProvider = ({ children }) => {
     const [hasMore, setHasMore] = useState(true);
     const [page, setPage] = useState(1);
 
+    // --- Revision Comparison State ---
+    const revisionSourceRef = useRef(null);
+    const [revisionResult, setRevisionResult] = useState(null);
+
     const [credits, setCredits] = useState(0);
     const [creditsTotal, setCreditsTotal] = useState(0);
 
@@ -351,6 +355,22 @@ export const DashboardProvider = ({ children }) => {
                         }, 1500);
                         // Refresh profile to update credits
                         prefetchAllData();
+
+                        // Auto-trigger revision diff if this was a re-upload
+                        if (revisionSourceRef.current) {
+                            try {
+                                const diffRes = await axios.post(
+                                    `${import.meta.env.VITE_API_BASE_URL}/api/compare/revision-diff`,
+                                    { originalId: revisionSourceRef.current, revisedId: id },
+                                    { headers: { Authorization: `Bearer ${session.access_token}`, 'ngrok-skip-browser-warning': '69420' } }
+                                );
+                                setRevisionResult(diffRes.data);
+                            } catch (diffErr) {
+                                console.error('[RevisionDiff] Auto-compare failed:', diffErr);
+                            } finally {
+                                revisionSourceRef.current = null;
+                            }
+                        }
                     } else if (res.data.status === 'FAILED') {
                         clearInterval(interval);
                         setDashboardState('UPLOAD');
@@ -504,19 +524,25 @@ export const DashboardProvider = ({ children }) => {
     }), [dashboardState, rightPanelOpen, isSubscriptionOpen, isChatOpen, focusedIssue, isHandshaking, lagMetrics, language]);
 
     const dataValue = React.useMemo(() => ({
-        files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory, prefetchedData, credits, creditsTotal
-    }), [files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory, prefetchedData, credits, creditsTotal]);
+        files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory, prefetchedData, credits, creditsTotal, revisionResult
+    }), [files, activeFile, searchTerm, integrityAvg, totalAudits, loadingHistory, prefetchedData, credits, creditsTotal, revisionResult]);
 
     const scanValue = React.useMemo(() => ({
         scanStatus, hasMore, loadingMore
     }), [scanStatus, hasMore, loadingMore]);
 
+    const startRevisionScan = useCallback((originalId, newFile) => {
+        revisionSourceRef.current = originalId;
+        setRevisionResult(null);
+        inputScan(newFile);
+    }, [inputScan]);
+
     const actionValue = React.useMemo(() => ({
         setDashboardState, setRightPanelOpen, setSubscriptionOpen, setIsChatOpen, setFocusedIssue, setSearchTerm, setActiveFile,
         loadFile, fetchHistory, loadMore, startScan: inputScan, deleteAnalysis, updateCredits: prefetchAllData, setLanguage,
-        translateSummary
+        translateSummary, startRevisionScan, setRevisionResult
     }), [setDashboardState, setRightPanelOpen, setSubscriptionOpen, setIsChatOpen, setFocusedIssue, setSearchTerm, setActiveFile,
-        loadFile, fetchHistory, loadMore, inputScan, deleteAnalysis, prefetchAllData, setLanguage, translateSummary]);
+        loadFile, fetchHistory, loadMore, inputScan, deleteAnalysis, prefetchAllData, setLanguage, translateSummary, startRevisionScan]);
 
     return (
         <UIContext.Provider value={uiValue}>
