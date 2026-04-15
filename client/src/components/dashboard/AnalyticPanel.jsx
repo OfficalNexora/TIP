@@ -362,7 +362,7 @@ const AnalyticPanel = React.memo(() => {
                         className="flex items-center gap-1.5 px-3 py-1.5 mx-1 text-[10px] font-black uppercase tracking-widest rounded-lg border border-purple-200 bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/20 dark:border-purple-800/50 dark:text-purple-400 dark:hover:bg-purple-900/40 transition-colors"
                         title="Compare to Initial Draft"
                     >
-                        <Icons.GitMerge size={14} />
+                        <Icons.RefreshCw size={14} />
                         Compare
                     </button>
                     <button
