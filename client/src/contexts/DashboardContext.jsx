@@ -130,7 +130,8 @@ export const DashboardProvider = ({ children }) => {
                     fullText: results?.full_text,
                     forensic_analysis: results?.forensic_analysis,
                     plagiarism: results?.plagiarism,
-                    confidence_score: results?.confidence_score
+                    confidence_score: results?.confidence_score,
+                    parent_id: results?.parent_id || analysis.results?.parent_id || (analysis.analysis_results?.[0]?.result_json?.parent_id)
                 };
             });
 
@@ -242,6 +243,7 @@ export const DashboardProvider = ({ children }) => {
                 dimensions: results?.dimensions || file.dimensions,
                 flags: results?.flags || file.flags,
                 forensic_analysis: results?.forensic_analysis || file.forensic_analysis,
+                parent_id: results?.parent_id || analysis.results?.parent_id || (analysis.analysis_results?.[0]?.result_json?.parent_id),
                 fileUrl,
                 fileBlob: fileBlobData,
                 mimeType: docInfo.file_type || 'application/octet-stream',
@@ -263,7 +265,7 @@ export const DashboardProvider = ({ children }) => {
         try {
             const init = await axios.post(
                 `${import.meta.env.VITE_API_BASE_URL}/api/analysis`,
-                { filename: uploadedFile.name },
+                { filename: uploadedFile.name, parentId: revisionSourceRef.current },
                 {
                     headers: {
                         Authorization: `Bearer ${session.access_token}`,
@@ -344,6 +346,7 @@ export const DashboardProvider = ({ children }) => {
                             forensic_analysis: model.forensic_analysis,
                             plagiarism: model.plagiarism,
                             fullText: model.full_text,
+                            parent_id: model.parent_id || revisionSourceRef.current,
                             fileBlob: uploadedFile,
                             fileUrl: URL.createObjectURL(uploadedFile)
                         };

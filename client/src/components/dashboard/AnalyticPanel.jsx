@@ -123,12 +123,7 @@ const AnalyticPanel = React.memo(() => {
             const response = await axios.post(
                 `${import.meta.env.VITE_API_BASE_URL}/api/compare/rerun-verify`,
                 { trial1Ids: [trial1Id], trial2Ids: [activeFile.id] },
-                {
-                    headers: {
-                        Authorization: `Bearer ${session.access_token}`,
-                        'ngrok-skip-browser-warning': '69420'
-                    }
-                }
+                { ...getAuthHeaders() }
             );
             setVerificationResult(response.data);
         } catch (e) {
@@ -136,6 +131,28 @@ const AnalyticPanel = React.memo(() => {
             alert("Comparison failed. " + (e.response?.data?.error || e.message));
         }
     };
+
+    const viewRevisionComparison = async () => {
+        if (!activeFile?.parent_id) return;
+        try {
+            const response = await axios.post(
+                `${import.meta.env.VITE_API_BASE_URL}/api/compare/revision-diff`,
+                { originalId: activeFile.parent_id, revisedId: activeFile.id },
+                { ...getAuthHeaders() }
+            );
+            setVerificationResult(response.data);
+        } catch (e) {
+            console.error("Revision comparison failed:", e);
+            alert("Hindi makuha ang paghahambing ng rebisyon. " + (e.response?.data?.error || e.message));
+        }
+    };
+
+    const getAuthHeaders = () => ({
+        headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            'ngrok-skip-browser-warning': '69420'
+        }
+    });
 
     const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
@@ -364,6 +381,16 @@ const AnalyticPanel = React.memo(() => {
                     <span className="font-semibold text-slate-900 dark:text-tip-text-main tracking-tight transition-colors">{t('analytic.report_title')}</span>
                 </div>
                 <div className="flex items-center gap-2">
+                    {activeFile?.parent_id && (
+                        <button
+                            onClick={viewRevisionComparison}
+                            className="flex items-center gap-1.5 px-3 py-1.5 mx-1 text-[10px] font-black uppercase tracking-widest rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800/50 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition-colors"
+                            title="Tingnan ang Rebisyon"
+                        >
+                            <Icons.GitMerge size={14} />
+                            Tingnan ang Rebisyon
+                        </button>
+                    )}
                     <button
                         onClick={() => setIsSelectingComparison(!isSelectingComparison)}
                         className="flex items-center gap-1.5 px-3 py-1.5 mx-1 text-[10px] font-black uppercase tracking-widest rounded-lg border border-purple-200 bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/20 dark:border-purple-800/50 dark:text-purple-400 dark:hover:bg-purple-900/40 transition-colors"
