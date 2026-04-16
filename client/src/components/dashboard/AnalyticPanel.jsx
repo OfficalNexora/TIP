@@ -209,9 +209,9 @@ const AnalyticPanel = React.memo(() => {
         if (!alignment) return 'text-slate-500';
         const lower = alignment.toLowerCase();
         // Emerald-600 for Compliant, Amber-500 for Needs Improvement, Rose-600 for Non-Compliant
-        if (lower.includes('aligned') || lower.includes('ligtas')) return 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400';
-        if (lower.includes('obserbasyon')) return 'text-amber-500 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400';
-        if (lower.includes('pagnilay') || lower.includes('warning')) return 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400';
+        if (lower.includes('aligned') || lower.includes('ligtas') || lower.includes('compliant')) return 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400';
+        if (lower.includes('obserbasyon') || lower.includes('needs') || lower.includes('improvement')) return 'text-amber-500 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400';
+        if (lower.includes('pagnilay') || lower.includes('warning') || lower.includes('non') || lower.includes('risk') || lower.includes('violation')) return 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400';
         return 'text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400';
     };
 
@@ -1012,7 +1012,11 @@ const AnalyticPanel = React.memo(() => {
                                                     <DimensionIcon size={18} />
                                                 </div>
                                                 <span className="text-sm font-bold text-slate-800 dark:text-slate-200 capitalize">
-                                                    {t(`analytic.dim.${key}`) || formatKey(key)}
+                                                    {(() => {
+                                                        const tKey = `analytic.dim.${key.toLowerCase()}`;
+                                                        const translated = t(tKey);
+                                                        return translated === tKey ? formatKey(key) : translated;
+                                                    })()}
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2">
