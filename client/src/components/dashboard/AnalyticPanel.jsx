@@ -80,6 +80,7 @@ const AnalyticPanel = React.memo(() => {
     // Comparison State
     const [isSelectingComparison, setIsSelectingComparison] = useState(false);
     const [verificationResult, setVerificationResult] = useState(null);
+    const [isTechOpen, setIsTechOpen] = useState(false);
 
     // Auto-show revision comparison modal when revisionResult arrives
     useEffect(() => {
@@ -225,14 +226,26 @@ const AnalyticPanel = React.memo(() => {
         return status;
     };
 
-    const getIconForDimension = (key) => {
+    const normalizeDimensionKey = (key) => {
         const lower = key.toLowerCase();
-        if (lower.includes('fairness') || lower.includes('katarungan')) return Icons.Scale;
-        if (lower.includes('transparency') || lower.includes('kalinawan')) return Icons.Eye;
-        if (lower.includes('privacy') || lower.includes('pagkapribado')) return Icons.Lock;
-        if (lower.includes('sustainability') || lower.includes('pagpapanatili')) return Icons.Globe;
-        if (lower.includes('oversight') || lower.includes('pangangasiwa')) return Icons.UserCheck;
-        if (lower.includes('inclusiveness') || lower.includes('pagiging_inklusibo')) return Icons.Users;
+        if (lower.includes('fairness') || lower.includes('katarungan')) return 'fairness';
+        if (lower.includes('transparency') || lower.includes('kalinawan')) return 'transparency';
+        if (lower.includes('privacy') || lower.includes('pagkapribado')) return 'privacy';
+        if (lower.includes('sustainability') || lower.includes('pagpapanatili')) return 'sustainability';
+        if (lower.includes('oversight') || lower.includes('pangangasiwa')) return 'oversight';
+        if (lower.includes('inclusiveness') || lower.includes('inklusibo')) return 'inclusiveness';
+        // Clean up fallback keys if they have analytic.dim prefixes
+        return key.replace(/^(analytic\.dim\.|analytic_dim_)/i, '').replace(/\./g, ' ');
+    };
+
+    const getIconForDimension = (key) => {
+        const normalized = normalizeDimensionKey(key);
+        if (normalized === 'fairness') return Icons.Scale;
+        if (normalized === 'transparency') return Icons.Eye;
+        if (normalized === 'privacy') return Icons.Lock;
+        if (normalized === 'sustainability') return Icons.Globe;
+        if (normalized === 'oversight') return Icons.UserCheck;
+        if (normalized === 'inclusiveness') return Icons.Users;
         return Icons.Activity;
     };
 
@@ -554,8 +567,114 @@ const AnalyticPanel = React.memo(() => {
                     </div>
                 </InsightCard>
 
-                {/* 2. Forensic Signal Detection */}
-                <div className="space-y-4">
+                {/* 4. UNESCO Principles (Interactive) - MOVED TO TOP */}
+                <div>
+                    <h4 className="text-sm font-black text-slate-900 dark:text-tip-text-main mb-3 uppercase tracking-wide">Institusyonal na UNESCO Audit</h4>
+                    <div className="space-y-3">
+                        {dimensionKeys.map((key, i) => {
+                            const dim = dimensions[key];
+                            const status = dim?.status || dim?.alignment || 'N/A';
+                            const alignClass = getAlignmentColor(status);
+                            const DimensionIcon = getIconForDimension(key);
+                            const dimId = `dim-${key}`;
+                            const isExpanded = expandedDimensions.has(dimId);
+
+                            return (
+                                <InsightCard
+                                    key={i}
+                                    noPadding
+                                    onClick={() => toggleDimension(dimId)}
+                                    className={`overflow-hidden hover:shadow-md transition-all group cursor-pointer ${isExpanded ? 'ring-1 ring-blue-400 border-blue-400 shadow-lg bg-white dark:bg-slate-800/60' : 'border-slate-100 dark:border-slate-800'}`}
+                                >
+                                    <div className="p-4">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-500 group-hover:scale-110 transition-transform">
+                                                    <DimensionIcon size={18} />
+                                                </div>
+                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200 capitalize">
+                                                    {(() => {
+                                                        const normalized = normalizeDimensionKey(key);
+                                                        const tKey = `analytic.dim.${normalized}`;
+                                                        const translated = t(tKey);
+                                                        return translated === tKey ? formatKey(normalized) : translated;
+                                                    })()}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className={`text-[9px] px-2 py-0.5 rounded-full border font-black uppercase transition-colors shadow-sm ${alignClass}`}>
+                                                    {status}
+                                                </span>
+                                                <Icons.ChevronDown size={14} className={`text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                            </div>
+                                        </div>
+                                        
+                                        {!isExpanded && (
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium line-clamp-1 pl-[42px]">
+                                                {dim?.reason || dim?.explanation || "Walang sapat na ebidensya ang natuklasan."}
+                                            </p>
+                                        )}
+
+                                        {isExpanded && (
+                                            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                <div>
+                                                    <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Icons.Info size={12} className="text-slate-400"/> Pagsusuri</h5>
+                                                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium pl-[22px]">
+                                                        {dim?.reason || dim?.explanation || "Walang sapat na ebidensya ang natuklasan."}
+                                                    </p>
+                                                </div>
+
+                                                {(dim?.evidence_snippet || dim?.snippet) && (
+                                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                                                        <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                                            <Icons.Hash size={10} /> {t('analytic.evidence')}
+                                                        </h5>
+                                                        <p className="text-[11px] text-slate-600 dark:text-slate-400 italic leading-relaxed border-l-2 border-slate-300 dark:border-slate-600 pl-2">
+                                                            "{dim?.evidence_snippet || dim?.snippet}"
+                                                        </p>
+                                                    </div>
+                                                )}
+
+                                                {dim?.suggestion && (
+                                                    <div className="bg-emerald-50/50 dark:bg-emerald-900/20 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/50">
+                                                        <h5 className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                                                            <Icons.Zap size={10} /> {t('analytic.suggestion')}
+                                                        </h5>
+                                                        <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                                                            {dim?.suggestion}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </InsightCard>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Collapsible Container for Technical Metrics */}
+                <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800/50">
+                    <button 
+                        onClick={() => setIsTechOpen(!isTechOpen)}
+                        className="w-full flex items-center justify-between group bg-slate-50/50 dark:bg-slate-800/30 p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500/50 transition-colors"
+                    >
+                        <div className="flex flex-col text-left">
+                            <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-blue-500 transition-colors flex items-center gap-2">
+                                <Icons.Settings size={14}/> Teknikal na Pagsusuri (Opsiyonal)
+                            </h4>
+                            <p className="text-[10px] text-slate-500 italic mt-0.5">Mga metrikong teknikal para sa forensics at higit pa</p>
+                        </div>
+                        <div className="bg-white dark:bg-slate-800 shadow-sm p-1.5 rounded-full border border-slate-100 dark:border-slate-700 group-hover:bg-blue-50 transition-all">
+                            <Icons.ChevronDown size={16} className={`text-slate-500 transition-transform duration-300 ${isTechOpen ? 'rotate-180 text-blue-500' : ''}`} />
+                        </div>
+                    </button>
+
+                    {isTechOpen && (
+                        <div className="mt-6 space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
+                            {/* 2. Forensic Signal Detection */}
+                            <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <h4 className="text-sm font-bold text-slate-900 dark:text-tip-text-main transition-colors">{t('analytic.forensic_analysis')}</h4>
                     </div>
@@ -986,104 +1105,9 @@ const AnalyticPanel = React.memo(() => {
                     </div>
                 </div>
 
-                {/* 4. UNESCO Principles (Interactive) */}
-                <div>
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-tip-text-main mb-3 transition-colors">Institusyonal na UNESCO Audit</h4>
-                    <div className="space-y-3">
-                        {dimensionKeys.map((key, i) => {
-                            const dim = dimensions[key];
-                            const status = dim?.status || dim?.alignment || 'N/A';
-                            const alignClass = getAlignmentColor(status);
-                            const DimensionIcon = getIconForDimension(key);
-                            const dimId = `dim-${key}`;
-                            const isExpanded = expandedDimensions.has(dimId);
-
-                            return (
-                                <InsightCard
-                                    key={i}
-                                    noPadding
-                                    onClick={() => toggleDimension(dimId)}
-                                    className={`overflow-hidden hover:shadow-md transition-all group cursor-pointer ${isExpanded ? 'ring-1 ring-blue-400 border-blue-400 shadow-lg bg-white dark:bg-slate-800/60' : 'border-slate-100 dark:border-slate-800'}`}
-                                >
-                                    <div className="p-4">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="text-slate-400 group-hover:text-blue-500 transition-colors">
-                                                    <DimensionIcon size={18} />
-                                                </div>
-                                                <span className="text-sm font-bold text-slate-800 dark:text-slate-200 capitalize">
-                                                    {(() => {
-                                                        const tKey = `analytic.dim.${key.toLowerCase()}`;
-                                                        const translated = t(tKey);
-                                                        return translated === tKey ? formatKey(key) : translated;
-                                                    })()}
-                                                </span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <span className={`text-[9px] px-2 py-0.5 rounded-full border font-black uppercase transition-colors ${alignClass}`}>
-                                                    {status}
-                                                </span>
-                                                <Icons.ChevronRight size={14} className={`text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} />
-                                            </div>
-                                        </div>
-                                        
-                                        {!isExpanded && (
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed italic line-clamp-1">
-                                                {dim?.reason || dim?.explanation || "Walang sapat na ebidensya ang natuklasan."}
-                                            </p>
-                                        )}
-
-                                        {isExpanded && (
-                                            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                <div>
-                                                    <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pagsusuri</h5>
-                                                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                                                        {dim?.reason || dim?.explanation || "Walang sapat na ebidensya ang natuklasan."}
-                                                    </p>
-                                                </div>
-
-                                                {(dim?.evidence_snippet || dim?.snippet) && (
-                                                    <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                                                        <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                                            <Icons.Hash size={10} /> {t('analytic.evidence')}
-                                                        </h5>
-                                                        <p className="text-[11px] text-slate-600 dark:text-slate-400 italic leading-relaxed">
-                                                            "{dim?.evidence_snippet || dim?.snippet}"
-                                                        </p>
-                                                    </div>
-                                                )}
-
-                                                {dim?.suggestion && (
-                                                    <div className="bg-emerald-50/50 dark:bg-emerald-900/20 p-3 rounded-lg border border-emerald-100 dark:border-emerald-800/50">
-                                                        <h5 className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                                                            <Icons.Zap size={10} /> {t('analytic.suggestion')}
-                                                        </h5>
-                                                        <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                                                            {dim?.suggestion}
-                                                        </p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-                                    </div>
-                                </InsightCard>
-                            );
-                        })}
-                    </div>
-                </div>
-
                 {/* 6. Optional Metrics - Plagiarism/Similarity (Demoted) */}
-                <div className="mt-20 pt-10 border-t border-slate-50 dark:border-slate-800/30 opacity-50 hover:opacity-100 transition-opacity duration-500">
-                    <div className="flex flex-col gap-1 mb-6">
-                        <h4 className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
-                            {t('analytic.optional_metrics')}
-                        </h4>
-                        <p className="text-[9px] text-slate-400 dark:text-slate-600 font-medium italic">
-                            {t('analytic.secondary_analysis_desc')}
-                        </p>
-                    </div>
-
-                    <div className="space-y-4">
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800/50">
+                    <div className="space-y-4 pt-4">
                         <div className="flex items-center justify-between">
                             <h4 className="text-xs font-bold text-slate-800 dark:text-slate-300 transition-colors uppercase tracking-tight">
                                 {t('analytic.plagiarism_analysis')}
@@ -1171,6 +1195,9 @@ const AnalyticPanel = React.memo(() => {
                             </InsightCard>
                         )}
                     </div>
+                </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* 5. Institutional Branding & Copyright Footer */}
