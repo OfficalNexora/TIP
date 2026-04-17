@@ -583,7 +583,18 @@ const AnalyticPanel = React.memo(() => {
                                 <InsightCard
                                     key={i}
                                     noPadding
-                                    onClick={() => toggleDimension(dimId)}
+                                    onClick={() => {
+                                        toggleDimension(dimId);
+                                        if (!isExpanded && (dim?.evidence_snippet || dim?.snippet)) {
+                                            handleIssueClick({
+                                                id: dimId,
+                                                label: formatKey(normalizeDimensionKey(key)),
+                                                explanation: dim?.reason || dim?.explanation,
+                                                suggestion: dim?.suggestion,
+                                                snippet: dim?.evidence_snippet || dim?.snippet
+                                            });
+                                        }
+                                    }}
                                     className={`overflow-hidden hover:shadow-md transition-all group cursor-pointer ${isExpanded ? 'ring-1 ring-blue-400 border-blue-400 shadow-lg bg-white dark:bg-slate-800/60' : 'border-slate-100 dark:border-slate-800'}`}
                                 >
                                     <div className="p-4">
@@ -747,7 +758,8 @@ const AnalyticPanel = React.memo(() => {
                                                             label: p.pattern || p.label || t('nav.aiInsights'),
                                                             explanation: p.explanation || t('analytic.pattern_desc_default'),
                                                             suggestion: p.suggestion || "Iwasan ang paggamit ng mga generic o overused na mga salita.",
-                                                            revision_prompt: p.revision_prompt || `Baguhin ang pariralang "${p.pattern}" gamit ang sariling pananalita.`
+                                                            revision_prompt: p.revision_prompt || `Baguhin ang pariralang "${p.pattern}" gamit ang sariling pananalita.`,
+                                                            snippet: p.pattern || p.text || (typeof p === 'string' ? p : null)
                                                         })}
                                                         className="w-full text-left bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 p-3.5 rounded-xl shadow-sm group hover:border-blue-300 hover:translate-x-1 transition-all"
                                                     >
@@ -821,7 +833,8 @@ const AnalyticPanel = React.memo(() => {
                                                             label: o.label || o.pattern || t('analytic.omission_context'),
                                                             explanation: o.explanation || `Ang dokumento ay kulang sa sapat na detalye tungkol sa: ${o.label || o.text || 'pangunahing aspeto'}.`,
                                                             suggestion: o.suggestion || "Magbigay ng karagdagang ebidensya o paliwanag sa bahaging ito.",
-                                                            revision_prompt: o.revision_prompt || `Paunlarin ang diskusyon tungkol sa ${o.label || o.text}.`
+                                                            revision_prompt: o.revision_prompt || `Paunlarin ang diskusyon tungkol sa ${o.label || o.text}.`,
+                                                            snippet: o.pattern || o.text || (typeof o === 'string' ? o : null)
                                                         })}
                                                         className="w-full text-left bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 p-3.5 rounded-xl shadow-sm group hover:border-rose-300 hover:translate-x-1 transition-all"
                                                     >
@@ -1039,7 +1052,18 @@ const AnalyticPanel = React.memo(() => {
                                 return (
                                     <InsightCard
                                         key={i}
-                                        onClick={() => toggleFlag(flagId)}
+                                        onClick={() => {
+                                            toggleFlag(flagId);
+                                            if (!isExpanded && flag.associated_snippet) {
+                                                handleIssueClick({
+                                                    id: flagId,
+                                                    label: flag.label || (typeof flag === 'string' ? flag : t('analytic.needs_review')),
+                                                    explanation: flag.explanation || flag.detail,
+                                                    suggestion: flag.suggestion,
+                                                    snippet: flag.associated_snippet
+                                                });
+                                            }
+                                        }}
                                         className={`group transition-all hover:translate-x-1 cursor-pointer overflow-hidden ${isExpanded ? 'ring-1 ring-rose-300 border-rose-300 shadow-md bg-white dark:bg-slate-800/60' : 'border-rose-100 dark:border-rose-900/30'}`}
                                     >
                                         <div className="flex gap-3">

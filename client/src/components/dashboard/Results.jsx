@@ -212,6 +212,17 @@ const Results = React.memo(() => {
         };
     }, [isDocxRendered, activeFile?.id]);
 
+    // Scroll plain text highlights into view
+    useEffect(() => {
+        if (!isDocx && textHighlightRef.current) {
+            setTimeout(() => {
+                if (textHighlightRef.current) {
+                    textHighlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+        }
+    }, [focusedIssue?.snippet, isDocx]);
+
     // 2. HIGHLIGHTING (Light Op - Run on Click)
     useEffect(() => {
         if (!focusedIssue?.snippet || !isDocxRendered) {
@@ -320,15 +331,24 @@ const Results = React.memo(() => {
                             </div>
                         </div>
                         <div className="p-4 space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
-                            <div className="flex items-center gap-2 mb-3">
+                            <div className="flex flex-col gap-2 mb-3">
                                 {focusedIssue.snippet ? (
-                                    <span className="text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full font-bold border border-blue-100 dark:border-blue-800">
-                                        {t('results.evidence') || 'Institutional Evidence Found'}
-                                    </span>
+                                    <>
+                                        <div className="flex items-center">
+                                            <span className="text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full font-bold border border-blue-100 dark:border-blue-800">
+                                                {t('results.evidence') || 'Institutional Evidence Found'}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-slate-700 dark:text-slate-300 italic border-l-2 border-blue-400 dark:border-blue-500 pl-2 leading-relaxed bg-blue-50/50 dark:bg-blue-900/10 py-1.5 px-2 rounded-r-md">
+                                            "{focusedIssue.snippet}"
+                                        </p>
+                                    </>
                                 ) : (
-                                    <span className="text-[10px] bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full font-bold border border-slate-100 dark:border-slate-700">
-                                        {t('results.deficiency') || 'Methodological Deficiency Found'}
-                                    </span>
+                                    <div className="flex items-center">
+                                        <span className="text-[10px] bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full font-bold border border-slate-100 dark:border-slate-700">
+                                            {t('results.deficiency') || 'Methodological Deficiency Found'}
+                                        </span>
+                                    </div>
                                 )}
                             </div>
 
