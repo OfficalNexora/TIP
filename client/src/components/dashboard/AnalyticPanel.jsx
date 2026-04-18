@@ -48,18 +48,19 @@ const TypewriterSummary = React.memo(({ fullSummary, activeFileId }) => {
     useEffect(() => {
         setTypedSummary('');
         let i = 0;
-        const speed = 25; // Optimized for performance and legibility
+        let timeoutId;
 
         const typeChar = () => {
             if (i < fullSummary.length) {
                 setTypedSummary(prev => prev + fullSummary.charAt(i));
                 i++;
-                setTimeout(typeChar, speed);
+                timeoutId = setTimeout(typeChar, 25);
             }
         };
 
-        const timer = setTimeout(typeChar, 300);
-        return () => clearTimeout(timer);
+        timeoutId = setTimeout(typeChar, 300);
+        
+        return () => clearTimeout(timeoutId);
     }, [fullSummary, activeFileId]);
 
     return (

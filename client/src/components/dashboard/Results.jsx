@@ -93,16 +93,43 @@ const Results = React.memo(() => {
 
     // INTERACTIVE AUDIT: Finding and Highlighting Snippets
     const textHighlightRef = useRef(null);
-    const docxIndexRef = useRef({ fullText: "", nodeOffsets: [] });
 
-    // 1. INDEXING (Heavy Op - Run Once per Doc Load)
+    // Scroll plain text highlights into view
     useEffect(() => {
-        if (!isDocxRendered || !docxContainerRef.current) return;
+        if (!isDocx && textHighlightRef.current) {
+            setTimeout(() => {
+                if (textHighlightRef.current) {
+                    textHighlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+        }
+    }, [focusedIssue?.snippet, isDocx]);
 
-        const container = docxContainerRef.current;
-        let indexTimer;
+    // HIGHLIGHTING in DOCX
+    useEffect(() => {
+        if (!focusedIssue?.snippet || !isDocxRendered) {
+            setHighlightRect(null);
+            return;
+        }
 
-        const indexDoc = () => {
+        const findAndHighlight = () => {
+            const container = docxContainerRef.current;
+            if (!container) return;
+
+            // Cleanup OLD highlights to restore the tree
+            const oldHighlights = container.querySelectorAll('.audit-highlight');
+            oldHighlights.forEach(el => {
+                const parent = el.parentNode;
+                if (parent) {
+                    parent.replaceChild(document.createTextNode(el.textContent), el);
+                    parent.normalize();
+                }
+            });
+
+            const snippet = focusedIssue.snippet.trim();
+            if (!snippet) return;
+
+            // REBUILD INDEX DYNAMICALLY AFTER RESTORING TREE
             const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
             let fullText = "";
             const nodeOffsets = [];
@@ -117,63 +144,6 @@ const Results = React.memo(() => {
                 fullText += currentNode.nodeValue;
             }
 
-            if (fullText.length > 0) {
-                docxIndexRef.current = { fullText, nodeOffsets };
-                console.log("[Viewer] DOCX Indexing Complete. Length:", fullText.length);
-            }
-        };
-
-        // MutationObserver to detect when docx-preview actually inserts content
-        const observer = new MutationObserver((mutations) => {
-            clearTimeout(indexTimer);
-            indexTimer = setTimeout(indexDoc, 1000); // Debounce: Wait 1s after last DOM update
-        });
-
-        observer.observe(container, { childList: true, subtree: true, characterData: true });
-
-        return () => {
-            observer.disconnect();
-            clearTimeout(indexTimer);
-        };
-    }, [isDocxRendered, activeFile?.id]);
-
-    // Scroll plain text highlights into view
-    useEffect(() => {
-        if (!isDocx && textHighlightRef.current) {
-            setTimeout(() => {
-                if (textHighlightRef.current) {
-                    textHighlightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-            }, 100);
-        }
-    }, [focusedIssue?.snippet, isDocx]);
-
-    // 2. HIGHLIGHTING (Light Op - Run on Click)
-    useEffect(() => {
-        if (!focusedIssue?.snippet || !isDocxRendered) {
-            setHighlightRect(null);
-            return;
-        }
-
-        const findAndHighlight = () => {
-            const container = docxContainerRef.current;
-            if (!container) return;
-
-            // Cleanup OLD highlights
-            const oldHighlights = container.querySelectorAll('.audit-highlight');
-            oldHighlights.forEach(el => {
-                const parent = el.parentNode;
-                if (parent) {
-                    parent.replaceChild(document.createTextNode(el.innerText), el);
-                    parent.normalize();
-                }
-            });
-
-            const snippet = focusedIssue.snippet.trim();
-            if (!snippet) return;
-
-            // Use CACHED Index
-            const { fullText, nodeOffsets } = docxIndexRef.current;
             if (!fullText) return;
 
             const escaped = snippet.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
@@ -199,19 +169,20 @@ const Results = React.memo(() => {
                         span.appendChild(contents);
                         range.insertNode(span);
 
+                        // Ensure container layout passes then scroll
                         setTimeout(() => {
                             span.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 50); // Reduced delay for snappier feel
+                        }, 50); // Snappy feel
                     } catch (e) {
                         console.warn("[Highlight] Complex range error:", e);
                     }
                 }
             } else {
-                console.warn("[Viewer] Snippet not found in index:", snippet.substring(0, 30));
+                console.warn("[Viewer] Snippet not found in document text:", snippet.substring(0, 30));
             }
         };
 
-        // Instant execution, no delay needed since indexing is pre-computed
+        // Instant execution
         requestAnimationFrame(findAndHighlight);
     }, [focusedIssue, isDocxRendered, isDocx]);
 
