@@ -9,6 +9,7 @@ import './DocumentViewer.css';
 const Results = React.memo(() => {
     const docxContainerRef = useRef(null);
     const wrapperRef = useRef(null);
+    const scrollContainerRef = useRef(null); // The actual overflow-auto div
     const { theme } = useTheme();
     const { activeFile } = useData();
     const { focusedIssue } = useUI();
@@ -169,10 +170,26 @@ const Results = React.memo(() => {
                         span.appendChild(contents);
                         range.insertNode(span);
 
-                        // Ensure container layout passes then scroll
+                        // MANUAL SCROLL - scrollIntoView is broken inside CSS transform: scale() containers.
+                        // getBoundingClientRect returns coordinates in the TRANSFORMED space,
+                        // so the scroll offset is wrong by the scale factor.
                         setTimeout(() => {
-                            span.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }, 50); // Snappy feel
+                            const scrollEl = scrollContainerRef.current;
+                            if (!scrollEl || !span.isConnected) return;
+
+                            const spanRect = span.getBoundingClientRect();
+                            const scrollRect = scrollEl.getBoundingClientRect();
+
+                            // The span's position relative to the scroll container's viewport,
+                            // adjusted for the CSS transform scale distortion
+                            const relativeTop = (spanRect.top - scrollRect.top) / zoomScale;
+                            const targetScroll = scrollEl.scrollTop + relativeTop - (scrollRect.height / 2);
+
+                            scrollEl.scrollTo({
+                                top: Math.max(0, targetScroll),
+                                behavior: 'smooth'
+                            });
+                        }, 80);
                     } catch (e) {
                         console.warn("[Highlight] Complex range error:", e);
                     }
@@ -184,7 +201,7 @@ const Results = React.memo(() => {
 
         // Instant execution
         requestAnimationFrame(findAndHighlight);
-    }, [focusedIssue, isDocxRendered, isDocx]);
+    }, [focusedIssue, isDocxRendered, isDocx, zoomScale]);
 
     if (!activeFile) return null;
 
@@ -257,6 +274,7 @@ const Results = React.memo(() => {
                     </div>
 
                     <div
+                        ref={scrollContainerRef}
                         className="flex-1 overflow-auto p-0 flex justify-center items-start custom-scrollbar transition-colors duration-500 relative"
                         style={{ backgroundColor: isDark ? '#020617' : '#f1f5f9' }}
                     >
