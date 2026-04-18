@@ -109,13 +109,26 @@ const Results = React.memo(() => {
     // HIGHLIGHTING in DOCX
     useEffect(() => {
         if (!focusedIssue?.snippet || !isDocxRendered) {
+            if (focusedIssue && !focusedIssue.snippet) {
+                console.warn("[AutoScroll] focusedIssue exists but has no snippet:", focusedIssue.id);
+            }
             setHighlightRect(null);
             return;
         }
 
+        console.log("[AutoScroll] === TRIGGERED ===", {
+            snippetPreview: focusedIssue.snippet.substring(0, 50),
+            isDocxRendered,
+            isDocx,
+            zoomScale
+        });
+
         const findAndHighlight = () => {
             const container = docxContainerRef.current;
-            if (!container) return;
+            if (!container) {
+                console.error("[AutoScroll] FAIL: docxContainerRef is null");
+                return;
+            }
 
             // Cleanup OLD highlights to restore the tree
             const oldHighlights = container.querySelectorAll('.audit-highlight');
@@ -128,7 +141,10 @@ const Results = React.memo(() => {
             });
 
             const snippet = focusedIssue.snippet.trim();
-            if (!snippet) return;
+            if (!snippet) {
+                console.warn("[AutoScroll] FAIL: snippet is empty after trim");
+                return;
+            }
 
             // REBUILD INDEX DYNAMICALLY AFTER RESTORING TREE
             const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
@@ -145,13 +161,19 @@ const Results = React.memo(() => {
                 fullText += currentNode.nodeValue;
             }
 
-            if (!fullText) return;
+            if (!fullText) {
+                console.error("[AutoScroll] FAIL: no text found in DOCX container");
+                return;
+            }
+
+            console.log("[AutoScroll] Index built, totalChars:", fullText.length, "nodes:", nodeOffsets.length);
 
             const escaped = snippet.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
             const fuzzyRegex = new RegExp(escaped, 'i');
             const match = fullText.match(fuzzyRegex);
 
             if (match) {
+                console.log("[AutoScroll] MATCH found at index:", match.index);
                 const matchStart = match.index;
                 const matchEnd = matchStart + match[0].length;
                 const range = document.createRange();
@@ -170,32 +192,57 @@ const Results = React.memo(() => {
                         span.appendChild(contents);
                         range.insertNode(span);
 
-                        // MANUAL SCROLL - scrollIntoView is broken inside CSS transform: scale() containers.
-                        // getBoundingClientRect returns coordinates in the TRANSFORMED space,
-                        // so the scroll offset is wrong by the scale factor.
+                        // SCROLL into view
                         setTimeout(() => {
                             const scrollEl = scrollContainerRef.current;
-                            if (!scrollEl || !span.isConnected) return;
+                            if (!scrollEl) {
+                                console.error("[AutoScroll] FAIL: scrollContainerRef is null");
+                                // Fallback
+                                span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                return;
+                            }
+                            if (!span.isConnected) {
+                                console.error("[AutoScroll] FAIL: highlight span detached from DOM");
+                                return;
+                            }
 
                             const spanRect = span.getBoundingClientRect();
                             const scrollRect = scrollEl.getBoundingClientRect();
 
-                            // The span's position relative to the scroll container's viewport,
-                            // adjusted for the CSS transform scale distortion
-                            const relativeTop = (spanRect.top - scrollRect.top) / zoomScale;
-                            const targetScroll = scrollEl.scrollTop + relativeTop - (scrollRect.height / 2);
+                            // The wrapper div is already sized for the scale transform,
+                            // so getBoundingClientRect positions are in the correct coordinate space.
+                            // DO NOT divide by zoomScale — that was causing overshoot.
+                            const visualOffset = spanRect.top - scrollRect.top;
+                            const targetScroll = scrollEl.scrollTop + visualOffset - (scrollRect.height / 2);
+
+                            console.log("[AutoScroll] SCROLLING:", {
+                                spanTop: spanRect.top,
+                                scrollContainerTop: scrollRect.top,
+                                visualOffset,
+                                currentScrollTop: scrollEl.scrollTop,
+                                targetScroll: Math.max(0, targetScroll),
+                                scrollHeight: scrollEl.scrollHeight,
+                                clientHeight: scrollEl.clientHeight,
+                                isScrollable: scrollEl.scrollHeight > scrollEl.clientHeight
+                            });
+
+                            if (scrollEl.scrollHeight <= scrollEl.clientHeight) {
+                                console.warn("[AutoScroll] WARNING: container is NOT scrollable (content fits)");
+                            }
 
                             scrollEl.scrollTo({
                                 top: Math.max(0, targetScroll),
                                 behavior: 'smooth'
                             });
-                        }, 80);
+                        }, 100);
                     } catch (e) {
-                        console.warn("[Highlight] Complex range error:", e);
+                        console.warn("[AutoScroll] Complex range error:", e);
                     }
+                } else {
+                    console.error("[AutoScroll] FAIL: could not resolve node offsets for match range");
                 }
             } else {
-                console.warn("[Viewer] Snippet not found in document text:", snippet.substring(0, 30));
+                console.warn("[AutoScroll] FAIL: snippet not found in document text. Snippet:", snippet.substring(0, 60));
             }
         };
 

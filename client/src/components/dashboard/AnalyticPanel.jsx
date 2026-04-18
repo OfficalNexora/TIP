@@ -116,6 +116,11 @@ const AnalyticPanel = React.memo(() => {
     const onClose = () => setRightPanelOpen(false);
 
     const handleIssueClick = useCallback((issue) => {
+        console.log("[AutoScroll] handleIssueClick fired:", {
+            id: issue.id,
+            hasSnippet: !!issue.snippet,
+            snippetPreview: issue.snippet?.substring(0, 60) || "NULL"
+        });
         setFocusedIssue(issue);
     }, [setFocusedIssue]);
 
