@@ -167,9 +167,32 @@ const Results = React.memo(() => {
 
             console.log("[AutoScroll] Index built, totalChars:", fullText.length, "nodes:", nodeOffsets.length);
 
-            const escaped = snippet.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
-            const fuzzyRegex = new RegExp(escaped, 'i');
-            const match = fullText.match(fuzzyRegex);
+            let match = null;
+            
+            // Try matching full string first, then progressively shorter chunks resolving typography differences
+            const searchChunks = [
+                snippet.trim(),
+                snippet.trim().substring(0, 60),
+                snippet.trim().substring(0, 30) // Minimum viable chunk
+            ];
+
+            for (let chunk of searchChunks) {
+                if (!chunk || chunk.length < 5) continue;
+                
+                // Allow flexible whitespace and convert any quote marks into a wild-card quote matcher
+                const escaped = chunk
+                    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                    .replace(/\s+/g, '\\s*') // Even more flexible: spaces might be missing or combined
+                    .replace(/['"“”‘’]/g, '[\'\\""“”‘’]');
+                
+                const fuzzyRegex = new RegExp(escaped, 'i');
+                match = fullText.match(fuzzyRegex);
+                
+                if (match) {
+                    console.log("[AutoScroll] Match found using chunk length:", chunk.length);
+                    break;
+                }
+            }
 
             if (match) {
                 console.log("[AutoScroll] MATCH found at index:", match.index);
