@@ -165,37 +165,38 @@ const Results = React.memo(() => {
                 return;
             }
 
-            console.log("[AutoScroll] Index built, totalChars:", fullText.length, "nodes:", nodeOffsets.length);
-
             let match = null;
             
-            // Try matching full string first, then progressively shorter chunks resolving typography differences
-            const searchChunks = [
-                snippet.trim(),
-                snippet.trim().substring(0, 60),
-                snippet.trim().substring(0, 30) // Minimum viable chunk
+            // Normalize snippet: remove weird control characters, trim, and handle quotes
+            const normalizedSnippet = snippet.trim()
+                .replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
+                .replace(/\s+/g, ' ');
+
+            // Progressive search strategies
+            const searchStrategies = [
+                { chunk: normalizedSnippet, label: 'Full Verbatim' },
+                { chunk: normalizedSnippet.substring(0, Math.floor(normalizedSnippet.length * 0.8)), label: '80% Prefix' },
+                { chunk: normalizedSnippet.split(' ').slice(0, 8).join(' '), label: 'First 8 Words' }
             ];
 
-            for (let chunk of searchChunks) {
-                if (!chunk || chunk.length < 5) continue;
+            for (const strategy of searchStrategies) {
+                if (!strategy.chunk || strategy.chunk.length < 10) continue;
                 
-                // Allow flexible whitespace and convert any quote marks into a wild-card quote matcher
-                const escaped = chunk
+                const escaped = strategy.chunk
                     .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                    .replace(/\s+/g, '\\s*') // Even more flexible: spaces might be missing or combined
+                    .replace(/\s+/g, '\\s*') 
                     .replace(/['"“”‘’]/g, '[\'\\""“”‘’]');
                 
-                const fuzzyRegex = new RegExp(escaped, 'i');
-                match = fullText.match(fuzzyRegex);
+                const regex = new RegExp(escaped, 'i');
+                match = fullText.match(regex);
                 
                 if (match) {
-                    console.log("[AutoScroll] Match found using chunk length:", chunk.length);
+                    console.log(`[AutoScroll] Match found using [${strategy.label}] at index:`, match.index);
                     break;
                 }
             }
 
             if (match) {
-                console.log("[AutoScroll] MATCH found at index:", match.index);
                 const matchStart = match.index;
                 const matchEnd = matchStart + match[0].length;
                 const range = document.createRange();
@@ -210,6 +211,7 @@ const Results = React.memo(() => {
 
                         const contents = range.extractContents();
                         const span = document.createElement('span');
+                        span.id = `highlight-${focusedIssue.id.replace(/\s+/g, '-')}`;
                         span.className = 'audit-highlight bg-blue-400/40 ring-2 ring-blue-500/50 rounded-sm transition-all duration-700 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse inline-block';
                         span.appendChild(contents);
                         range.insertNode(span);
@@ -230,7 +232,10 @@ const Results = React.memo(() => {
                     console.error("[AutoScroll] FAIL: could not resolve node offsets for match range");
                 }
             } else {
-                console.warn("[AutoScroll] FAIL: snippet not found in document text. Snippet:", snippet.substring(0, 60));
+                console.warn("[AutoScroll] FAIL: snippet not found in document text.");
+                console.log("[AutoScroll] SEARCHED SNIPPET:", normalizedSnippet);
+                console.log("[AutoScroll] DOCUMENT TEXT SAMPLE (First 500):", fullText.substring(0, 500));
+                console.log("[AutoScroll] TOTAL DOCUMENT LENGTH:", fullText.length);
             }
         };
 
