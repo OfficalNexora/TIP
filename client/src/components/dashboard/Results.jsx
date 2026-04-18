@@ -28,82 +28,7 @@ const Results = React.memo(() => {
     const isLegacyDoc = activeFile?.mimeType === 'application/msword';
     const isImage = activeFile?.mimeType?.startsWith('image/');
 
-    // DRAGGABLE WINDOW STATE
-    const [windowPos, setWindowPos] = useState({ x: -1000, y: -1000 }); // Start off-screen
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-
-    // Center the window initially when focusedIssue changes
-    useLayoutEffect(() => {
-        if (focusedIssue) {
-            const width = 320;
-            const height = 280; // Approximate height with header
-
-            // DYNAMIC BOUNDARY DETECTION
-            const sidebar = document.querySelector('nav') || { offsetWidth: 280 };
-            const header = document.querySelector('header') || { offsetHeight: 80 };
-
-            const sidebarWidth = sidebar.offsetWidth || 280;
-            const headerHeight = header.offsetHeight || 80;
-
-            // Center in the AVAILABLE main area
-            const availableWidth = window.innerWidth - sidebarWidth;
-            const availableHeight = window.innerHeight - headerHeight;
-
-            const startX = sidebarWidth + (availableWidth / 2) - (width / 2);
-            const startY = headerHeight + (availableHeight / 2) - (height / 2);
-
-            setWindowPos({ x: startX, y: startY });
-        }
-    }, [!!focusedIssue]);
-
-    const handleMouseDown = (e) => {
-        setIsDragging(true);
-        setDragOffset({
-            x: e.clientX - windowPos.x,
-            y: e.clientY - windowPos.y
-        });
-    };
-
-    useEffect(() => {
-        const handleMouseMove = (e) => {
-            if (!isDragging) return;
-
-            let nextX = e.clientX - dragOffset.x;
-            let nextY = e.clientY - dragOffset.y;
-
-            // DYNAMIC BOUNDARY CONSTRAINTS
-            const sidebar = document.querySelector('nav') || { offsetWidth: 280 };
-            const header = document.querySelector('header') || { offsetHeight: 80 };
-
-            const sidebarWidth = sidebar.offsetWidth || 280;
-            const headerHeight = header.offsetHeight || 80;
-            const windowWidth = 320;
-            const windowHeight = 250; // Approximate
-
-            // Constraint logic: Keep strictly within main panel
-            if (nextX < sidebarWidth) nextX = sidebarWidth;
-            if (nextX > window.innerWidth - windowWidth) nextX = window.innerWidth - windowWidth;
-            if (nextY < headerHeight) nextY = headerHeight;
-            if (nextY > window.innerHeight - windowHeight) nextY = window.innerHeight - windowHeight;
-
-            setWindowPos({ x: nextX, y: nextY });
-        };
-
-        const handleMouseUp = () => {
-            setIsDragging(false);
-        };
-
-        if (isDragging) {
-            window.addEventListener('mousemove', handleMouseMove);
-            window.addEventListener('mouseup', handleMouseUp);
-        }
-
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove);
-            window.removeEventListener('mouseup', handleMouseUp);
-        };
-    }, [isDragging, dragOffset]);
+    // DRAGGABLE WINDOW STATE REMOVED - User requested only auto-scroll
 
     // Dynamic Zoom-to-Fit Calculation
     useEffect(() => {
@@ -306,74 +231,7 @@ const Results = React.memo(() => {
     return (
         <div className={`w-full flex flex-col animate-fade-in ${isMaximized ? 'fixed inset-0 z-[100] bg-slate-50 dark:bg-slate-950 p-6 overflow-auto' : ''}`}>
 
-            {/* DRAGGABLE AUDIT WINDOW (Floating Camera View) */}
-            {focusedIssue && (
-                <div
-                    className="fixed z-[200] shadow-2xl rounded-2xl overflow-hidden transition-shadow duration-300 pointer-events-auto"
-                    style={{
-                        left: `${windowPos.x}px`,
-                        top: `${windowPos.y}px`,
-                        width: '320px',
-                        cursor: isDragging ? 'grabbing' : 'auto',
-                        boxShadow: isDragging ? '0 25px 50px -12px rgba(0, 0, 0, 0.5)' : 'none'
-                    }}
-                >
-                    <div className="bg-white dark:bg-slate-900 border-2 border-tip-primary dark:border-blue-500 shadow-2xl rounded-2xl overflow-hidden">
-                        <div
-                            className="bg-tip-primary dark:bg-blue-600 px-4 py-2 flex items-center justify-between cursor-grab active:cursor-grabbing select-none"
-                            onMouseDown={handleMouseDown}
-                        >
-                            <span className="text-[10px] font-black text-white uppercase tracking-widest">{t('results.guide') || 'Revision Guide'}</span>
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => setFocusedIssue(null)} className="text-white hover:bg-white/20 p-1 rounded transition-colors">
-                                    <Icons.X size={12} />
-                                </button>
-                            </div>
-                        </div>
-                        <div className="p-4 space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
-                            <div className="flex flex-col gap-2 mb-3">
-                                {focusedIssue.snippet ? (
-                                    <>
-                                        <div className="flex items-center">
-                                            <span className="text-[10px] bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full font-bold border border-blue-100 dark:border-blue-800">
-                                                {t('results.evidence') || 'Institutional Evidence Found'}
-                                            </span>
-                                        </div>
-                                        <p className="text-xs text-slate-700 dark:text-slate-300 italic border-l-2 border-blue-400 dark:border-blue-500 pl-2 leading-relaxed bg-blue-50/50 dark:bg-blue-900/10 py-1.5 px-2 rounded-r-md">
-                                            "{focusedIssue.snippet}"
-                                        </p>
-                                    </>
-                                ) : (
-                                    <div className="flex items-center">
-                                        <span className="text-[10px] bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full font-bold border border-slate-100 dark:border-slate-700">
-                                            {t('results.deficiency') || 'Methodological Deficiency Found'}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-
-                              {focusedIssue.suggestion ? (
-                                <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
-                                    <h4 className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase mb-1">{t('results.suggestion') || 'Institutional Suggestion'}</h4>
-                                    <p className="text-xs text-emerald-800 dark:text-emerald-200 leading-relaxed">
-                                        {focusedIssue.suggestion}
-                                    </p>
-                                </div>
-                            ) : (
-                                <p className="text-xs text-slate-500 italic">{t('results.noSuggestion') || 'No suggestions available.'}</p>
-                            )}
-                            <div className="flex justify-end pt-2">
-                                <button
-                                    className="text-[10px] font-bold text-tip-primary dark:text-blue-400 uppercase tracking-wider"
-                                    onClick={() => setFocusedIssue(null)}
-                                >
-                                    {t('results.understood') || 'I understand'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            {/* DRAGGABLE AUDIT WINDOW REMOVED */}
 
             {/* AUDIT HEADER BAR */}
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-6 mb-6 flex items-start sm:items-center justify-between shadow-sm transition-colors gap-6 overflow-hidden">
