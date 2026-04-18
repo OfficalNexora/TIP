@@ -9,7 +9,6 @@ import './DocumentViewer.css';
 const Results = React.memo(() => {
     const docxContainerRef = useRef(null);
     const wrapperRef = useRef(null);
-    const scrollContainerRef = useRef(null); // The actual overflow-auto div
     const { theme } = useTheme();
     const { activeFile } = useData();
     const { focusedIssue } = useUI();
@@ -192,49 +191,15 @@ const Results = React.memo(() => {
                         span.appendChild(contents);
                         range.insertNode(span);
 
-                        // SCROLL into view
+                        // SCROLL — use scrollIntoView which finds the correct scrollable ancestor.
+                        // The inner container (scrollContainerRef) is NOT height-constrained in normal mode,
+                        // so it expands to fit content and has no scrollbar. The ACTUAL scrollable container
+                        // is the outer page div in App.jsx (overflow-y-auto), which has no CSS transform.
                         setTimeout(() => {
-                            const scrollEl = scrollContainerRef.current;
-                            if (!scrollEl) {
-                                console.error("[AutoScroll] FAIL: scrollContainerRef is null");
-                                // Fallback
-                                span.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                return;
-                            }
-                            if (!span.isConnected) {
-                                console.error("[AutoScroll] FAIL: highlight span detached from DOM");
-                                return;
-                            }
-
-                            const spanRect = span.getBoundingClientRect();
-                            const scrollRect = scrollEl.getBoundingClientRect();
-
-                            // The wrapper div is already sized for the scale transform,
-                            // so getBoundingClientRect positions are in the correct coordinate space.
-                            // DO NOT divide by zoomScale — that was causing overshoot.
-                            const visualOffset = spanRect.top - scrollRect.top;
-                            const targetScroll = scrollEl.scrollTop + visualOffset - (scrollRect.height / 2);
-
-                            console.log("[AutoScroll] SCROLLING:", {
-                                spanTop: spanRect.top,
-                                scrollContainerTop: scrollRect.top,
-                                visualOffset,
-                                currentScrollTop: scrollEl.scrollTop,
-                                targetScroll: Math.max(0, targetScroll),
-                                scrollHeight: scrollEl.scrollHeight,
-                                clientHeight: scrollEl.clientHeight,
-                                isScrollable: scrollEl.scrollHeight > scrollEl.clientHeight
-                            });
-
-                            if (scrollEl.scrollHeight <= scrollEl.clientHeight) {
-                                console.warn("[AutoScroll] WARNING: container is NOT scrollable (content fits)");
-                            }
-
-                            scrollEl.scrollTo({
-                                top: Math.max(0, targetScroll),
-                                behavior: 'smooth'
-                            });
-                        }, 100);
+                            if (!span.isConnected) return;
+                            span.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            console.log("[AutoScroll] scrollIntoView called");
+                        }, 120);
                     } catch (e) {
                         console.warn("[AutoScroll] Complex range error:", e);
                     }
@@ -321,7 +286,6 @@ const Results = React.memo(() => {
                     </div>
 
                     <div
-                        ref={scrollContainerRef}
                         className="flex-1 overflow-auto p-0 flex justify-center items-start custom-scrollbar transition-colors duration-500 relative"
                         style={{ backgroundColor: isDark ? '#020617' : '#f1f5f9' }}
                     >
