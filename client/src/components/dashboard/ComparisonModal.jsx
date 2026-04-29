@@ -130,21 +130,32 @@ const RevisionDiffView = ({ result, isDark, isEditMode, draft, setDraft }) => {
             {/* Verdict Banner */}
             <div className={`p-4 rounded-2xl border flex items-start gap-4 ${verdictInfo.color}`}>
                 <VerdictIcon size={22} className="mt-0.5 shrink-0" />
-                <div className="flex-1">
+                <div className="flex-1 w-full">
                     {isEditMode ? (
                         <select
                             value={verdict}
                             onChange={e => setDraft(prev => ({ ...prev, verdict: e.target.value }))}
-                            className="text-sm font-black uppercase tracking-wider mb-1 bg-transparent border-b-2 border-dashed border-amber-400 outline-none cursor-pointer w-full"
+                            className="text-sm font-black uppercase tracking-wider mb-2 bg-transparent border-b-2 border-dashed border-amber-400 outline-none cursor-pointer w-full"
                         >
                             {VERDICT_OPTIONS.map(v => (
                                 <option key={v} value={v}>{VERDICT_MAP[v].label}</option>
                             ))}
                         </select>
                     ) : (
-                        <h3 className="text-sm font-black uppercase tracking-wider mb-1">{verdictInfo.label}</h3>
+                        <h3 className="text-sm font-black uppercase tracking-wider mb-2">{verdictInfo.label}</h3>
                     )}
-                    <p className="text-xs leading-relaxed">{verdictInfo.desc}</p>
+                    
+                    {/* AI / Custom Summary */}
+                    {isEditMode ? (
+                        <EditableText 
+                            value={data.aiSummary || verdictInfo.desc} 
+                            onChange={v => setDraft(prev => ({ ...prev, aiSummary: v }))} 
+                            className="text-xs leading-relaxed italic block" 
+                            multiline 
+                        />
+                    ) : (
+                        <p className="text-xs leading-relaxed italic">{data.aiSummary || verdictInfo.desc}</p>
+                    )}
                 </div>
             </div>
 
@@ -227,7 +238,7 @@ const RevisionDiffView = ({ result, isDark, isEditMode, draft, setDraft }) => {
                                     ) : (
                                         <>
                                             <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{issue.label}</span>
-                                            {issue.detail && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{issue.detail}</p>}
+                                            {issue.detail && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{issue.detail}</p>}
                                         </>
                                     )}
                                 </div>
@@ -271,7 +282,7 @@ const RevisionDiffView = ({ result, isDark, isEditMode, draft, setDraft }) => {
                                     ) : (
                                         <>
                                             <span className="text-xs font-bold text-amber-700 dark:text-amber-300">{issue.label}</span>
-                                            {issue.detail && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{issue.detail}</p>}
+                                            {issue.detail && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{issue.detail}</p>}
                                         </>
                                     )}
                                 </div>
@@ -315,7 +326,7 @@ const RevisionDiffView = ({ result, isDark, isEditMode, draft, setDraft }) => {
                                     ) : (
                                         <>
                                             <span className="text-xs font-bold text-rose-700 dark:text-rose-300">{issue.label}</span>
-                                            {issue.detail && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{issue.detail}</p>}
+                                            {issue.detail && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">{issue.detail}</p>}
                                         </>
                                     )}
                                 </div>
@@ -334,60 +345,68 @@ const RevisionDiffView = ({ result, isDark, isEditMode, draft, setDraft }) => {
 
             {/* Dimension Changes */}
             {(dimensionChanges.length > 0 || isEditMode) && (
-                <div className="space-y-2">
+                <div className="space-y-4">
                     <div className="flex items-center gap-2">
                         <Icons.BarChart2 size={14} className="text-blue-500" />
                         <h4 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">
                             Pagbabago sa Dimensyon
                         </h4>
                     </div>
-                    <div className={`rounded-xl border overflow-hidden ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-                        <table className="w-full text-xs">
-                            <thead>
-                                <tr className={isDark ? 'bg-slate-800/80' : 'bg-slate-50'}>
-                                    <th className="text-left px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-400">Dimensyon</th>
-                                    <th className="text-center px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-400">Orihinal</th>
-                                    <th className="text-center px-2 py-2 text-slate-400"><Icons.ArrowRight size={10} /></th>
-                                    <th className="text-center px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-400">Binago</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {dimensionChanges.map((dc, idx) => (
-                                    <tr key={idx} className={`border-t ${isDark ? 'border-slate-700/50' : 'border-slate-100'}`}>
-                                        <td className={`px-3 py-2.5 font-bold capitalize ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{dc.dimension}</td>
-                                        <td className="px-3 py-2.5 text-center">
-                                            {isEditMode ? (
-                                                <select
-                                                    value={dc.oldStatus}
-                                                    onChange={e => updateDimChange(idx, 'oldStatus', e.target.value)}
-                                                    className="text-[10px] font-black px-2 py-0.5 rounded-full bg-transparent border border-dashed border-amber-400 outline-none cursor-pointer"
-                                                >
-                                                    {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                                                </select>
-                                            ) : (
-                                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">{dc.oldStatus}</span>
-                                            )}
-                                        </td>
-                                        <td className="text-center">
-                                            {dc.improved ? <Icons.ArrowDown size={12} className="text-emerald-500 mx-auto" /> : <Icons.ArrowUp size={12} className="text-rose-500 mx-auto" />}
-                                        </td>
-                                        <td className="px-3 py-2.5 text-center">
-                                            {isEditMode ? (
-                                                <select
-                                                    value={dc.newStatus}
-                                                    onChange={e => updateDimChange(idx, 'newStatus', e.target.value)}
-                                                    className={`text-[10px] font-black px-2 py-0.5 rounded-full bg-transparent border border-dashed border-amber-400 outline-none cursor-pointer`}
-                                                >
-                                                    {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                                                </select>
-                                            ) : (
-                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${dc.improved ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'}`}>{dc.newStatus}</span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div className="space-y-3">
+                        {dimensionChanges.map((dc, idx) => (
+                            <div key={idx} className={`p-4 rounded-xl border ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+                                <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-200 dark:border-slate-700/50">
+                                    <span className={`text-[11px] font-black uppercase tracking-widest ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{dc.dimension}</span>
+                                    <div className="flex items-center gap-3">
+                                        {isEditMode ? (
+                                            <select
+                                                value={dc.oldStatus}
+                                                onChange={e => updateDimChange(idx, 'oldStatus', e.target.value)}
+                                                className="text-[10px] font-black px-2 py-0.5 rounded-full bg-transparent border border-dashed border-amber-400 outline-none cursor-pointer"
+                                            >
+                                                {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                                            </select>
+                                        ) : (
+                                            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">{dc.oldStatus}</span>
+                                        )}
+                                        {dc.improved ? <Icons.ArrowRight size={14} className="text-emerald-500" /> : <Icons.ArrowRight size={14} className="text-rose-500" />}
+                                        {isEditMode ? (
+                                            <select
+                                                value={dc.newStatus}
+                                                onChange={e => updateDimChange(idx, 'newStatus', e.target.value)}
+                                                className={`text-[10px] font-black px-2 py-0.5 rounded-full bg-transparent border border-dashed border-amber-400 outline-none cursor-pointer`}
+                                            >
+                                                {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                                            </select>
+                                        ) : (
+                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${dc.improved ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'}`}>{dc.newStatus}</span>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* Old Reason */}
+                                    <div>
+                                        <div className="text-[9px] uppercase font-bold tracking-wider text-slate-400 mb-1">Orihinal na Isyu</div>
+                                        {isEditMode ? (
+                                            <EditableText value={dc.oldReason || ''} onChange={v => updateDimChange(idx, 'oldReason', v)} className="text-[10px] text-slate-500" multiline />
+                                        ) : (
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed italic">{dc.oldReason || 'Walang detalye sa orihinal.'}</p>
+                                        )}
+                                    </div>
+                                    
+                                    {/* New Reason */}
+                                    <div>
+                                        <div className="text-[9px] uppercase font-bold tracking-wider text-slate-400 mb-1">Kasulukuyang Isyu</div>
+                                        {isEditMode ? (
+                                            <EditableText value={dc.newReason || ''} onChange={v => updateDimChange(idx, 'newReason', v)} className="text-[10px] text-slate-500" multiline />
+                                        ) : (
+                                            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed italic">{dc.newReason || 'Walang detalyeng naitala sa rebisyon.'}</p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}

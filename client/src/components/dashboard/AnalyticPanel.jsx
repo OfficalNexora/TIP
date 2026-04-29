@@ -1665,10 +1665,35 @@ const AnalyticPanel = React.memo(() => {
                     result={verificationResult}
                     onClose={() => { setVerificationResult(null); setRevisionResult(null); }}
                     isEditMode={isSecretEditMode}
-                    onSave={(editedResult) => {
-                        setVerificationResult(editedResult);
-                        setRevisionResult(editedResult);
-                        alert('Revision comparison data overridden successfully!');
+                    onSave={async (editedResult) => {
+                        try {
+                            const { scores, textSimilarity, issues, dimensionChanges, verdict, aiSummary } = editedResult;
+                            
+                            const overridePayload = {
+                                textSimilarity,
+                                scores,
+                                issues,
+                                dimensionChanges,
+                                verdict,
+                                aiSummary
+                            };
+
+                            await axios.post(
+                                `${import.meta.env.VITE_API_BASE_URL}/api/admin/override-analysis`,
+                                {
+                                    analysis_id: activeFile.id,
+                                    comparison_override: overridePayload
+                                },
+                                { ...getAuthHeaders() }
+                            );
+
+                            setVerificationResult(editedResult);
+                            setRevisionResult(editedResult);
+                            alert('Revision comparison data overridden successfully!');
+                        } catch (err) {
+                            console.error("Override comparison failed:", err);
+                            alert('Failed to save comparison override.');
+                        }
                     }}
                 />
 
