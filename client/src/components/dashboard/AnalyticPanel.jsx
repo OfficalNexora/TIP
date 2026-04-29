@@ -71,7 +71,83 @@ const TypewriterSummary = React.memo(({ fullSummary, activeFileId }) => {
     );
 });
 
+const normalizeStatusLabel = (status) => {
+    if (!status) return 'Mababa';
+    const s = status.trim().toLowerCase();
+    if (s === 'aligned' || s === 'n/a' || s === 'ligtas' || s === 'nakatugma' || s === 'compliant') return 'Mababa';
+    if (s === 'may obserbasyon' || s === 'observed' || s === 'needs improvement') return 'Katamtaman';
+    if (s === 'pagnilay' || s === 'critical' || s === 'flagged') return 'Mataas';
+    if (s === 'mababa' || s === 'katamtaman' || s === 'mataas') return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+    return 'Mababa';
+};
+
+const normalizeDimensionKey = (key) => {
+    const lower = (key || '').toLowerCase();
+    if (lower.includes('fairness') || lower.includes('katarungan') || lower.includes('patas')) return 'fairness';
+    if (lower.includes('transparency') || lower.includes('kalinawan')) return 'transparency';
+    if (lower.includes('privacy') || lower.includes('pagkapribado')) return 'privacy';
+    if (lower.includes('sustainability') || lower.includes('pagpapanatili')) return 'sustainability';
+    if (lower.includes('oversight') || lower.includes('pananagutan') || lower.includes('pangangasiwa')) return 'oversight';
+    if (lower.includes('inclusiveness') || lower.includes('inklusibo')) return 'inclusiveness';
+    // Clean up fallback keys if they have analytic.dim prefixes
+    return key.replace(/^(analytic\.dim\.|analytic_dim_)/i, '').replace(/\./g, ' ');
+};
+
+const getIconForDimension = (key) => {
+    const normalized = normalizeDimensionKey(key);
+    if (normalized === 'fairness') return Icons.Scale;
+    if (normalized === 'transparency') return Icons.Eye;
+    if (normalized === 'privacy') return Icons.Lock;
+    if (normalized === 'sustainability') return Icons.Globe;
+    if (normalized === 'oversight') return Icons.UserCheck;
+    if (normalized === 'inclusiveness') return Icons.Users;
+    return Icons.Activity;
+};
+
+// Verdict Logic (Ternary Classification)
+const getVerdictInfo = (verdict, activeFile, t) => {
+    const hasSmokingGun = activeFile?.forensic_analysis?.has_smoking_gun;
+
+    if (hasSmokingGun) {
+        return {
+            label: t('analytic.forensic_certainty'),
+            color: 'text-rose-700 bg-rose-100 border-rose-300 dark:bg-rose-900/40 dark:border-rose-700 dark:text-rose-300 shadow-md',
+            icon: Icons.Lock,
+            isCertain: true
+        };
+    }
+
+    switch (verdict) {
+        case 'AI_GENERATED':
+            return {
+                label: t('analytic.verdict.ai_generated'),
+                color: 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400',
+                icon: Icons.Cpu
+            };
+        case 'AI_HELPED':
+            return {
+                label: t('analytic.verdict.ai_helped'),
+                color: 'text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400',
+                icon: Icons.Zap
+            };
+        case 'HUMAN_AUTHENTIC':
+        case 'HUMAN_EDITED':
+            return {
+                label: t('analytic.verdict.human_authentic'),
+                color: 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400',
+                icon: Icons.UserCheck
+            };
+        default:
+            return {
+                label: t('analytic.verdict.under_review'),
+                color: 'text-slate-500 bg-slate-50 border-slate-200 dark:bg-slate-900/20 dark:border-slate-800 dark:text-slate-400',
+                icon: Icons.Search
+            };
+    }
+};
+
 const AnalyticPanel = React.memo(() => {
+
     const { activeFile, files: historyFiles, revisionResult } = useData();
     const { session, userProfile } = useAuth();
     const { theme } = useTheme();
@@ -488,80 +564,8 @@ const AnalyticPanel = React.memo(() => {
     };
 
     // Normalizes old DB statuses (Aligned, May Obserbasyon, Pagnilay, N/A) to new labels
-    const normalizeStatusLabel = (status) => {
-        if (!status) return 'Mababa';
-        const s = status.trim().toLowerCase();
-        if (s === 'aligned' || s === 'n/a' || s === 'ligtas' || s === 'nakatugma' || s === 'compliant') return 'Mababa';
-        if (s === 'may obserbasyon' || s === 'observed' || s === 'needs improvement') return 'Katamtaman';
-        if (s === 'pagnilay' || s === 'critical' || s === 'flagged') return 'Mataas';
-        if (s === 'mababa' || s === 'katamtaman' || s === 'mataas') return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-        return 'Mababa';
-    };
 
-    const normalizeDimensionKey = (key) => {
-        const lower = key.toLowerCase();
-        if (lower.includes('fairness') || lower.includes('katarungan') || lower.includes('patas')) return 'fairness';
-        if (lower.includes('transparency') || lower.includes('kalinawan')) return 'transparency';
-        if (lower.includes('privacy') || lower.includes('pagkapribado')) return 'privacy';
-        if (lower.includes('sustainability') || lower.includes('pagpapanatili')) return 'sustainability';
-        if (lower.includes('oversight') || lower.includes('pananagutan') || lower.includes('pangangasiwa')) return 'oversight';
-        if (lower.includes('inclusiveness') || lower.includes('inklusibo')) return 'inclusiveness';
-        // Clean up fallback keys if they have analytic.dim prefixes
-        return key.replace(/^(analytic\.dim\.|analytic_dim_)/i, '').replace(/\./g, ' ');
-    };
 
-    const getIconForDimension = (key) => {
-        const normalized = normalizeDimensionKey(key);
-        if (normalized === 'fairness') return Icons.Scale;
-        if (normalized === 'transparency') return Icons.Eye;
-        if (normalized === 'privacy') return Icons.Lock;
-        if (normalized === 'sustainability') return Icons.Globe;
-        if (normalized === 'oversight') return Icons.UserCheck;
-        if (normalized === 'inclusiveness') return Icons.Users;
-        return Icons.Activity;
-    };
-
-    // Verdict Logic (Ternary Classification)
-    const getVerdictInfo = (verdict, lang) => {
-        const hasSmokingGun = activeFile?.forensic_analysis?.has_smoking_gun;
-
-        if (hasSmokingGun) {
-            return {
-                label: t('analytic.forensic_certainty'),
-                color: 'text-rose-700 bg-rose-100 border-rose-300 dark:bg-rose-900/40 dark:border-rose-700 dark:text-rose-300 shadow-md',
-                icon: Icons.Lock,
-                isCertain: true
-            };
-        }
-
-        switch (verdict) {
-            case 'AI_GENERATED':
-                return {
-                    label: t('analytic.verdict.ai_generated'),
-                    color: 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400',
-                    icon: Icons.Cpu
-                };
-            case 'AI_HELPED':
-                return {
-                    label: t('analytic.verdict.ai_helped'),
-                    color: 'text-amber-600 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400',
-                    icon: Icons.Zap
-                };
-            case 'HUMAN_AUTHENTIC':
-            case 'HUMAN_EDITED':
-                return {
-                    label: t('analytic.verdict.human_authentic'),
-                    color: 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400',
-                    icon: Icons.UserCheck
-                };
-            default:
-                return {
-                    label: t('analytic.verdict.under_review'),
-                    color: 'text-slate-500 bg-slate-50 border-slate-200 dark:bg-slate-900/20 dark:border-slate-800 dark:text-slate-400',
-                    icon: Icons.Search
-                };
-        }
-    };
 
     // Confidence Logic: Always compute from dimensions when available
     // 6 dims: Mababa=0, Katamtaman=8.34, Mataas=16.67, sum = risk score
@@ -716,19 +720,20 @@ const AnalyticPanel = React.memo(() => {
                 {/* 0. Verdict Banner (New Section) */}
                 {activeFile.verdict && (
                     <div className="space-y-4">
-                        <div className={`p-5 rounded-2xl border transition-all duration-500 animate-in fade-in zoom-in-95 ${getVerdictInfo(activeFile.verdict, language).color}`}>
+                        <div className={`p-5 rounded-2xl border transition-all duration-500 animate-in fade-in zoom-in-95 ${getVerdictInfo(activeFile.verdict, activeFile, t).color}`}>
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 rounded-lg bg-white/20 dark:bg-black/20">
-                                        {React.createElement(getVerdictInfo(activeFile.verdict, language).icon, { size: 20 })}
+                                        {React.createElement(getVerdictInfo(activeFile.verdict, activeFile, t).icon, { size: 20 })}
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-[10px] font-black uppercase tracking-widest opacity-70">
-                                            {getVerdictInfo(activeFile.verdict, language).isCertain ? t('analytic.forensic_certainty') : t('analytic.verdict_analysis')}
+                                            {getVerdictInfo(activeFile.verdict, activeFile, t).isCertain ? t('analytic.forensic_certainty') : t('analytic.verdict_analysis')}
                                         </span>
-                                        <h4 className="text-xl font-black tracking-tight">{getVerdictInfo(activeFile.verdict, language).label}</h4>
+                                        <h4 className="text-xl font-black tracking-tight">{getVerdictInfo(activeFile.verdict, activeFile, t).label}</h4>
                                     </div>
                                 </div>
+
                                 <div className="text-right">
                                     <span className="text-2xl font-black">{activeFile.ai_detection_score || 0}%</span>
                                     <p className="text-[9px] font-bold uppercase opacity-70">{t('analytic.ai_score')}</p>
