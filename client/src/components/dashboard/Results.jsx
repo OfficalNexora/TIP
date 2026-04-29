@@ -113,37 +113,35 @@ const Results = React.memo(() => {
 
     // HIGHLIGHTING in DOCX
     useEffect(() => {
-        if (!focusedIssue?.snippet || !isDocxRendered) {
-            if (focusedIssue && !focusedIssue.snippet) {
-                console.warn("[AutoScroll] focusedIssue exists but has no snippet:", focusedIssue.id);
-            }
+        const snippet = focusedIssue?.snippet;
+        if (!snippet || !isDocxRendered) {
             setHighlightRect(null);
             return;
         }
 
-        console.log("[AutoScroll] === TRIGGERED ===", {
-            snippetPreview: focusedIssue.snippet.substring(0, 50),
-            isDocxRendered,
-            isDocx,
-            zoomScale
-        });
-
-        const findAndHighlight = () => {
-            const container = docxContainerRef.current;
-            if (!container) {
-                console.error("[AutoScroll] FAIL: docxContainerRef is null");
-                return;
-            }
-
-            // Cleanup OLD highlights to restore the tree
-            const oldHighlights = container.querySelectorAll('.audit-highlight');
-            oldHighlights.forEach(el => {
-                const parent = el.parentNode;
-                if (parent) {
-                    parent.replaceChild(document.createTextNode(el.textContent), el);
-                    parent.normalize();
-                }
+        // Debounce the computationally expensive highlighting logic
+        // This is crucial when admins are typing in overrides in real-time
+        const debounceTimer = setTimeout(() => {
+            console.log("[AutoScroll] === TRIGGERED (DEBOUNCED) ===", {
+                snippetPreview: snippet.substring(0, 50),
+                isDocxRendered,
+                isDocx,
+                zoomScale
             });
+
+            const findAndHighlight = () => {
+                const container = docxContainerRef.current;
+                if (!container) return;
+
+                // Cleanup OLD highlights to restore the tree
+                const oldHighlights = container.querySelectorAll('.audit-highlight');
+                oldHighlights.forEach(el => {
+                    const parent = el.parentNode;
+                    if (parent) {
+                        parent.replaceChild(document.createTextNode(el.textContent), el);
+                        parent.normalize();
+                    }
+                });
 
             const snippet = focusedIssue.snippet.trim();
             if (!snippet) {
@@ -260,8 +258,11 @@ const Results = React.memo(() => {
             }
         };
 
-        // Instant execution
-        requestAnimationFrame(findAndHighlight);
+        // Execute finding logic
+        findAndHighlight();
+        }, 500);
+
+        return () => clearTimeout(debounceTimer);
     }, [focusedIssue, isDocxRendered, isDocx, zoomScale]);
 
     if (!activeFile) return null;

@@ -211,17 +211,28 @@ const AnalyticPanel = React.memo(() => {
     const saveOverrides = async () => {
         if (!draftEdits || userProfile?.role !== 'admin') return;
         try {
-            await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/admin/override-analysis`, {
+            const updatedAnalysis = {
                 analysis_id: activeFile.id,
                 newRiskScore: draftEdits.riskScore,
                 newIntegrityScore: draftEdits.integrityScore,
                 dimensions: draftEdits.dimensions
-            }, {
+            };
+
+            await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/admin/override-analysis`, updatedAnalysis, {
                 headers: {
                     Authorization: `Bearer ${session.access_token}`,
                     'ngrok-skip-browser-warning': '69420'
                 }
             });
+
+            // IMPORTANT: Update local activeFile so Results.jsx and other components see the changes immediately
+            setActiveFile(prev => ({
+                ...prev,
+                confidence_score: draftEdits.riskScore,
+                integrity_score: draftEdits.integrityScore,
+                dimensions: draftEdits.dimensions
+            }));
+
             alert('Admin details updated secretly!');
             setIsSecretEditMode(false);
         } catch (e) {
@@ -274,6 +285,37 @@ const AnalyticPanel = React.memo(() => {
             setVerificationResult(revisionResult);
         }
     }, [revisionResult]);
+
+    // 1. Sync focusedIssue with draftEdits when in secret edit mode
+    useEffect(() => {
+        if (!isSecretEditMode || !draftEdits?.dimensions || !focusedIssue) return;
+
+        // If the focused issue is a dimension, find its current state in draftEdits
+        const match = focusedIssue.id.match(/^dim-(.+)$/);
+        if (match) {
+            const key = match[1];
+            const currentDim = draftEdits.dimensions[key];
+            if (currentDim) {
+                const currentSnippet = currentDim.evidence_snippet || currentDim.snippet;
+                
+                // If snippet or metadata changed, refresh focused issue to trigger highlight in Results
+                if (currentSnippet !== focusedIssue.snippet || 
+                    currentDim.startIndex !== (focusedIssue.startIndex || 0) || 
+                    currentDim.endIndex !== (focusedIssue.endIndex || 0)) {
+                    
+                    console.log("[AutoScroll] Syncing focusedIssue with draftEdits for:", key);
+                    setFocusedIssue({
+                        ...focusedIssue,
+                        snippet: currentSnippet,
+                        startIndex: currentDim.startIndex,
+                        endIndex: currentDim.endIndex,
+                        explanation: currentDim.reason || currentDim.explanation,
+                        suggestion: currentDim.suggestion
+                    });
+                }
+            }
+        }
+    }, [isSecretEditMode, draftEdits?.dimensions, focusedIssue, setFocusedIssue]);
 
     const t = useCallback((key) => {
         return translations[language]?.[key] || translations['en']?.[key] || key;
@@ -912,9 +954,29 @@ const AnalyticPanel = React.memo(() => {
                                                                 onClick={e => e.stopPropagation()}
                                                             />
                                                         ) : (
-                                                            <p className="text-[11px] text-slate-600 dark:text-slate-400 italic leading-relaxed border-l-2 border-slate-300 dark:border-slate-600 pl-2">
-                                                                "{dim?.evidence_snippet || dim?.snippet}"
-                                                            </p>
+                                                            <div 
+                                                                className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors rounded p-1 group/evidence"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleIssueClick({
+                                                                        id: dimId,
+                                                                        label: formatKey(normalizeDimensionKey(key)),
+                                                                        explanation: dim?.reason || dim?.explanation,
+                                                                        suggestion: dim?.suggestion,
+                                                                        snippet: dim?.evidence_snippet || dim?.snippet,
+                                                                        startIndex: dim?.startIndex,
+                                                                        endIndex: dim?.endIndex
+                                                                    });
+                                                                }}
+                                                            >
+                                                                <p className="text-[11px] text-slate-600 dark:text-slate-400 italic leading-relaxed border-l-2 border-slate-300 dark:border-slate-600 pl-2">
+                                                                    "{dim?.evidence_snippet || dim?.snippet}"
+                                                                </p>
+                                                                <div className="flex items-center gap-1.5 mt-1 opacity-0 group-hover/evidence:opacity-100 transition-opacity">
+                                                                    <Icons.Search size={10} className="text-blue-500" />
+                                                                    <span className="text-[8px] font-black text-blue-500 uppercase tracking-widest">{t('analytic.highlight_evidence') ||'Highlight Evidence'}</span>
+                                                                </div>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 )}
