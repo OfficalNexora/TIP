@@ -450,10 +450,8 @@ const AnalyticPanel = React.memo(() => {
     };
 
     const [isDeleting, setIsDeleting] = useState(false);
-
-    if (!isOpen || !activeFile) return null;
-
     const formatKey = (key) => key.replace(/_/g, ' ').toUpperCase();
+
 
     // Institutional Color Logic
     const getAlignmentColor = (alignment) => {
@@ -637,9 +635,12 @@ const AnalyticPanel = React.memo(() => {
         ];
     };
 
+    if (!isOpen || !activeFile) return null;
+
     return (
         <div
             className="fixed inset-y-0 right-0 border-l shadow-2xl z-50 flex flex-col font-sans text-slate-800 dark:text-tip-text-main transition-colors duration-300"
+
             style={{
                 width: `${width}px`,
                 transition: isResizing ? 'none' : 'width 0.1s ease-out',
