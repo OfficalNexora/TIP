@@ -150,15 +150,20 @@ const Results = React.memo(() => {
             }
 
             // REBUILD INDEX DYNAMICALLY AFTER RESTORING TREE
-            // We must filter out STYLE and SCRIPT tags to avoid indexing internal CSS/JS
+            // We must filter out STYLE, SCRIPT, and HEAD tags to avoid indexing internal CSS/JS
             const walker = document.createTreeWalker(
                 container, 
                 NodeFilter.SHOW_TEXT, 
                 {
                     acceptNode: (node) => {
-                        const parent = node.parentElement;
-                        if (parent && (parent.tagName === 'STYLE' || parent.tagName === 'SCRIPT' || parent.tagName === 'HEAD')) {
-                            return NodeFilter.FILTER_REJECT;
+                        let p = node.parentElement;
+                        // Walk up the tree to ensure no ancestor is a STYLE or SCRIPT tag
+                        while (p && p !== container) {
+                            const tag = p.tagName.toUpperCase();
+                            if (tag === 'STYLE' || tag === 'SCRIPT' || tag === 'HEAD' || tag === 'NOSCRIPT') {
+                                return NodeFilter.FILTER_REJECT;
+                            }
+                            p = p.parentElement;
                         }
                         return NodeFilter.FILTER_ACCEPT;
                     }

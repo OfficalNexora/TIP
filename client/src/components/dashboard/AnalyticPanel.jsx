@@ -124,7 +124,6 @@ const AnalyticPanel = React.memo(() => {
     const parsePastedOverride = (text) => {
         try {
             // Extract risk score
-            // Extract risk score
             const riskMatch = text.match(/Overall Risk Score[^:]*:\s*(\d+)/i);
             const integrityMatch = text.match(/Overall Integrity Score[^:]*:\s*(\d+)/i);
 
@@ -134,39 +133,38 @@ const AnalyticPanel = React.memo(() => {
             // Map of pillar display names -> dimension keys
             const pillarMap = {
                 'katarungan': 'katarungan',
-                'justice': 'katarungan',
-                'fairness': 'katarungan',
                 'kalinawan': 'kalinawan',
-                'transparency': 'kalinawan',
                 'pagkapribado': 'pagkapribado',
-                'privacy': 'pagkapribado',
                 'pagpapanatili': 'pagpapanatili',
-                'sustainability': 'pagpapanatili',
                 'pananagutan': 'pananagutan',
-                'accountability': 'pananagutan',
                 'pagiging inklusibo': 'pagiging_inklusibo',
-                'inclusiveness': 'pagiging_inklusibo',
                 'inklusibo': 'pagiging_inklusibo',
             };
 
-            // Split by numbered sections (1. Katarungan, 2. Kalinawan, etc.)
-            const sectionRegex = /\d+\.\s+([\w\s]+?)(?:\s*\(.*?\))?\s*(?:\n|$)/gi;
-            const sections = text.split(sectionRegex);
-
+            // Split text by numbered sections: "1. Name", "2. Name", etc.
+            // We look for a line starting with a number followed by a dot.
+            const rawSections = text.split(/\n\s*(?=\d+\.\s)/g);
+            
             const newDimensions = JSON.parse(JSON.stringify(draftEdits?.dimensions || activeFile?.dimensions || {}));
 
-            // Process pairs: sections[1]=name, sections[2]=content, sections[3]=name, sections[4]=content...
-            for (let i = 1; i < sections.length; i += 2) {
-                const rawName = (sections[i] || '').trim().toLowerCase();
-                const content = sections[i + 1] || '';
+            rawSections.forEach(section => {
+                // Find the pillar name in the section header (e.g., "1. Katarungan (Justice/Fairness)")
+                const headerMatch = section.match(/^\d+\.\s+([\w\s]+)/);
+                if (!headerMatch) return;
 
-                const dimKey = pillarMap[rawName];
-                if (!dimKey || !newDimensions[dimKey]) continue;
+                const rawName = headerMatch[1].trim().toLowerCase();
+                let dimKey = null;
+                
+                // Find matching key in map
+                Object.keys(pillarMap).forEach(key => {
+                    if (rawName.includes(key)) dimKey = pillarMap[key];
+                });
 
-                const cleanContent = content.replace(/\n\s*\+\s*\d+\s*(?:\n|$)/g, '\n').trim();
+                if (!dimKey || !newDimensions[dimKey]) return;
 
                 // Extract status
-                const statusMatch = cleanContent.match(/Status\/Alignment[^:]*:\s*(MATAAS|KATAMTAMAN|MABABA|WALANG EBIDENSYA|ALIGNED|PAGNILAY|MAY OBSERBASYON)/i);
+                // Matches "Status/Alignment: MABABA" or "Status: MABABA"
+                const statusMatch = section.match(/(?:Status|Alignment)[^:]*:\s*(MATAAS|KATAMTAMAN|MABABA|WALANG EBIDENSYA|ALIGNED|PAGNILAY|MAY OBSERBASYON)/i);
                 if (statusMatch) {
                     let val = statusMatch[1].toUpperCase();
                     if (val === 'ALIGNED') val = 'Mababa';
@@ -179,27 +177,38 @@ const AnalyticPanel = React.memo(() => {
                 }
 
                 // Extract pagsusuri/explanation
-                const reasonMatch = cleanContent.match(/Pagsusuri[^:]*:\s*(.+?)(?=\n\s*(?:Nakitang|Mungkahi|Ebidensya|$))/is);
+                // Matches "Pagsusuri (Explanation): text" until next marker or end
+                const reasonMatch = section.match(/(?:Pagsusuri|Explanation|Analysis)[^:]*:\s*(.+?)(?=\n\s*(?:Nakitang|Mungkahi|Evidence|Recommendation|$))/is);
                 if (reasonMatch) {
-                    const val = reasonMatch[1].trim().replace(/\s*\+\d+$/g, '');
+                    const val = reasonMatch[1].trim()
+                        .replace(/\n\s*\+\s*\d+$/g, '') // Remove trailing +2 etc
+                        .replace(/\s+\+\d+$/g, '');
+                    
                     if (newDimensions[dimKey].reason !== undefined) newDimensions[dimKey].reason = val;
                     else newDimensions[dimKey].explanation = val;
                 }
 
                 // Extract evidence snippet
-                const evidenceMatch = cleanContent.match(/(?:Nakitang Ebidensya|Evidence)[^:]*:\s*(.+?)(?=\n\s*(?:Mungkahi|Recommendation|$))/is);
+                // Matches "Nakitang Ebidensya (Evidence Snippet): "quoted text""
+                const evidenceMatch = section.match(/(?:Nakitang Ebidensya|Evidence|Snippet)[^:]*:\s*(.+?)(?=\n\s*(?:Mungkahi|Recommendation|$))/is);
                 if (evidenceMatch) {
-                    let val = evidenceMatch[1].trim().replace(/^[""“”]|[""“”]$/g, '').replace(/\s*\+\d+$/g, '');
+                    let val = evidenceMatch[1].trim()
+                        .replace(/^[""“”]|[""“”]$/g, '') // Remove quotes
+                        .replace(/\n\s*\+\s*\d+$/g, '')   // Remove trailing +1 etc
+                        .replace(/\s+\+\d+$/g, '');
+                    
                     if (newDimensions[dimKey].evidence_snippet !== undefined) newDimensions[dimKey].evidence_snippet = val;
                     else newDimensions[dimKey].snippet = val;
                 }
 
                 // Extract suggestion/recommendation
-                const suggestionMatch = cleanContent.match(/(?:Mungkahi|Recommendation)[^:]*:\s*(.+?)(?=\n|$)/is);
+                const suggestionMatch = section.match(/(?:Mungkahi|Recommendation|Suggestion)[^:]*:\s*(.+?)(?=\n|$)/is);
                 if (suggestionMatch) {
-                    newDimensions[dimKey].suggestion = suggestionMatch[1].trim().replace(/\s*\+\d+$/g, '');
+                    newDimensions[dimKey].suggestion = suggestionMatch[1].trim()
+                        .replace(/\n\s*\+\s*\d+$/g, '')
+                        .replace(/\s+\+\d+$/g, '');
                 }
-            }
+            });
 
             setDraftEdits({
                 riskScore: riskScore,
@@ -543,7 +552,17 @@ const AnalyticPanel = React.memo(() => {
     };
 
     const dimensions = (isSecretEditMode && draftEdits) ? draftEdits.dimensions : (activeFile.dimensions || {});
-    const dimensionKeys = Object.keys(dimensions);
+    // Deduplicate dimension keys to prevent duplicate UI cards for synonyms (e.g., oversight/pananagutan)
+    const dimensionKeys = useMemo(() => {
+        const keys = Object.keys(dimensions || {});
+        const seen = new Set();
+        return keys.filter(key => {
+            const normalized = normalizeDimensionKey(key);
+            if (seen.has(normalized)) return false;
+            seen.add(normalized);
+            return true;
+        });
+    }, [dimensions]);
 
     // Confidence Logic: Always compute from dimensions when available
     // 6 dims: Mababa=0, Katamtaman=8.34, Mataas=16.67, sum = risk score
