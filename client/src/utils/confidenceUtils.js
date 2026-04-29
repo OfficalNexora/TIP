@@ -39,5 +39,5 @@ export const getComplianceLabel = (confidence) => {
     if (score >= 85) return 'Kritikal';
     if (score >= 60) return 'Mataas na Panganib';
     if (score >= 30) return 'Kailangan ng Rebyu';
-    return 'Nakatugma';
+    return 'Mababa';
 };

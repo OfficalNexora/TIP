@@ -215,10 +215,9 @@ const AnalyticPanel = React.memo(() => {
     const getAlignmentColor = (alignment) => {
         if (!alignment) return 'text-slate-500';
         const lower = alignment.toLowerCase();
-        // Emerald-600 for Compliant, Amber-500 for Needs Improvement, Rose-600 for Non-Compliant
-        if (lower.includes('aligned') || lower.includes('ligtas') || lower.includes('compliant')) return 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400';
-        if (lower.includes('obserbasyon') || lower.includes('needs') || lower.includes('improvement')) return 'text-amber-500 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400';
-        if (lower.includes('pagnilay') || lower.includes('warning') || lower.includes('non') || lower.includes('risk') || lower.includes('violation')) return 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400';
+        if (lower === 'mababa' || lower.includes('aligned') || lower.includes('ligtas') || lower.includes('compliant') || lower === 'n/a') return 'text-emerald-600 bg-emerald-50 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400';
+        if (lower === 'katamtaman' || lower.includes('obserbasyon') || lower.includes('needs') || lower.includes('observed')) return 'text-amber-500 bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400';
+        if (lower === 'mataas' || lower.includes('pagnilay') || lower.includes('critical') || lower.includes('flagged')) return 'text-rose-600 bg-rose-50 border-rose-200 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400';
         return 'text-blue-600 bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400';
     };
 
@@ -579,7 +578,7 @@ const AnalyticPanel = React.memo(() => {
                     <div className="space-y-3">
                         {dimensionKeys.map((key, i) => {
                             const dim = dimensions[key];
-                            const status = dim?.status || dim?.alignment || 'N/A';
+                            const status = dim?.status || dim?.alignment || 'Mababa';
                             const alignClass = getAlignmentColor(status);
                             const DimensionIcon = getIconForDimension(key);
                             const dimId = `dim-${key}`;
