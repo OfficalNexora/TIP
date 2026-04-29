@@ -4,6 +4,7 @@ import { renderAsync } from 'docx-preview';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 import { useTranslation } from '../../utils/useTranslation';
+import { DocumentMatcher } from '../../utils/snippetMatcher';
 import './DocumentViewer.css';
 
 const Results = React.memo(() => {
@@ -22,6 +23,11 @@ const Results = React.memo(() => {
     const [zoomScale, setZoomScale] = useState(1);
     const [highlightRect, setHighlightRect] = useState(null);
     const [isScanning, setIsScanning] = useState(false); // Forensic scan animation state
+
+    // NEW: Highly optimized single-pass memoized document string matcher
+    const documentMatcher = React.useMemo(() => {
+        return activeFile?.fullText ? new DocumentMatcher(activeFile.fullText) : null;
+    }, [activeFile?.fullText]);
 
     const isPDF = activeFile?.mimeType === 'application/pdf';
     const isDocx = activeFile?.mimeType?.includes('officedocument.wordprocessingml.document');
@@ -166,39 +172,54 @@ const Results = React.memo(() => {
             }
 
             let match = null;
+            let matchStart = -1;
+            let matchEnd = -1;
             
-            // Normalize snippet: remove weird control characters, trim, and handle quotes
-            const normalizedSnippet = snippet.trim()
-                .replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
-                .replace(/\s+/g, ' ');
+            // Build docx DOM specific O(N) single-pass matcher text structure
+            const docxMatcher = new DocumentMatcher(fullText);
+            const robustMatch = docxMatcher.findBestMatch(snippet);
+            
+            if (robustMatch) {
+                matchStart = robustMatch.startIndex;
+                matchEnd = robustMatch.endIndex;
+                match = true;
+                console.log(`[AutoScroll] Using findBestMatch robust offsets: [${matchStart}, ${matchEnd}]`);
+            } else {
+                console.warn("[AutoScroll] findBestMatch failed. Falling back to simple regex.");
+                // Normalize snippet: remove weird control characters, trim, and handle quotes
+                const normalizedSnippet = snippet.trim()
+                    .replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
+                    .replace(/\s+/g, ' ');
 
-            // Progressive search strategies
-            const searchStrategies = [
-                { chunk: normalizedSnippet, label: 'Full Verbatim' },
-                { chunk: normalizedSnippet.substring(0, Math.floor(normalizedSnippet.length * 0.8)), label: '80% Prefix' },
-                { chunk: normalizedSnippet.split(' ').slice(0, 8).join(' '), label: 'First 8 Words' }
-            ];
+                // Progressive search strategies
+                const searchStrategies = [
+                    { chunk: normalizedSnippet, label: 'Full Verbatim' },
+                    { chunk: normalizedSnippet.substring(0, Math.floor(normalizedSnippet.length * 0.8)), label: '80% Prefix' },
+                    { chunk: normalizedSnippet.split(' ').slice(0, 8).join(' '), label: 'First 8 Words' }
+                ];
 
-            for (const strategy of searchStrategies) {
-                if (!strategy.chunk || strategy.chunk.length < 10) continue;
-                
-                const escaped = strategy.chunk
-                    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-                    .replace(/\s+/g, '\\s*') 
-                    .replace(/['"“”‘’]/g, '[\'\\""“”‘’]');
-                
-                const regex = new RegExp(escaped, 'i');
-                match = fullText.match(regex);
-                
-                if (match) {
-                    console.log(`[AutoScroll] Match found using [${strategy.label}] at index:`, match.index);
-                    break;
+                for (const strategy of searchStrategies) {
+                    if (!strategy.chunk || strategy.chunk.length < 10) continue;
+                    
+                    const escaped = strategy.chunk
+                        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                        .replace(/\s+/g, '\\s*') 
+                        .replace(/['"“”‘’]/g, '[\'\\""“”‘’]');
+                    
+                    const regex = new RegExp(escaped, 'i');
+                    const textMatch = fullText.match(regex);
+                    
+                    if (textMatch) {
+                        console.log(`[AutoScroll] Match found using [${strategy.label}] at index:`, textMatch.index);
+                        match = true;
+                        matchStart = textMatch.index;
+                        matchEnd = matchStart + textMatch[0].length;
+                        break;
+                    }
                 }
             }
 
-            if (match) {
-                const matchStart = match.index;
-                const matchEnd = matchStart + match[0].length;
+            if (match && matchStart !== -1 && matchEnd !== -1) {
                 const range = document.createRange();
 
                 const startInfo = nodeOffsets.find(info => matchStart >= info.start && matchStart < info.end);
@@ -369,20 +390,33 @@ const Results = React.memo(() => {
                                         (() => {
                                             const text = activeFile.fullText || "";
                                             const snippet = focusedIssue.snippet.trim();
-                                            // Create a fuzzy regex that ignores whitespace differences
-                                            const escaped = snippet.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
-                                            try {
-                                                const regex = new RegExp(`(${escaped})`, 'i');
-                                                const parts = text.split(regex);
-                                                if (parts.length > 1) {
-                                                    return parts.map((part, i) => {
-                                                        if (regex.test(part)) {
-                                                            return <span key={i} ref={textHighlightRef} className="bg-blue-400/40 ring-2 ring-blue-500/50 rounded-sm p-0.5 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse">{part}</span>;
-                                                        }
-                                                        return part;
-                                                    });
+                                            // Prefer exact offsets if available from backend, fallback to matching it now
+                                            let finalStart = focusedIssue.startIndex;
+                                            let finalEnd = focusedIssue.endIndex;
+
+                                            if (finalStart === undefined || finalEnd === undefined) {
+                                                const robustMatch = documentMatcher?.findBestMatch(snippet);
+                                                if (robustMatch) {
+                                                    finalStart = robustMatch.startIndex;
+                                                    finalEnd = robustMatch.endIndex;
                                                 }
-                                            } catch (e) { }
+                                            }
+
+                                            if (finalStart !== undefined && finalEnd !== undefined && finalStart >= 0 && finalEnd <= text.length) {
+                                                const before = text.substring(0, finalStart);
+                                                const matchedObj = text.substring(finalStart, finalEnd);
+                                                const after = text.substring(finalEnd);
+                                                return (
+                                                    <>
+                                                        {before}
+                                                        <span ref={textHighlightRef} className="bg-blue-400/40 ring-2 ring-blue-500/50 rounded-sm p-0.5 shadow-[0_0_15px_rgba(59,130,246,0.5)] animate-pulse">{matchedObj}</span>
+                                                        {after}
+                                                    </>
+                                                );
+                                            }
+                                            
+                                            // If both DB exact offsets AND our frontend findBestMatch algorithms fail:
+                                            console.warn("[Results] All exact and robust snippet matching strategies failed for:", snippet);
                                             return text;
                                         })()
                                     ) : (activeFile.fullText || t('results.indexing') || "Currently indexing content...")}

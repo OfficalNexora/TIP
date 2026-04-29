@@ -597,7 +597,9 @@ const AnalyticPanel = React.memo(() => {
                                                 label: formatKey(normalizeDimensionKey(key)),
                                                 explanation: dim?.reason || dim?.explanation,
                                                 suggestion: dim?.suggestion,
-                                                snippet: dim?.evidence_snippet || dim?.snippet
+                                                snippet: dim?.evidence_snippet || dim?.snippet,
+                                                startIndex: dim?.startIndex,
+                                                endIndex: dim?.endIndex
                                             });
                                         }
                                     }}
@@ -765,7 +767,9 @@ const AnalyticPanel = React.memo(() => {
                                                             explanation: p.explanation || t('analytic.pattern_desc_default'),
                                                             suggestion: p.suggestion || "Iwasan ang paggamit ng mga generic o overused na mga salita.",
                                                             revision_prompt: p.revision_prompt || `Baguhin ang pariralang "${p.pattern}" gamit ang sariling pananalita.`,
-                                                            snippet: p.pattern || p.text || (typeof p === 'string' ? p : null)
+                                                            snippet: p.pattern || p.text || (typeof p === 'string' ? p : null),
+                                                            startIndex: p.startIndex,
+                                                            endIndex: p.endIndex
                                                         })}
                                                         className="w-full text-left bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 p-3.5 rounded-xl shadow-sm group hover:border-blue-300 hover:translate-x-1 transition-all"
                                                     >
@@ -840,7 +844,9 @@ const AnalyticPanel = React.memo(() => {
                                                             explanation: o.explanation || `Ang dokumento ay kulang sa sapat na detalye tungkol sa: ${o.label || o.text || 'pangunahing aspeto'}.`,
                                                             suggestion: o.suggestion || "Magbigay ng karagdagang ebidensya o paliwanag sa bahaging ito.",
                                                             revision_prompt: o.revision_prompt || `Paunlarin ang diskusyon tungkol sa ${o.label || o.text}.`,
-                                                            snippet: o.pattern || o.text || (typeof o === 'string' ? o : null)
+                                                            snippet: o.pattern || o.text || (typeof o === 'string' ? o : null),
+                                                            startIndex: o.startIndex,
+                                                            endIndex: o.endIndex
                                                         })}
                                                         className="w-full text-left bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 p-3.5 rounded-xl shadow-sm group hover:border-rose-300 hover:translate-x-1 transition-all"
                                                     >
