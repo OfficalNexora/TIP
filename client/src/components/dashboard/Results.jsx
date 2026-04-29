@@ -150,7 +150,21 @@ const Results = React.memo(() => {
             }
 
             // REBUILD INDEX DYNAMICALLY AFTER RESTORING TREE
-            const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+            // We must filter out STYLE and SCRIPT tags to avoid indexing internal CSS/JS
+            const walker = document.createTreeWalker(
+                container, 
+                NodeFilter.SHOW_TEXT, 
+                {
+                    acceptNode: (node) => {
+                        const parent = node.parentElement;
+                        if (parent && (parent.tagName === 'STYLE' || parent.tagName === 'SCRIPT' || parent.tagName === 'HEAD')) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                }, 
+                false
+            );
             let fullText = "";
             const nodeOffsets = [];
             let currentNode;
