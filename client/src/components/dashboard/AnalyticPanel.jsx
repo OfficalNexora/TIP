@@ -685,10 +685,11 @@ const AnalyticPanel = React.memo(() => {
                             className="flex items-center gap-1.5 px-3 py-1.5 mx-1 text-[10px] font-black uppercase tracking-widest rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800/50 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition-colors"
                             title="Tingnan ang Rebisyon"
                         >
-                            <Icons.GitMerge size={14} />
+                            <Icons.GitCompare size={14} />
                             Tingnan ang Rebisyon
                         </button>
                     )}
+
                     <button
                         onClick={() => setIsSelectingComparison(!isSelectingComparison)}
                         className="flex items-center gap-1.5 px-3 py-1.5 mx-1 text-[10px] font-black uppercase tracking-widest rounded-lg border border-purple-200 bg-purple-50 text-purple-600 hover:bg-purple-100 dark:bg-purple-900/20 dark:border-purple-800/50 dark:text-purple-400 dark:hover:bg-purple-900/40 transition-colors"
