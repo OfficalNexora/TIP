@@ -244,7 +244,7 @@ const AnalyticPanel = React.memo(() => {
 
     const normalizeDimensionKey = (key) => {
         const lower = key.toLowerCase();
-        if (lower.includes('fairness') || lower.includes('katarungan')) return 'fairness';
+        if (lower.includes('fairness') || lower.includes('katarungan') || lower.includes('patas')) return 'fairness';
         if (lower.includes('transparency') || lower.includes('kalinawan')) return 'transparency';
         if (lower.includes('privacy') || lower.includes('pagkapribado')) return 'privacy';
         if (lower.includes('sustainability') || lower.includes('pagpapanatili')) return 'sustainability';
