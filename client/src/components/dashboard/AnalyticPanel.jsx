@@ -359,6 +359,20 @@ const AnalyticPanel = React.memo(() => {
 
     const onClose = () => setRightPanelOpen(false);
 
+    const dimensions = (isSecretEditMode && draftEdits) ? draftEdits.dimensions : (activeFile?.dimensions || {});
+    // Deduplicate dimension keys to prevent duplicate UI cards for synonyms (e.g., oversight/pananagutan)
+    const dimensionKeys = useMemo(() => {
+        const keys = Object.keys(dimensions || {});
+        const seen = new Set();
+        return keys.filter(key => {
+            const normalized = normalizeDimensionKey(key);
+            if (seen.has(normalized)) return false;
+            seen.add(normalized);
+            return true;
+        });
+    }, [dimensions]);
+
+
     const handleIssueClick = useCallback((issue) => {
         console.log("[AutoScroll] handleIssueClick fired:", {
             id: issue.id,
@@ -549,26 +563,14 @@ const AnalyticPanel = React.memo(() => {
         }
     };
 
-    const dimensions = (isSecretEditMode && draftEdits) ? draftEdits.dimensions : (activeFile.dimensions || {});
-    // Deduplicate dimension keys to prevent duplicate UI cards for synonyms (e.g., oversight/pananagutan)
-    const dimensionKeys = useMemo(() => {
-        const keys = Object.keys(dimensions || {});
-        const seen = new Set();
-        return keys.filter(key => {
-            const normalized = normalizeDimensionKey(key);
-            if (seen.has(normalized)) return false;
-            seen.add(normalized);
-            return true;
-        });
-    }, [dimensions]);
-
     // Confidence Logic: Always compute from dimensions when available
     // 6 dims: Mababa=0, Katamtaman=8.34, Mataas=16.67, sum = risk score
     const computedFromDims = recalcScoresFromDimensions(dimensions);
     const hasValidDimensions = dimensionKeys.length > 0;
     const confidenceScore = (isSecretEditMode && draftEdits)
         ? draftEdits.riskScore
-        : (hasValidDimensions ? computedFromDims.riskScore : (activeFile.confidence_score || normalizeConfidence(activeFile.confidence)));
+        : (hasValidDimensions ? computedFromDims.riskScore : (activeFile?.confidence_score || normalizeConfidence(activeFile?.confidence || 0)));
+
     let confidenceColor = "bg-emerald-500";
     if (confidenceScore >= 85) confidenceColor = "bg-rose-600";
     else if (confidenceScore >= 60) confidenceColor = "bg-rose-500";
@@ -636,6 +638,7 @@ const AnalyticPanel = React.memo(() => {
     };
 
     if (!isOpen || !activeFile) return null;
+
 
     return (
         <div
