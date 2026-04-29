@@ -86,6 +86,96 @@ const AnalyticPanel = React.memo(() => {
     // --- Secret Admin Overrides for Research ---
     const [isSecretEditMode, setIsSecretEditMode] = useState(false);
     const [draftEdits, setDraftEdits] = useState(null);
+    const [showPasteModal, setShowPasteModal] = useState(false);
+    const [pasteText, setPasteText] = useState('');
+
+    // Parses ChatGPT-formatted override text into draftEdits structure
+    const parsePastedOverride = (text) => {
+        try {
+            // Extract risk score
+            const riskMatch = text.match(/Overall Risk Score[^:]*:\s*(\d+)/i);
+            const integrityMatch = text.match(/Overall Integrity Score[^:]*:\s*(\d+)/i);
+
+            const riskScore = riskMatch ? parseInt(riskMatch[1]) : (draftEdits?.riskScore || 0);
+            const integrityScore = integrityMatch ? parseInt(integrityMatch[1]) : (draftEdits?.integrityScore || 0);
+
+            // Map of pillar display names -> dimension keys
+            const pillarMap = {
+                'katarungan': 'katarungan',
+                'justice': 'katarungan',
+                'fairness': 'katarungan',
+                'kalinawan': 'kalinawan',
+                'transparency': 'kalinawan',
+                'pagkapribado': 'pagkapribado',
+                'privacy': 'pagkapribado',
+                'pagpapanatili': 'pagpapanatili',
+                'sustainability': 'pagpapanatili',
+                'pananagutan': 'pananagutan',
+                'accountability': 'pananagutan',
+                'pagiging inklusibo': 'pagiging_inklusibo',
+                'inclusiveness': 'pagiging_inklusibo',
+                'inklusibo': 'pagiging_inklusibo',
+            };
+
+            // Split by numbered sections (1. Katarungan, 2. Kalinawan, etc.)
+            const sectionRegex = /\d+\.\s+(\w[\w\s]*?)(?:\(.*?\))?\s*\n/gi;
+            const sections = text.split(sectionRegex);
+
+            const newDimensions = JSON.parse(JSON.stringify(draftEdits?.dimensions || activeFile?.dimensions || {}));
+
+            // Process pairs: sections[1]=name, sections[2]=content, sections[3]=name, sections[4]=content...
+            for (let i = 1; i < sections.length; i += 2) {
+                const rawName = (sections[i] || '').trim().toLowerCase();
+                const content = sections[i + 1] || '';
+
+                const dimKey = pillarMap[rawName];
+                if (!dimKey || !newDimensions[dimKey]) continue;
+
+                // Extract status
+                const statusMatch = content.match(/Status\/Alignment[^:]*:\s*(MATAAS|KATAMTAMAN|MABABA|WALANG EBIDENSYA)/i);
+                if (statusMatch) {
+                    const val = statusMatch[1].charAt(0).toUpperCase() + statusMatch[1].slice(1).toLowerCase();
+                    if (newDimensions[dimKey].status !== undefined) newDimensions[dimKey].status = val;
+                    else newDimensions[dimKey].alignment = val;
+                }
+
+                // Extract pagsusuri/explanation
+                const reasonMatch = content.match(/Pagsusuri[^:]*:\s*(.+?)(?=\n\s*(?:Nakitang|$))/is);
+                if (reasonMatch) {
+                    const val = reasonMatch[1].trim();
+                    if (newDimensions[dimKey].reason !== undefined) newDimensions[dimKey].reason = val;
+                    else newDimensions[dimKey].explanation = val;
+                }
+
+                // Extract evidence snippet
+                const evidenceMatch = content.match(/(?:Nakitang Ebidensya|Evidence)[^:]*:\s*(.+?)(?=\n\s*(?:Mungkahi|$))/is);
+                if (evidenceMatch) {
+                    let val = evidenceMatch[1].trim().replace(/^[""]|[""]$/g, '');
+                    if (newDimensions[dimKey].evidence_snippet !== undefined) newDimensions[dimKey].evidence_snippet = val;
+                    else newDimensions[dimKey].snippet = val;
+                }
+
+                // Extract suggestion/recommendation
+                const suggestionMatch = content.match(/(?:Mungkahi|Recommendation)[^:]*:\s*(.+?)(?=\n|$)/is);
+                if (suggestionMatch) {
+                    newDimensions[dimKey].suggestion = suggestionMatch[1].trim();
+                }
+            }
+
+            setDraftEdits({
+                riskScore: riskScore,
+                integrityScore: integrityScore,
+                dimensions: newDimensions
+            });
+
+            setShowPasteModal(false);
+            setPasteText('');
+            alert('Override data parsed and applied to all fields!');
+        } catch (err) {
+            console.error('[PasteParser] Failed:', err);
+            alert('Failed to parse. Check the format.');
+        }
+    };
 
     const saveOverrides = async () => {
         if (!draftEdits || userProfile?.role !== 'admin') return;
@@ -135,10 +225,16 @@ const AnalyticPanel = React.memo(() => {
                     return prev;
                 });
             }
+            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'v') {
+                e.preventDefault();
+                if (isSecretEditMode) {
+                    setShowPasteModal(true);
+                }
+            }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [activeFile, userProfile, session, draftEdits]);
+    }, [activeFile, userProfile, session, draftEdits, isSecretEditMode]);
     // -------------------------------------------
 
     // Auto-show revision comparison modal when revisionResult arrives
@@ -1433,6 +1529,56 @@ const AnalyticPanel = React.memo(() => {
                     onClose={() => { setVerificationResult(null); setRevisionResult(null); }}
                 />
 
+                {/* Secret Admin Paste Override Modal */}
+                {showPasteModal && isSecretEditMode && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4" onClick={() => setShowPasteModal(false)}>
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col" onClick={e => e.stopPropagation()}>
+                            <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wide">Paste Override Data</h3>
+                                    <p className="text-[10px] text-slate-400 mt-0.5">Paste the ChatGPT-formatted output below. All fields will be auto-filled.</p>
+                                </div>
+                                <button onClick={() => setShowPasteModal(false)} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                    <Icons.X size={16} className="text-slate-400" />
+                                </button>
+                            </div>
+                            <div className="p-4 flex-1 overflow-auto">
+                                <textarea
+                                    className="w-full h-64 text-xs font-mono text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl p-3 resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                    placeholder="Paste the full ChatGPT output here...
+
+Example format:
+Overall Risk Score (%): 85
+Overall Integrity Score (/100): 15
+
+1. Katarungan (Justice/Fairness)
+Status/Alignment: MATAAS
+Pagsusuri: ...
+Nakitang Ebidensya: ...
+Mungkahi: ..."
+                                    value={pasteText}
+                                    onChange={(e) => setPasteText(e.target.value)}
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="p-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-3">
+                                <button
+                                    onClick={() => setShowPasteModal(false)}
+                                    className="px-4 py-2 text-xs font-bold text-slate-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={() => parsePastedOverride(pasteText)}
+                                    disabled={!pasteText.trim()}
+                                    className="px-5 py-2 text-xs font-black text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-lg"
+                                >
+                                    Apply Override
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
