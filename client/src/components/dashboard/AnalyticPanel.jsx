@@ -231,13 +231,24 @@ const AnalyticPanel = React.memo(() => {
         return status;
     };
 
+    // Normalizes old DB statuses (Aligned, May Obserbasyon, Pagnilay, N/A) to new labels
+    const normalizeStatusLabel = (status) => {
+        if (!status) return 'Mababa';
+        const s = status.trim().toLowerCase();
+        if (s === 'aligned' || s === 'n/a' || s === 'ligtas' || s === 'nakatugma' || s === 'compliant') return 'Mababa';
+        if (s === 'may obserbasyon' || s === 'observed' || s === 'needs improvement') return 'Katamtaman';
+        if (s === 'pagnilay' || s === 'critical' || s === 'flagged') return 'Mataas';
+        if (s === 'mababa' || s === 'katamtaman' || s === 'mataas') return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+        return 'Mababa';
+    };
+
     const normalizeDimensionKey = (key) => {
         const lower = key.toLowerCase();
         if (lower.includes('fairness') || lower.includes('katarungan')) return 'fairness';
         if (lower.includes('transparency') || lower.includes('kalinawan')) return 'transparency';
         if (lower.includes('privacy') || lower.includes('pagkapribado')) return 'privacy';
         if (lower.includes('sustainability') || lower.includes('pagpapanatili')) return 'sustainability';
-        if (lower.includes('oversight') || lower.includes('pananagutan')) return 'oversight';
+        if (lower.includes('oversight') || lower.includes('pananagutan') || lower.includes('pangangasiwa')) return 'oversight';
         if (lower.includes('inclusiveness') || lower.includes('inklusibo')) return 'inclusiveness';
         // Clean up fallback keys if they have analytic.dim prefixes
         return key.replace(/^(analytic\.dim\.|analytic_dim_)/i, '').replace(/\./g, ' ');
@@ -578,7 +589,7 @@ const AnalyticPanel = React.memo(() => {
                     <div className="space-y-3">
                         {dimensionKeys.map((key, i) => {
                             const dim = dimensions[key];
-                            const status = dim?.status || dim?.alignment || 'Mababa';
+                            const status = normalizeStatusLabel(dim?.status || dim?.alignment);
                             const alignClass = getAlignmentColor(status);
                             const DimensionIcon = getIconForDimension(key);
                             const dimId = `dim-${key}`;

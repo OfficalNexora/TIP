@@ -248,6 +248,14 @@ export const translations = {
     'analytic.translate_to_en': 'Translate to EN',
     'analytic.translate_to_tl': 'Translate to TL',
     'analytic.translating': 'Translating...',
+
+    // Dimension labels
+    'analytic.dim.fairness': 'Fairness',
+    'analytic.dim.transparency': 'Transparency',
+    'analytic.dim.privacy': 'Privacy',
+    'analytic.dim.sustainability': 'Sustainability',
+    'analytic.dim.oversight': 'Oversight',
+    'analytic.dim.inclusiveness': 'Inclusiveness',
     'analytic.verdict.ai_generated': 'AI GENERATED',
     'analytic.verdict.ai_helped': 'AI ASSISTED / HYBRID',
     'analytic.verdict.human_authentic': 'AUTHENTIC HUMAN',
@@ -595,9 +603,17 @@ export const translations = {
     'analytic.human_merits': 'Mga Katangiang Pantao (Positibong Indicator)',
     'analytic.determination_reason_default': 'Ang pagsusuring linggwistiko at estruktural ay nagmumungkahi ng mga pattern na parang gawa ng tao na may kaunting tulong ng AI.',
     'analytic.category.structure': 'Ayos ng Dokumento',
-    'analytic.category.style': 'Paraan ng Pagsusulat',
+    'analytic.category.style_desc': 'Flow and choice of words.',
     'analytic.category.integrity': 'Integridad',
     'analytic.category.structure_desc': 'Consistency ng format at layout.',
+
+    // Dimension labels
+    'analytic.dim.fairness': 'Katarungan',
+    'analytic.dim.transparency': 'Kalinawan',
+    'analytic.dim.privacy': 'Pagkapribado',
+    'analytic.dim.sustainability': 'Pagpapanatili',
+    'analytic.dim.oversight': 'Pananagutan',
+    'analytic.dim.inclusiveness': 'Pagiging Inklusibo',
     'analytic.category.style_desc': 'Daloy at pagpili ng mga salita.',
     'analytic.category.integrity_desc': 'Presensya ng mga marker ng AI at mga ethical gap.',
     'analytic.translate_to_en': 'I-translate sa EN',
@@ -637,7 +653,7 @@ export const translations = {
     'analytic.human_indicator': 'Mga Tagapagpahiwatig ng Tao',
     'analytic.no_evidence_found': 'Walang sapat na ebidensya ang natuklasan.',
 
-    // ── Upgrade / Subscription Modal ────────────────────
+    // ── Upgrade / Subscription Modal ──────────
     'upgrade.title': 'Institusyonal na Access',
     'upgrade.subtitle': 'I-upgrade ang kapasidad sa pagsusuri, paganahin ang interoperability sa API, at i-unlock mga pangunahing tool sa audit.',
     'upgrade.currentPlan': 'Kasalukuyang Aktibong Plan',
