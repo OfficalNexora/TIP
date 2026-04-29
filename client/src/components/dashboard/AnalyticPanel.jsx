@@ -73,7 +73,7 @@ const TypewriterSummary = React.memo(({ fullSummary, activeFileId }) => {
 
 const AnalyticPanel = React.memo(() => {
     const { activeFile, files: historyFiles, revisionResult } = useData();
-    const { session } = useAuth();
+    const { session, userProfile } = useAuth();
     const { theme } = useTheme();
     const { focusedIssue, rightPanelOpen: isOpen, language } = useUI();
     const { setFocusedIssue, setRightPanelOpen, deleteAnalysis, translateSummary, setRevisionResult } = useActions();
@@ -88,7 +88,7 @@ const AnalyticPanel = React.memo(() => {
     const [draftEdits, setDraftEdits] = useState(null);
 
     const saveOverrides = async () => {
-        if (!draftEdits || session?.user?.role !== 'admin') return;
+        if (!draftEdits || userProfile?.role !== 'admin') return;
         try {
             await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/admin/override-analysis`, {
                 analysis_id: activeFile.id,
@@ -110,7 +110,7 @@ const AnalyticPanel = React.memo(() => {
     };
 
     useEffect(() => {
-        if (session?.user?.role !== 'admin') return;
+        if (userProfile?.role !== 'admin') return;
 
         const handleKeyDown = (e) => {
             if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'e') {
@@ -138,7 +138,7 @@ const AnalyticPanel = React.memo(() => {
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [activeFile, session, draftEdits]);
+    }, [activeFile, userProfile, session, draftEdits]);
     // -------------------------------------------
 
     // Auto-show revision comparison modal when revisionResult arrives
