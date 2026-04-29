@@ -1664,6 +1664,12 @@ const AnalyticPanel = React.memo(() => {
                 <ComparisonModal
                     result={verificationResult}
                     onClose={() => { setVerificationResult(null); setRevisionResult(null); }}
+                    isEditMode={isSecretEditMode}
+                    onSave={(editedResult) => {
+                        setVerificationResult(editedResult);
+                        setRevisionResult(editedResult);
+                        alert('Revision comparison data overridden successfully!');
+                    }}
                 />
 
                 {/* Secret Admin Paste Override Modal */}

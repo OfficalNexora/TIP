@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Icons from '../ui/Icons';
 import { useTheme } from '../../contexts/ThemeContext';
 
 // ─── Verdict Helpers ────────────────────────────────
+const VERDICT_OPTIONS = ['NAPABUTI', 'BAHAGYANG_NAPABUTI', 'HINDI_NAPABUTI', 'LUMALA'];
+const STATUS_OPTIONS = ['Mababa', 'Katamtaman', 'Mataas'];
+
 const VERDICT_MAP = {
     NAPABUTI: {
         label: 'Napabuti ang Dokumento',
@@ -30,19 +33,117 @@ const VERDICT_MAP = {
     }
 };
 
+// ─── Editable Input Wrapper ─────────────────────────
+const EditableNumber = ({ value, onChange, className = '', min = 0, max = 100 }) => (
+    <input
+        type="number"
+        value={value}
+        onChange={e => onChange(Math.max(min, Math.min(max, parseInt(e.target.value) || 0)))}
+        className={`bg-transparent border-b-2 border-dashed border-amber-400 text-center w-20 outline-none focus:border-amber-500 ${className}`}
+        min={min}
+        max={max}
+    />
+);
+
+const EditableText = ({ value, onChange, className = '', multiline = false }) => {
+    if (multiline) {
+        return (
+            <textarea
+                value={value}
+                onChange={e => onChange(e.target.value)}
+                className={`bg-transparent border border-dashed border-amber-400 rounded-lg px-2 py-1 w-full outline-none focus:border-amber-500 resize-y min-h-[40px] ${className}`}
+                rows={2}
+            />
+        );
+    }
+    return (
+        <input
+            type="text"
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            className={`bg-transparent border-b-2 border-dashed border-amber-400 w-full outline-none focus:border-amber-500 ${className}`}
+        />
+    );
+};
+
 // ─── Revision Diff View ─────────────────────────────
-const RevisionDiffView = ({ result, isDark }) => {
-    const { textSimilarity, scores, issues, dimensionChanges, verdict } = result;
+const RevisionDiffView = ({ result, isDark, isEditMode, draft, setDraft }) => {
+    const data = isEditMode && draft ? draft : result;
+    const { textSimilarity, scores, issues, dimensionChanges, verdict } = data;
     const verdictInfo = VERDICT_MAP[verdict] || VERDICT_MAP.HINDI_NAPABUTI;
     const VerdictIcon = verdictInfo.icon;
 
+    const updateScore = (field, val) => {
+        if (!isEditMode) return;
+        const newScores = { ...draft.scores, [field]: val };
+        // Auto-calc delta
+        newScores.riskDelta = newScores.originalRisk - newScores.revisedRisk;
+        newScores.integrityDelta = newScores.revisedIntegrity - newScores.originalIntegrity;
+        setDraft(prev => ({ ...prev, scores: newScores }));
+    };
+
+    const updateDimChange = (idx, field, val) => {
+        if (!isEditMode) return;
+        const newDims = [...draft.dimensionChanges];
+        newDims[idx] = { ...newDims[idx], [field]: val };
+        // Auto-calc improved flag based on status hierarchy
+        const statusRank = { 'Mababa': 0, 'Katamtaman': 1, 'Mataas': 2 };
+        const oldRank = statusRank[newDims[idx].oldStatus] ?? 1;
+        const newRank = statusRank[newDims[idx].newStatus] ?? 1;
+        newDims[idx].improved = newRank < oldRank;
+        setDraft(prev => ({ ...prev, dimensionChanges: newDims }));
+    };
+
+    const updateIssue = (category, idx, field, val) => {
+        if (!isEditMode) return;
+        const newIssues = { ...draft.issues };
+        const arr = [...newIssues[category]];
+        arr[idx] = { ...arr[idx], [field]: val };
+        newIssues[category] = arr;
+        setDraft(prev => ({ ...prev, issues: newIssues }));
+    };
+
+    const addIssue = (category) => {
+        if (!isEditMode) return;
+        const newIssues = { ...draft.issues };
+        newIssues[category] = [...(newIssues[category] || []), { label: 'Bagong isyu', detail: '', type: 'FLAG' }];
+        setDraft(prev => ({ ...prev, issues: newIssues }));
+    };
+
+    const removeIssue = (category, idx) => {
+        if (!isEditMode) return;
+        const newIssues = { ...draft.issues };
+        newIssues[category] = newIssues[category].filter((_, i) => i !== idx);
+        setDraft(prev => ({ ...prev, issues: newIssues }));
+    };
+
     return (
         <div className="p-6 space-y-5 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            {/* Edit Mode Banner */}
+            {isEditMode && (
+                <div className="p-3 rounded-xl border-2 border-dashed border-amber-400 bg-amber-50/50 dark:bg-amber-900/10 flex items-center gap-2 text-amber-600 dark:text-amber-400">
+                    <Icons.AlertTriangle size={16} />
+                    <span className="text-[10px] font-black uppercase tracking-widest">Admin Edit Mode — All fields editable</span>
+                </div>
+            )}
+
             {/* Verdict Banner */}
             <div className={`p-4 rounded-2xl border flex items-start gap-4 ${verdictInfo.color}`}>
                 <VerdictIcon size={22} className="mt-0.5 shrink-0" />
-                <div>
-                    <h3 className="text-sm font-black uppercase tracking-wider mb-1">{verdictInfo.label}</h3>
+                <div className="flex-1">
+                    {isEditMode ? (
+                        <select
+                            value={verdict}
+                            onChange={e => setDraft(prev => ({ ...prev, verdict: e.target.value }))}
+                            className="text-sm font-black uppercase tracking-wider mb-1 bg-transparent border-b-2 border-dashed border-amber-400 outline-none cursor-pointer w-full"
+                        >
+                            {VERDICT_OPTIONS.map(v => (
+                                <option key={v} value={v}>{VERDICT_MAP[v].label}</option>
+                            ))}
+                        </select>
+                    ) : (
+                        <h3 className="text-sm font-black uppercase tracking-wider mb-1">{verdictInfo.label}</h3>
+                    )}
                     <p className="text-xs leading-relaxed">{verdictInfo.desc}</p>
                 </div>
             </div>
@@ -51,11 +152,19 @@ const RevisionDiffView = ({ result, isDark }) => {
             <div className="grid grid-cols-3 gap-3">
                 <div className={`p-4 rounded-2xl border text-center ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
                     <div className="text-[9px] uppercase font-black tracking-widest text-slate-400 mb-1">Orihinal na Marka</div>
-                    <span className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{scores.originalRisk}%</span>
+                    {isEditMode ? (
+                        <EditableNumber value={scores.originalRisk} onChange={v => updateScore('originalRisk', v)} className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`} />
+                    ) : (
+                        <span className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{scores.originalRisk}%</span>
+                    )}
                 </div>
                 <div className={`p-4 rounded-2xl border text-center ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
                     <div className="text-[9px] uppercase font-black tracking-widest text-slate-400 mb-1">Binagong Marka</div>
-                    <span className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{scores.revisedRisk}%</span>
+                    {isEditMode ? (
+                        <EditableNumber value={scores.revisedRisk} onChange={v => updateScore('revisedRisk', v)} className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`} />
+                    ) : (
+                        <span className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{scores.revisedRisk}%</span>
+                    )}
                 </div>
                 <div className={`p-4 rounded-2xl border text-center ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
                     <div className="text-[9px] uppercase font-black tracking-widest text-slate-400 mb-1">Pagbabago</div>
@@ -72,7 +181,11 @@ const RevisionDiffView = ({ result, isDark }) => {
                     <span className="text-[10px] uppercase font-black tracking-widest text-slate-400 flex items-center gap-2">
                         <Icons.FileText size={12} /> Pagkakatulad ng Teksto
                     </span>
-                    <span className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{textSimilarity}%</span>
+                    {isEditMode ? (
+                        <EditableNumber value={textSimilarity} onChange={v => setDraft(prev => ({ ...prev, textSimilarity: v }))} className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`} />
+                    ) : (
+                        <span className={`text-sm font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{textSimilarity}%</span>
+                    )}
                 </div>
                 <div className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
@@ -88,23 +201,43 @@ const RevisionDiffView = ({ result, isDark }) => {
             </div>
 
             {/* Issues Fixed */}
-            {issues.fixed.length > 0 && (
+            {(issues.fixed.length > 0 || isEditMode) && (
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <Icons.CheckCircle size={14} className="text-emerald-500" />
                         <h4 className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">
                             Mga Isyung Naayos ({issues.fixed.length})
                         </h4>
+                        {isEditMode && (
+                            <button onClick={() => addIssue('fixed')} className="ml-auto p-1 rounded bg-emerald-100 dark:bg-emerald-900/30 hover:bg-emerald-200 transition-colors">
+                                <Icons.Plus size={12} className="text-emerald-500" />
+                            </button>
+                        )}
                     </div>
                     <div className="space-y-1.5">
                         {issues.fixed.map((issue, idx) => (
                             <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30">
                                 <Icons.Check size={14} className="text-emerald-500 mt-0.5 shrink-0" />
-                                <div>
-                                    <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{issue.label}</span>
-                                    {issue.detail && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{issue.detail}</p>}
+                                <div className="flex-1">
+                                    {isEditMode ? (
+                                        <>
+                                            <EditableText value={issue.label} onChange={v => updateIssue('fixed', idx, 'label', v)} className="text-xs font-bold text-emerald-700 dark:text-emerald-300" />
+                                            <EditableText value={issue.detail || ''} onChange={v => updateIssue('fixed', idx, 'detail', v)} className="text-[10px] text-slate-500 mt-1" multiline />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{issue.label}</span>
+                                            {issue.detail && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{issue.detail}</p>}
+                                        </>
+                                    )}
                                 </div>
-                                <span className="ml-auto text-[8px] font-black uppercase text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-full shrink-0">{issue.type}</span>
+                                {isEditMode ? (
+                                    <button onClick={() => removeIssue('fixed', idx)} className="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors shrink-0">
+                                        <Icons.X size={12} className="text-rose-500" />
+                                    </button>
+                                ) : (
+                                    <span className="ml-auto text-[8px] font-black uppercase text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-full shrink-0">{issue.type}</span>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -112,23 +245,43 @@ const RevisionDiffView = ({ result, isDark }) => {
             )}
 
             {/* Issues Remaining */}
-            {issues.remaining.length > 0 && (
+            {(issues.remaining.length > 0 || isEditMode) && (
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <Icons.AlertTriangle size={14} className="text-amber-500" />
                         <h4 className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest">
                             Mga Natitirang Isyu ({issues.remaining.length})
                         </h4>
+                        {isEditMode && (
+                            <button onClick={() => addIssue('remaining')} className="ml-auto p-1 rounded bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 transition-colors">
+                                <Icons.Plus size={12} className="text-amber-500" />
+                            </button>
+                        )}
                     </div>
                     <div className="space-y-1.5">
                         {issues.remaining.map((issue, idx) => (
                             <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800/30">
                                 <Icons.AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" />
-                                <div>
-                                    <span className="text-xs font-bold text-amber-700 dark:text-amber-300">{issue.label}</span>
-                                    {issue.detail && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{issue.detail}</p>}
+                                <div className="flex-1">
+                                    {isEditMode ? (
+                                        <>
+                                            <EditableText value={issue.label} onChange={v => updateIssue('remaining', idx, 'label', v)} className="text-xs font-bold text-amber-700 dark:text-amber-300" />
+                                            <EditableText value={issue.detail || ''} onChange={v => updateIssue('remaining', idx, 'detail', v)} className="text-[10px] text-slate-500 mt-1" multiline />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="text-xs font-bold text-amber-700 dark:text-amber-300">{issue.label}</span>
+                                            {issue.detail && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{issue.detail}</p>}
+                                        </>
+                                    )}
                                 </div>
-                                <span className="ml-auto text-[8px] font-black uppercase text-amber-500 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full shrink-0">{issue.type}</span>
+                                {isEditMode ? (
+                                    <button onClick={() => removeIssue('remaining', idx)} className="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors shrink-0">
+                                        <Icons.X size={12} className="text-rose-500" />
+                                    </button>
+                                ) : (
+                                    <span className="ml-auto text-[8px] font-black uppercase text-amber-500 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded-full shrink-0">{issue.type}</span>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -136,23 +289,43 @@ const RevisionDiffView = ({ result, isDark }) => {
             )}
 
             {/* New Issues */}
-            {issues.new.length > 0 && (
+            {(issues.new.length > 0 || isEditMode) && (
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <Icons.XCircle size={14} className="text-rose-500" />
                         <h4 className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">
                             Mga Bagong Isyu ({issues.new.length})
                         </h4>
+                        {isEditMode && (
+                            <button onClick={() => addIssue('new')} className="ml-auto p-1 rounded bg-rose-100 dark:bg-rose-900/30 hover:bg-rose-200 transition-colors">
+                                <Icons.Plus size={12} className="text-rose-500" />
+                            </button>
+                        )}
                     </div>
                     <div className="space-y-1.5">
                         {issues.new.map((issue, idx) => (
                             <div key={idx} className="flex items-start gap-3 p-3 rounded-xl bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-800/30">
                                 <Icons.XCircle size={14} className="text-rose-500 mt-0.5 shrink-0" />
-                                <div>
-                                    <span className="text-xs font-bold text-rose-700 dark:text-rose-300">{issue.label}</span>
-                                    {issue.detail && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{issue.detail}</p>}
+                                <div className="flex-1">
+                                    {isEditMode ? (
+                                        <>
+                                            <EditableText value={issue.label} onChange={v => updateIssue('new', idx, 'label', v)} className="text-xs font-bold text-rose-700 dark:text-rose-300" />
+                                            <EditableText value={issue.detail || ''} onChange={v => updateIssue('new', idx, 'detail', v)} className="text-[10px] text-slate-500 mt-1" multiline />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="text-xs font-bold text-rose-700 dark:text-rose-300">{issue.label}</span>
+                                            {issue.detail && <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{issue.detail}</p>}
+                                        </>
+                                    )}
                                 </div>
-                                <span className="ml-auto text-[8px] font-black uppercase text-rose-500 bg-rose-100 dark:bg-rose-900/30 px-1.5 py-0.5 rounded-full shrink-0">{issue.type}</span>
+                                {isEditMode ? (
+                                    <button onClick={() => removeIssue('new', idx)} className="p-1 rounded hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors shrink-0">
+                                        <Icons.X size={12} className="text-rose-500" />
+                                    </button>
+                                ) : (
+                                    <span className="ml-auto text-[8px] font-black uppercase text-rose-500 bg-rose-100 dark:bg-rose-900/30 px-1.5 py-0.5 rounded-full shrink-0">{issue.type}</span>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -160,7 +333,7 @@ const RevisionDiffView = ({ result, isDark }) => {
             )}
 
             {/* Dimension Changes */}
-            {dimensionChanges.length > 0 && (
+            {(dimensionChanges.length > 0 || isEditMode) && (
                 <div className="space-y-2">
                     <div className="flex items-center gap-2">
                         <Icons.BarChart2 size={14} className="text-blue-500" />
@@ -183,13 +356,33 @@ const RevisionDiffView = ({ result, isDark }) => {
                                     <tr key={idx} className={`border-t ${isDark ? 'border-slate-700/50' : 'border-slate-100'}`}>
                                         <td className={`px-3 py-2.5 font-bold capitalize ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{dc.dimension}</td>
                                         <td className="px-3 py-2.5 text-center">
-                                            <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">{dc.oldStatus}</span>
+                                            {isEditMode ? (
+                                                <select
+                                                    value={dc.oldStatus}
+                                                    onChange={e => updateDimChange(idx, 'oldStatus', e.target.value)}
+                                                    className="text-[10px] font-black px-2 py-0.5 rounded-full bg-transparent border border-dashed border-amber-400 outline-none cursor-pointer"
+                                                >
+                                                    {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                                                </select>
+                                            ) : (
+                                                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">{dc.oldStatus}</span>
+                                            )}
                                         </td>
                                         <td className="text-center">
                                             {dc.improved ? <Icons.ArrowDown size={12} className="text-emerald-500 mx-auto" /> : <Icons.ArrowUp size={12} className="text-rose-500 mx-auto" />}
                                         </td>
                                         <td className="px-3 py-2.5 text-center">
-                                            <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${dc.improved ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'}`}>{dc.newStatus}</span>
+                                            {isEditMode ? (
+                                                <select
+                                                    value={dc.newStatus}
+                                                    onChange={e => updateDimChange(idx, 'newStatus', e.target.value)}
+                                                    className={`text-[10px] font-black px-2 py-0.5 rounded-full bg-transparent border border-dashed border-amber-400 outline-none cursor-pointer`}
+                                                >
+                                                    {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                                                </select>
+                                            ) : (
+                                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${dc.improved ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : 'bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400'}`}>{dc.newStatus}</span>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -201,14 +394,24 @@ const RevisionDiffView = ({ result, isDark }) => {
 
             {/* Summary Stats */}
             <div className={`flex items-center justify-between p-3 rounded-xl border text-[10px] font-bold ${isDark ? 'bg-slate-800/50 border-slate-700 text-slate-400' : 'bg-slate-50 border-slate-100 text-slate-500'}`}>
-                <span>Kabuuang Isyu (Orihinal): {issues.totalOriginal}</span>
-                <span>•</span>
-                <span>Kabuuang Isyu (Binago): {issues.totalRevised}</span>
-                <span>•</span>
-                <span className={issues.totalRevised < issues.totalOriginal ? 'text-emerald-500' : issues.totalRevised > issues.totalOriginal ? 'text-rose-500' : ''}>
-                    {issues.totalRevised < issues.totalOriginal ? `↓ ${issues.totalOriginal - issues.totalRevised} nabawas` :
-                     issues.totalRevised > issues.totalOriginal ? `↑ ${issues.totalRevised - issues.totalOriginal} nadagdag` : 'Pareho'}
-                </span>
+                {isEditMode ? (
+                    <>
+                        <span>Orihinal: <EditableNumber value={issues.totalOriginal} onChange={v => setDraft(prev => ({ ...prev, issues: { ...prev.issues, totalOriginal: v } }))} className="w-12 text-[10px]" min={0} max={999} /></span>
+                        <span>•</span>
+                        <span>Binago: <EditableNumber value={issues.totalRevised} onChange={v => setDraft(prev => ({ ...prev, issues: { ...prev.issues, totalRevised: v } }))} className="w-12 text-[10px]" min={0} max={999} /></span>
+                    </>
+                ) : (
+                    <>
+                        <span>Kabuuang Isyu (Orihinal): {issues.totalOriginal}</span>
+                        <span>•</span>
+                        <span>Kabuuang Isyu (Binago): {issues.totalRevised}</span>
+                        <span>•</span>
+                        <span className={issues.totalRevised < issues.totalOriginal ? 'text-emerald-500' : issues.totalRevised > issues.totalOriginal ? 'text-rose-500' : ''}>
+                            {issues.totalRevised < issues.totalOriginal ? `↓ ${issues.totalOriginal - issues.totalRevised} nabawas` :
+                             issues.totalRevised > issues.totalOriginal ? `↑ ${issues.totalRevised - issues.totalOriginal} nadagdag` : 'Pareho'}
+                        </span>
+                    </>
+                )}
             </div>
         </div>
     );
@@ -304,13 +507,31 @@ const RerunView = ({ result, isDark }) => {
 };
 
 // ─── Main Modal ─────────────────────────────────────
-const ComparisonModal = ({ result, onClose }) => {
+const ComparisonModal = ({ result, onClose, isEditMode = false, onSave }) => {
     const { theme } = useTheme();
     const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+    // Draft state for edit mode — deep copy of result when edit mode activates
+    const [draft, setDraft] = useState(null);
+
+    useEffect(() => {
+        if (isEditMode && result && result.isRevision) {
+            setDraft(JSON.parse(JSON.stringify(result)));
+        } else if (!isEditMode) {
+            setDraft(null);
+        }
+    }, [isEditMode, result]);
+
+    const handleSave = useCallback(() => {
+        if (draft && onSave) {
+            onSave(draft);
+        }
+    }, [draft, onSave]);
 
     if (!result) return null;
 
     const isRevision = result.isRevision === true;
+    const canEdit = isEditMode && isRevision;
 
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
@@ -329,6 +550,7 @@ const ComparisonModal = ({ result, onClose }) => {
                             </h2>
                             <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                                 {isRevision ? 'Orihinal vs Binagong Bersyon' : 'Trial 1 vs Trial 2'}
+                                {canEdit && <span className="ml-2 text-amber-500">• EDIT MODE</span>}
                             </p>
                         </div>
                     </div>
@@ -339,12 +561,21 @@ const ComparisonModal = ({ result, onClose }) => {
 
                 {/* Content - switch between modes */}
                 {isRevision
-                    ? <RevisionDiffView result={result} isDark={isDark} />
+                    ? <RevisionDiffView result={result} isDark={isDark} isEditMode={canEdit} draft={draft} setDraft={setDraft} />
                     : <RerunView result={result} isDark={isDark} />
                 }
 
                 {/* Footer */}
                 <div className={`p-4 border-t flex justify-end gap-3 ${isDark ? 'border-slate-800 bg-slate-900/50' : 'border-slate-100 bg-slate-50/50'}`}>
+                    {canEdit && (
+                        <button
+                            onClick={handleSave}
+                            className="px-6 py-2.5 rounded-xl font-bold text-sm bg-amber-500 text-white hover:bg-amber-600 transition-colors cursor-pointer flex items-center gap-2"
+                        >
+                            <Icons.Check size={16} />
+                            I-Save ang Overrides
+                        </button>
+                    )}
                     <button
                         onClick={onClose}
                         className="px-6 py-2.5 rounded-xl font-bold text-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors cursor-pointer"
