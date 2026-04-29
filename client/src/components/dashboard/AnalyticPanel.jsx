@@ -152,7 +152,7 @@ const AnalyticPanel = React.memo(() => {
     const { session, userProfile } = useAuth();
     const { theme } = useTheme();
     const { focusedIssue, rightPanelOpen: isOpen, language } = useUI();
-    const { setFocusedIssue, setRightPanelOpen, deleteAnalysis, translateSummary, setRevisionResult } = useActions();
+    const { setFocusedIssue, setRightPanelOpen, deleteAnalysis, translateSummary, setRevisionResult, setActiveFile } = useActions();
 
     // Comparison State
     const [isSelectingComparison, setIsSelectingComparison] = useState(false);

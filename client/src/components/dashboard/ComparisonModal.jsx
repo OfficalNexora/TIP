@@ -554,9 +554,9 @@ const ComparisonModal = ({ result, onClose, isEditMode = false, onSave }) => {
 
     return (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className={`w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
+            <div className={`w-full max-w-2xl max-h-[90vh] flex flex-col rounded-3xl shadow-2xl overflow-hidden ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
                 {/* Header */}
-                <div className={`p-6 border-b flex items-center justify-between ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
+                <div className={`p-6 border-b flex items-center justify-between shrink-0 ${isDark ? 'border-slate-800' : 'border-slate-100'}`}>
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-xl ${isRevision
                             ? 'bg-purple-50 dark:bg-purple-900/20 text-purple-500'
@@ -573,7 +573,7 @@ const ComparisonModal = ({ result, onClose, isEditMode = false, onSave }) => {
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer">
+                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-rose-500 transition-colors cursor-pointer shrink-0">
                         <Icons.X size={24} />
                     </button>
                 </div>
@@ -585,7 +585,7 @@ const ComparisonModal = ({ result, onClose, isEditMode = false, onSave }) => {
                 }
 
                 {/* Footer */}
-                <div className={`p-4 border-t flex justify-end gap-3 ${isDark ? 'border-slate-800 bg-slate-900/50' : 'border-slate-100 bg-slate-50/50'}`}>
+                <div className={`p-4 border-t flex justify-end gap-3 shrink-0 ${isDark ? 'border-slate-800 bg-slate-900/50' : 'border-slate-100 bg-slate-50/50'}`}>
                     {canEdit && (
                         <button
                             onClick={handleSave}
