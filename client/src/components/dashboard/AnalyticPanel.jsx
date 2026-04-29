@@ -495,8 +495,13 @@ const AnalyticPanel = React.memo(() => {
     const dimensions = (isSecretEditMode && draftEdits) ? draftEdits.dimensions : (activeFile.dimensions || {});
     const dimensionKeys = Object.keys(dimensions);
 
-    // Confidence Logic: 0 = safe, 25 = low, 50 = moderate, 75 = high, 100 = critical
-    const confidenceScore = (isSecretEditMode && draftEdits) ? draftEdits.riskScore : (activeFile.confidence_score || normalizeConfidence(activeFile.confidence));
+    // Confidence Logic: Always compute from dimensions when available
+    // 6 dims: Mababa=0, Katamtaman=8.34, Mataas=16.67, sum = risk score
+    const computedFromDims = recalcScoresFromDimensions(dimensions);
+    const hasValidDimensions = dimensionKeys.length > 0;
+    const confidenceScore = (isSecretEditMode && draftEdits)
+        ? draftEdits.riskScore
+        : (hasValidDimensions ? computedFromDims.riskScore : (activeFile.confidence_score || normalizeConfidence(activeFile.confidence)));
     let confidenceColor = "bg-emerald-500";
     if (confidenceScore >= 85) confidenceColor = "bg-rose-600";
     else if (confidenceScore >= 60) confidenceColor = "bg-rose-500";
@@ -548,7 +553,9 @@ const AnalyticPanel = React.memo(() => {
     // console.log('[AnalyticPanel] omission_list:', omissionList);
 
 
-    const targetScore = (isSecretEditMode && draftEdits) ? draftEdits.riskScore : (activeFile?.confidence_score || normalizeConfidence(activeFile?.confidence || 0));
+    const targetScore = (isSecretEditMode && draftEdits)
+        ? draftEdits.riskScore
+        : (hasValidDimensions ? computedFromDims.riskScore : (activeFile?.confidence_score || normalizeConfidence(activeFile?.confidence || 0)));
     const fullSummary = activeFile?.summary || t('analytic.no_summary');
 
     // Categorical Summary Helpers
@@ -664,7 +671,7 @@ const AnalyticPanel = React.memo(() => {
                                             value={draftEdits.integrityScore}
                                             onChange={e => setDraftEdits({...draftEdits, integrityScore: parseFloat(e.target.value) || 0})}
                                         />
-                                    ) : (activeFile.integrity_score || 0)}
+                                    ) : (hasValidDimensions ? computedFromDims.integrityScore : (activeFile.integrity_score || 0))}
                                     /100
                                 </span>
                             </div>
