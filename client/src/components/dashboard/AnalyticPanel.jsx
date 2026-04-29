@@ -710,10 +710,9 @@ const AnalyticPanel = React.memo(() => {
                                             <div className="flex items-center gap-2">
                                                 <span className={`text-[9px] px-2 py-0.5 rounded-full border font-black uppercase transition-colors shadow-sm ${alignClass}`}>
                                                     {isSecretEditMode && draftEdits ? (
-                                                        <input 
-                                                            type="text" 
-                                                            className="bg-transparent outline-none w-20 text-center"
-                                                            value={status} 
+                                                        <select 
+                                                            className="bg-transparent outline-none text-[9px] font-black uppercase cursor-pointer"
+                                                            value={dim?.status || dim?.alignment || 'Mababa'}
                                                             onChange={(e) => {
                                                                 const newDims = {...draftEdits.dimensions};
                                                                 if (newDims[key].status !== undefined) newDims[key].status = e.target.value;
@@ -721,7 +720,11 @@ const AnalyticPanel = React.memo(() => {
                                                                 setDraftEdits({...draftEdits, dimensions: newDims});
                                                             }}
                                                             onClick={e => e.stopPropagation()}
-                                                        />
+                                                        >
+                                                            <option value="Mababa">MABABA</option>
+                                                            <option value="Katamtaman">KATAMTAMAN</option>
+                                                            <option value="Mataas">MATAAS</option>
+                                                        </select>
                                                     ) : status}
                                                 </span>
                                                 <Icons.ChevronDown size={14} className={`text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
