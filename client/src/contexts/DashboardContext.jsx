@@ -141,7 +141,24 @@ export const DashboardProvider = ({ children }) => {
 
             if (pagination) setHasMore(pagination.hasMore);
             if (meta) {
-                setIntegrityAvg(meta.global_integrity_avg || 0);
+                // Compute average risk from dimension statuses (client-side)
+                const computeRiskFromDims = (dims) => {
+                    if (!dims || typeof dims !== 'object') return null;
+                    const keys = Object.keys(dims);
+                    if (keys.length === 0) return null;
+                    let total = 0;
+                    keys.forEach(k => {
+                        const raw = (dims[k]?.status || dims[k]?.alignment || 'Mababa').trim().toLowerCase();
+                        if (raw === 'mataas' || raw === 'critical' || raw === 'pagnilay' || raw === 'flagged') total += 16.67;
+                        else if (raw === 'katamtaman' || raw === 'may obserbasyon' || raw === 'observed' || raw === 'needs improvement') total += 8.34;
+                    });
+                    return Math.min(100, Math.round(total * 100) / 100);
+                };
+
+                const allFiles = isLoadMore ? [...files, ...historicalFiles] : historicalFiles;
+                const scores = allFiles.map(f => computeRiskFromDims(f.dimensions)).filter(s => s !== null);
+                const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : (meta.global_integrity_avg || 0);
+                setIntegrityAvg(avg);
                 setTotalAudits(meta.total_audits || 0);
             }
         } catch (err) {

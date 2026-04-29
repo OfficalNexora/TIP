@@ -9,9 +9,25 @@ import { useUI, useData, useActions } from '../../contexts/DashboardContext';
 import { normalizeConfidence } from '../../utils/confidenceUtils';
 import { useTranslation } from '../../utils/useTranslation';
 
+// Compute risk score from dimension statuses (same formula as AnalyticPanel)
+const computeRiskFromDimensions = (dims) => {
+    if (!dims || typeof dims !== 'object') return null;
+    const keys = Object.keys(dims);
+    if (keys.length === 0) return null;
+
+    let totalRisk = 0;
+    keys.forEach(k => {
+        const raw = (dims[k]?.status || dims[k]?.alignment || 'Mababa').trim().toLowerCase();
+        if (raw === 'mataas' || raw === 'critical' || raw === 'pagnilay' || raw === 'flagged') totalRisk += 16.67;
+        else if (raw === 'katamtaman' || raw === 'may obserbasyon' || raw === 'observed' || raw === 'needs improvement') totalRisk += 8.34;
+    });
+    return Math.min(100, Math.round(totalRisk * 100) / 100);
+};
+
 const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handleDeleteClick, handleRevisionClick }) => {
     const cardRef = React.useRef(null);
-    const confidenceScore = normalizeConfidence(file.confidence);
+    const dimsScore = computeRiskFromDimensions(file.dimensions);
+    const confidenceScore = dimsScore !== null ? dimsScore : normalizeConfidence(file.confidence);
     const isScanning = file.status?.toLowerCase() === 'scanning' || file.status?.toLowerCase() === 'processing';
     const [wasScanning, setWasScanning] = React.useState(isScanning);
 
