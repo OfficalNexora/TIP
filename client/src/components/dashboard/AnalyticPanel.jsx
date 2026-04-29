@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Icons from '../ui/Icons';
 import InsightCard from '../ui/InsightCard';
 import { useUI, useData, useActions } from '../../contexts/DashboardContext';
