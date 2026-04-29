@@ -83,6 +83,64 @@ const AnalyticPanel = React.memo(() => {
     const [verificationResult, setVerificationResult] = useState(null);
     const [isTechOpen, setIsTechOpen] = useState(false);
 
+    // --- Secret Admin Overrides for Research ---
+    const [isSecretEditMode, setIsSecretEditMode] = useState(false);
+    const [draftEdits, setDraftEdits] = useState(null);
+
+    const saveOverrides = async () => {
+        if (!draftEdits || session?.user?.role !== 'admin') return;
+        try {
+            await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/admin/override-analysis`, {
+                analysis_id: activeFile.id,
+                newRiskScore: draftEdits.riskScore,
+                newIntegrityScore: draftEdits.integrityScore,
+                dimensions: draftEdits.dimensions
+            }, {
+                headers: {
+                    Authorization: `Bearer ${session.access_token}`,
+                    'ngrok-skip-browser-warning': '69420'
+                }
+            });
+            alert('Admin details updated secretly!');
+            setIsSecretEditMode(false);
+        } catch (e) {
+            console.error(e);
+            alert('Failed to save overrides.');
+        }
+    };
+
+    useEffect(() => {
+        if (session?.user?.role !== 'admin') return;
+
+        const handleKeyDown = (e) => {
+            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'e') {
+                e.preventDefault();
+                setIsSecretEditMode(prev => {
+                    if (!prev) {
+                        setDraftEdits({
+                            riskScore: activeFile?.confidence_score || normalizeConfidence(activeFile?.confidence || 0) || 0,
+                            integrityScore: activeFile?.integrity_score || 0,
+                            dimensions: JSON.parse(JSON.stringify(activeFile?.dimensions || {}))
+                        });
+                    }
+                    return !prev;
+                });
+            }
+            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                setIsSecretEditMode(prev => {
+                    if (prev) {
+                        saveOverrides();
+                    }
+                    return prev;
+                });
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [activeFile, session, draftEdits]);
+    // -------------------------------------------
+
     // Auto-show revision comparison modal when revisionResult arrives
     useEffect(() => {
         if (revisionResult) {
@@ -307,11 +365,11 @@ const AnalyticPanel = React.memo(() => {
         }
     };
 
-    const dimensions = activeFile.dimensions || {};
+    const dimensions = (isSecretEditMode && draftEdits) ? draftEdits.dimensions : (activeFile.dimensions || {});
     const dimensionKeys = Object.keys(dimensions);
 
     // Confidence Logic: 0 = safe, 25 = low, 50 = moderate, 75 = high, 100 = critical
-    const confidenceScore = activeFile.confidence_score || normalizeConfidence(activeFile.confidence);
+    const confidenceScore = (isSecretEditMode && draftEdits) ? draftEdits.riskScore : (activeFile.confidence_score || normalizeConfidence(activeFile.confidence));
     let confidenceColor = "bg-emerald-500";
     if (confidenceScore >= 85) confidenceColor = "bg-rose-600";
     else if (confidenceScore >= 60) confidenceColor = "bg-rose-500";
@@ -471,7 +529,17 @@ const AnalyticPanel = React.memo(() => {
                             </div>
                             <div className="flex items-center justify-between px-2 pt-2 pb-1 border-t border-current/10 mt-1">
                                 <span className="text-[10px] font-black uppercase opacity-70">{t('analytic.integrity_score')}</span>
-                                <span className="text-sm font-black">{activeFile.integrity_score || 0}/100</span>
+                                <span className="text-sm font-black">
+                                    {isSecretEditMode && draftEdits ? (
+                                        <input 
+                                            type="number" 
+                                            className="w-16 bg-black/5 dark:bg-white/10 text-right px-1 outline-none rounded"
+                                            value={draftEdits.integrityScore}
+                                            onChange={e => setDraftEdits({...draftEdits, integrityScore: parseFloat(e.target.value) || 0})}
+                                        />
+                                    ) : (activeFile.integrity_score || 0)}
+                                    /100
+                                </span>
                             </div>
                             <p className="text-xs font-medium leading-relaxed opacity-90 border-t border-current/10 pt-3 italic">
                                 {activeFile?.forensic_analysis?.has_smoking_gun
@@ -537,7 +605,16 @@ const AnalyticPanel = React.memo(() => {
                         <div>
                             <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1 transition-colors">{t('analytic.overall_risk')}</h4>
                             <div className="flex items-baseline gap-2">
-                                <AnimatedRiskCounter targetScore={targetScore} />
+                                {isSecretEditMode && draftEdits ? (
+                                    <input 
+                                        type="number" 
+                                        className="w-16 bg-black/5 dark:bg-white/10 text-right px-1 outline-none rounded text-2xl font-black text-rose-500"
+                                        value={draftEdits.riskScore}
+                                        onChange={e => setDraftEdits({...draftEdits, riskScore: parseFloat(e.target.value) || 0})}
+                                    />
+                                ) : (
+                                    <AnimatedRiskCounter targetScore={targetScore} />
+                                )}
                             </div>
                         </div>
                         <div className={`px-2 py-1 rounded text-xs font-bold uppercase transition-colors ${confidenceBadgeClass}`}>
@@ -632,7 +709,20 @@ const AnalyticPanel = React.memo(() => {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <span className={`text-[9px] px-2 py-0.5 rounded-full border font-black uppercase transition-colors shadow-sm ${alignClass}`}>
-                                                    {status}
+                                                    {isSecretEditMode && draftEdits ? (
+                                                        <input 
+                                                            type="text" 
+                                                            className="bg-transparent outline-none w-20 text-center"
+                                                            value={status} 
+                                                            onChange={(e) => {
+                                                                const newDims = {...draftEdits.dimensions};
+                                                                if (newDims[key].status !== undefined) newDims[key].status = e.target.value;
+                                                                else newDims[key].alignment = e.target.value;
+                                                                setDraftEdits({...draftEdits, dimensions: newDims});
+                                                            }}
+                                                            onClick={e => e.stopPropagation()}
+                                                        />
+                                                    ) : status}
                                                 </span>
                                                 <Icons.ChevronDown size={14} className={`text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                             </div>
@@ -648,9 +738,23 @@ const AnalyticPanel = React.memo(() => {
                                             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                                 <div>
                                                     <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Icons.Info size={12} className="text-slate-400" /> Pagsusuri</h5>
-                                                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium pl-[22px]">
-                                                        {dim?.reason || dim?.explanation || "Walang sapat na ebidensya ang natuklasan."}
-                                                    </p>
+                                                    {isSecretEditMode && draftEdits ? (
+                                                        <textarea 
+                                                            className="w-full text-xs text-slate-700 dark:text-slate-300 bg-black/5 dark:bg-white/5 border border-slate-300 dark:border-slate-700 p-2 rounded"
+                                                            value={dim?.reason || dim?.explanation || ""}
+                                                            onChange={(e) => {
+                                                                const newDims = {...draftEdits.dimensions};
+                                                                if (newDims[key].reason !== undefined) newDims[key].reason = e.target.value;
+                                                                else newDims[key].explanation = e.target.value;
+                                                                setDraftEdits({...draftEdits, dimensions: newDims});
+                                                            }}
+                                                            onClick={e => e.stopPropagation()}
+                                                        />
+                                                    ) : (
+                                                        <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium pl-[22px]">
+                                                            {dim?.reason || dim?.explanation || "Walang sapat na ebidensya ang natuklasan."}
+                                                        </p>
+                                                    )}
                                                 </div>
 
                                                 {(dim?.evidence_snippet || dim?.snippet) && (
@@ -658,9 +762,23 @@ const AnalyticPanel = React.memo(() => {
                                                         <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                                                             <Icons.Hash size={10} /> {t('analytic.evidence')}
                                                         </h5>
-                                                        <p className="text-[11px] text-slate-600 dark:text-slate-400 italic leading-relaxed border-l-2 border-slate-300 dark:border-slate-600 pl-2">
-                                                            "{dim?.evidence_snippet || dim?.snippet}"
-                                                        </p>
+                                                        {isSecretEditMode && draftEdits ? (
+                                                            <textarea 
+                                                                className="w-full text-[11px] text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 p-2 rounded italic"
+                                                                value={dim?.evidence_snippet || dim?.snippet || ""}
+                                                                onChange={(e) => {
+                                                                    const newDims = {...draftEdits.dimensions};
+                                                                    if (newDims[key].evidence_snippet !== undefined) newDims[key].evidence_snippet = e.target.value;
+                                                                    else newDims[key].snippet = e.target.value;
+                                                                    setDraftEdits({...draftEdits, dimensions: newDims});
+                                                                }}
+                                                                onClick={e => e.stopPropagation()}
+                                                            />
+                                                        ) : (
+                                                            <p className="text-[11px] text-slate-600 dark:text-slate-400 italic leading-relaxed border-l-2 border-slate-300 dark:border-slate-600 pl-2">
+                                                                "{dim?.evidence_snippet || dim?.snippet}"
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 )}
 
@@ -669,9 +787,22 @@ const AnalyticPanel = React.memo(() => {
                                                         <h5 className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
                                                             <Icons.Zap size={10} /> {t('analytic.suggestion')}
                                                         </h5>
-                                                        <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                                                            {dim?.suggestion}
-                                                        </p>
+                                                        {isSecretEditMode && draftEdits ? (
+                                                            <textarea 
+                                                                className="w-full text-[11px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-700/50 p-2 rounded"
+                                                                value={dim?.suggestion || ""}
+                                                                onChange={(e) => {
+                                                                    const newDims = {...draftEdits.dimensions};
+                                                                    newDims[key].suggestion = e.target.value;
+                                                                    setDraftEdits({...draftEdits, dimensions: newDims});
+                                                                }}
+                                                                onClick={e => e.stopPropagation()}
+                                                            />
+                                                        ) : (
+                                                            <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                                                                {dim?.suggestion}
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 )}
                                             </div>
