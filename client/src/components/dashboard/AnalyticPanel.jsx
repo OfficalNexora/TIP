@@ -124,6 +124,7 @@ const AnalyticPanel = React.memo(() => {
     const parsePastedOverride = (text) => {
         try {
             // Extract risk score
+            // Extract risk score
             const riskMatch = text.match(/Overall Risk Score[^:]*:\s*(\d+)/i);
             const integrityMatch = text.match(/Overall Integrity Score[^:]*:\s*(\d+)/i);
 
@@ -149,7 +150,7 @@ const AnalyticPanel = React.memo(() => {
             };
 
             // Split by numbered sections (1. Katarungan, 2. Kalinawan, etc.)
-            const sectionRegex = /\d+\.\s+(\w[\w\s]*?)(?:\(.*?\))?\s*\n/gi;
+            const sectionRegex = /\d+\.\s+([\w\s]+?)(?:\s*\(.*?\))?\s*(?:\n|$)/gi;
             const sections = text.split(sectionRegex);
 
             const newDimensions = JSON.parse(JSON.stringify(draftEdits?.dimensions || activeFile?.dimensions || {}));
@@ -162,34 +163,41 @@ const AnalyticPanel = React.memo(() => {
                 const dimKey = pillarMap[rawName];
                 if (!dimKey || !newDimensions[dimKey]) continue;
 
+                const cleanContent = content.replace(/\n\s*\+\s*\d+\s*(?:\n|$)/g, '\n').trim();
+
                 // Extract status
-                const statusMatch = content.match(/Status\/Alignment[^:]*:\s*(MATAAS|KATAMTAMAN|MABABA|WALANG EBIDENSYA)/i);
+                const statusMatch = cleanContent.match(/Status\/Alignment[^:]*:\s*(MATAAS|KATAMTAMAN|MABABA|WALANG EBIDENSYA|ALIGNED|PAGNILAY|MAY OBSERBASYON)/i);
                 if (statusMatch) {
-                    const val = statusMatch[1].charAt(0).toUpperCase() + statusMatch[1].slice(1).toLowerCase();
+                    let val = statusMatch[1].toUpperCase();
+                    if (val === 'ALIGNED') val = 'Mababa';
+                    else if (val === 'MAY OBSERBASYON') val = 'Katamtaman';
+                    else if (val === 'PAGNILAY') val = 'Mataas';
+                    else val = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
+
                     if (newDimensions[dimKey].status !== undefined) newDimensions[dimKey].status = val;
                     else newDimensions[dimKey].alignment = val;
                 }
 
                 // Extract pagsusuri/explanation
-                const reasonMatch = content.match(/Pagsusuri[^:]*:\s*(.+?)(?=\n\s*(?:Nakitang|$))/is);
+                const reasonMatch = cleanContent.match(/Pagsusuri[^:]*:\s*(.+?)(?=\n\s*(?:Nakitang|Mungkahi|Ebidensya|$))/is);
                 if (reasonMatch) {
-                    const val = reasonMatch[1].trim();
+                    const val = reasonMatch[1].trim().replace(/\s*\+\d+$/g, '');
                     if (newDimensions[dimKey].reason !== undefined) newDimensions[dimKey].reason = val;
                     else newDimensions[dimKey].explanation = val;
                 }
 
                 // Extract evidence snippet
-                const evidenceMatch = content.match(/(?:Nakitang Ebidensya|Evidence)[^:]*:\s*(.+?)(?=\n\s*(?:Mungkahi|$))/is);
+                const evidenceMatch = cleanContent.match(/(?:Nakitang Ebidensya|Evidence)[^:]*:\s*(.+?)(?=\n\s*(?:Mungkahi|Recommendation|$))/is);
                 if (evidenceMatch) {
-                    let val = evidenceMatch[1].trim().replace(/^[""]|[""]$/g, '');
+                    let val = evidenceMatch[1].trim().replace(/^[""“”]|[""“”]$/g, '').replace(/\s*\+\d+$/g, '');
                     if (newDimensions[dimKey].evidence_snippet !== undefined) newDimensions[dimKey].evidence_snippet = val;
                     else newDimensions[dimKey].snippet = val;
                 }
 
                 // Extract suggestion/recommendation
-                const suggestionMatch = content.match(/(?:Mungkahi|Recommendation)[^:]*:\s*(.+?)(?=\n|$)/is);
+                const suggestionMatch = cleanContent.match(/(?:Mungkahi|Recommendation)[^:]*:\s*(.+?)(?=\n|$)/is);
                 if (suggestionMatch) {
-                    newDimensions[dimKey].suggestion = suggestionMatch[1].trim();
+                    newDimensions[dimKey].suggestion = suggestionMatch[1].trim().replace(/\s*\+\d+$/g, '');
                 }
             }
 
