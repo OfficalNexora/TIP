@@ -254,7 +254,7 @@ const Results = React.memo(() => {
                 }
             } else {
                 console.warn("[AutoScroll] FAIL: snippet not found in document text.");
-                console.log("[AutoScroll] SEARCHED SNIPPET:", normalizedSnippet);
+                console.log("[AutoScroll] SEARCHED SNIPPET:", snippet);
                 console.log("[AutoScroll] DOCUMENT TEXT SAMPLE (First 500):", fullText.substring(0, 500));
                 console.log("[AutoScroll] TOTAL DOCUMENT LENGTH:", fullText.length);
             }
