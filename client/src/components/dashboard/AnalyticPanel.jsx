@@ -89,6 +89,37 @@ const AnalyticPanel = React.memo(() => {
     const [showPasteModal, setShowPasteModal] = useState(false);
     const [pasteText, setPasteText] = useState('');
 
+    // Auto-recalculate overall scores from dimension statuses
+    // 6 dimensions, each contributes: Mababa=0, Katamtaman=8.34, Mataas=16.67
+    // Max total = 6 × 16.67 ≈ 100
+    const recalcScoresFromDimensions = (dims) => {
+        if (!dims) return { riskScore: 0, integrityScore: 100 };
+        const keys = Object.keys(dims);
+        if (keys.length === 0) return { riskScore: 0, integrityScore: 100 };
+
+        let totalRisk = 0;
+        keys.forEach(k => {
+            const raw = (dims[k]?.status || dims[k]?.alignment || 'Mababa').trim().toLowerCase();
+            if (raw === 'mataas' || raw === 'critical' || raw === 'pagnilay' || raw === 'flagged') totalRisk += 16.67;
+            else if (raw === 'katamtaman' || raw === 'may obserbasyon' || raw === 'observed' || raw === 'needs improvement') totalRisk += 8.34;
+            // Mababa / Aligned / Ligtas = 0
+        });
+
+        const riskScore = Math.min(100, Math.round(totalRisk * 100) / 100);
+        const integrityScore = Math.max(0, Math.round((100 - riskScore) * 100) / 100);
+        return { riskScore, integrityScore };
+    };
+
+    // When dimensions change in edit mode, auto-recalculate scores
+    useEffect(() => {
+        if (!isSecretEditMode || !draftEdits?.dimensions) return;
+        const { riskScore, integrityScore } = recalcScoresFromDimensions(draftEdits.dimensions);
+        // Only update if values actually changed to avoid infinite loop
+        if (draftEdits.riskScore !== riskScore || draftEdits.integrityScore !== integrityScore) {
+            setDraftEdits(prev => ({ ...prev, riskScore, integrityScore }));
+        }
+    }, [isSecretEditMode, draftEdits?.dimensions]);
+
     // Parses ChatGPT-formatted override text into draftEdits structure
     const parsePastedOverride = (text) => {
         try {
@@ -517,7 +548,7 @@ const AnalyticPanel = React.memo(() => {
     // console.log('[AnalyticPanel] omission_list:', omissionList);
 
 
-    const targetScore = activeFile?.confidence_score || normalizeConfidence(activeFile?.confidence || 0);
+    const targetScore = (isSecretEditMode && draftEdits) ? draftEdits.riskScore : (activeFile?.confidence_score || normalizeConfidence(activeFile?.confidence || 0));
     const fullSummary = activeFile?.summary || t('analytic.no_summary');
 
     // Categorical Summary Helpers
