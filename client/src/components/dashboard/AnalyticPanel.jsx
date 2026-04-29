@@ -877,37 +877,38 @@ const AnalyticPanel = React.memo(() => {
                 <div>
                     <h4 className="text-sm font-black text-slate-900 dark:text-tip-text-main mb-3 uppercase tracking-wide">Institusyonal na UNESCO Audit</h4>
                     <div className="space-y-3">
-                        {dimensionKeys.map((key, i) => {
-                            const dim = dimensions[key];
-                            const status = normalizeStatusLabel(dim?.status || dim?.alignment);
-                            const alignClass = getAlignmentColor(status);
-                            const DimensionIcon = getIconForDimension(key);
-                            const dimId = `dim-${key}`;
-                            const isExpanded = expandedDimensions.has(dimId);
+                        {dimensionKeys.length > 0 ? (
+                            dimensionKeys.map((key, i) => {
+                                const dim = dimensions[key];
+                                const status = normalizeStatusLabel(dim?.status || dim?.alignment);
+                                const alignClass = getAlignmentColor(status);
+                                const DimensionIcon = getIconForDimension(key);
+                                const dimId = `dim-${key}`;
+                                const isExpanded = expandedDimensions.has(dimId);
 
-                            return (
-                                <InsightCard
-                                    key={i}
-                                    noPadding
-                                    onClick={() => {
-                                        toggleDimension(dimId);
-                                        if (!isExpanded && (dim?.evidence_snippet || dim?.snippet)) {
-                                            handleIssueClick({
-                                                id: dimId,
-                                                label: formatKey(normalizeDimensionKey(key)),
-                                                explanation: dim?.reason || dim?.explanation,
-                                                suggestion: dim?.suggestion,
-                                                snippet: dim?.evidence_snippet || dim?.snippet,
-                                                startIndex: dim?.startIndex,
-                                                endIndex: dim?.endIndex
-                                            });
-                                        }
-                                    }}
-                                    className={`overflow-hidden hover:shadow-md transition-all group cursor-pointer ${isExpanded ? 'ring-1 ring-blue-400 border-blue-400 shadow-lg bg-white dark:bg-slate-800/60' : 'border-slate-100 dark:border-slate-800'}`}
-                                >
-                                    <div className="p-4">
-                                        <div className="flex items-center justify-between mb-3">
-                                            <div className="flex items-center gap-3">
+                                return (
+                                    <InsightCard
+                                        key={i}
+                                        noPadding
+                                        onClick={() => {
+                                            toggleDimension(dimId);
+                                            if (!isExpanded && (dim?.evidence_snippet || dim?.snippet)) {
+                                                handleIssueClick({
+                                                    id: dimId,
+                                                    label: formatKey(normalizeDimensionKey(key)),
+                                                    explanation: dim?.reason || dim?.explanation,
+                                                    suggestion: dim?.suggestion,
+                                                    snippet: dim?.evidence_snippet || dim?.snippet,
+                                                    startIndex: dim?.startIndex,
+                                                    endIndex: dim?.endIndex
+                                                });
+                                            }
+                                        }}
+                                        className={`overflow-hidden hover:shadow-md transition-all group cursor-pointer ${isExpanded ? 'ring-1 ring-blue-400 border-blue-400 shadow-lg bg-white dark:bg-slate-800/60' : 'border-slate-100 dark:border-slate-800'}`}
+                                    >
+                                        <div className="p-4">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div className="flex items-center gap-3">
                                                 <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-500 group-hover:scale-110 transition-transform">
                                                     <DimensionIcon size={18} />
                                                 </div>
@@ -1046,7 +1047,20 @@ const AnalyticPanel = React.memo(() => {
                                     </div>
                                 </InsightCard>
                             );
-                        })}
+                        })
+                    ) : (
+                        (activeFile?.status === 'scanning' || activeFile?.status === 'PENDING' || activeFile?.isFileLoading) ? (
+                            <div className="space-y-3">
+                                <div className="h-20 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+                                <div className="h-20 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+                                <div className="h-20 bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
+                            </div>
+                        ) : (
+                            <div className="p-4 text-center text-slate-500 text-sm bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                                Walang natagpuang isyu para sa dimensyong ito.
+                            </div>
+                        )
+                    )}
                     </div>
                 </div>
 
