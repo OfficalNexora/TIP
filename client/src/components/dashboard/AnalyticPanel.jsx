@@ -760,7 +760,7 @@ const AnalyticPanel = React.memo(() => {
                                                     )}
                                                 </div>
 
-                                                {(dim?.evidence_snippet || dim?.snippet) && (
+                                                {((dim?.evidence_snippet || dim?.snippet) || isSecretEditMode) && (
                                                     <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
                                                         <h5 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                                                             <Icons.Hash size={10} /> {t('analytic.evidence')}
@@ -785,7 +785,7 @@ const AnalyticPanel = React.memo(() => {
                                                     </div>
                                                 )}
 
-                                                {dim?.suggestion && (
+                                                {(dim?.suggestion || isSecretEditMode) && (
                                                     <div className="bg-emerald-50/50 dark:bg-emerald-900/20 p-3 rounded-xl border border-emerald-100 dark:border-emerald-800/50">
                                                         <h5 className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
                                                             <Icons.Zap size={10} /> {t('analytic.suggestion')}
