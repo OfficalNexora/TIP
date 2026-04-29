@@ -59,7 +59,7 @@ const TypewriterSummary = React.memo(({ fullSummary, activeFileId }) => {
         };
 
         timeoutId = setTimeout(typeChar, 300);
-        
+
         return () => clearTimeout(timeoutId);
     }, [fullSummary, activeFileId]);
 
@@ -190,20 +190,20 @@ const AnalyticPanel = React.memo(() => {
     const [showOmissions, setShowOmissions] = useState(false);
     const [expandedFlags, setExpandedFlags] = useState(new Set());
     const [expandedDimensions, setExpandedDimensions] = useState(new Set());
- 
-     const toggleFlag = (id) => {
-         const newSet = new Set(expandedFlags);
-         if (newSet.has(id)) newSet.delete(id);
-         else newSet.add(id);
-         setExpandedFlags(newSet);
-     };
- 
-     const toggleDimension = (id) => {
-         const newSet = new Set(expandedDimensions);
-         if (newSet.has(id)) newSet.delete(id);
-         else newSet.add(id);
-         setExpandedDimensions(newSet);
-     };
+
+    const toggleFlag = (id) => {
+        const newSet = new Set(expandedFlags);
+        if (newSet.has(id)) newSet.delete(id);
+        else newSet.add(id);
+        setExpandedFlags(newSet);
+    };
+
+    const toggleDimension = (id) => {
+        const newSet = new Set(expandedDimensions);
+        if (newSet.has(id)) newSet.delete(id);
+        else newSet.add(id);
+        setExpandedDimensions(newSet);
+    };
 
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -238,7 +238,7 @@ const AnalyticPanel = React.memo(() => {
         if (lower.includes('transparency') || lower.includes('kalinawan')) return 'transparency';
         if (lower.includes('privacy') || lower.includes('pagkapribado')) return 'privacy';
         if (lower.includes('sustainability') || lower.includes('pagpapanatili')) return 'sustainability';
-        if (lower.includes('oversight') || lower.includes('pangangasiwa')) return 'oversight';
+        if (lower.includes('oversight') || lower.includes('pananagutan')) return 'oversight';
         if (lower.includes('inclusiveness') || lower.includes('inklusibo')) return 'inclusiveness';
         // Clean up fallback keys if they have analytic.dim prefixes
         return key.replace(/^(analytic\.dim\.|analytic_dim_)/i, '').replace(/\./g, ' ');
@@ -258,7 +258,7 @@ const AnalyticPanel = React.memo(() => {
     // Verdict Logic (Ternary Classification)
     const getVerdictInfo = (verdict, lang) => {
         const hasSmokingGun = activeFile?.forensic_analysis?.has_smoking_gun;
-        
+
         if (hasSmokingGun) {
             return {
                 label: t('analytic.forensic_certainty'),
@@ -464,7 +464,7 @@ const AnalyticPanel = React.memo(() => {
                                 <span className="text-sm font-black">{activeFile.integrity_score || 0}/100</span>
                             </div>
                             <p className="text-xs font-medium leading-relaxed opacity-90 border-t border-current/10 pt-3 italic">
-                                {activeFile?.forensic_analysis?.has_smoking_gun 
+                                {activeFile?.forensic_analysis?.has_smoking_gun
                                     ? t('analytic.smoking_gun_msg')
                                     : (activeFile.determination_reason || t('analytic.determination_reason_default'))
                                 }
@@ -479,29 +479,29 @@ const AnalyticPanel = React.memo(() => {
                                     <h5 className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">{t('analytic.human_merits')}</h5>
                                 </div>
                                 <div className="grid grid-cols-1 gap-2">
-                                {forensic.human_merits.map((merit, mIdx) => {
-                                    const isHigh = merit.impact === 'Napakataas' || merit.impact === 'Mataas';
-                                    const isLikas = merit.impact === 'Likas na Tao';
-                                    
-                                    return (
-                                        <div key={mIdx} className={`bg-emerald-50/30 dark:bg-emerald-900/10 border ${isHigh ? 'border-emerald-300' : 'border-emerald-100/50'} dark:border-emerald-800/30 p-3 rounded-xl flex gap-3 items-start group hover:translate-x-1 transition-all`}>
-                                            <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-800/50 text-emerald-600 dark:text-emerald-400 mt-0.5">
-                                                {isLikas ? <Icons.UserCheck size={14} /> : <Icons.Award size={14} />}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{merit.label}</span>
-                                                    <span className="text-[9px] font-black bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full uppercase">
-                                                        +{merit.strength}% Human
-                                                    </span>
+                                    {forensic.human_merits.map((merit, mIdx) => {
+                                        const isHigh = merit.impact === 'Napakataas' || merit.impact === 'Mataas';
+                                        const isLikas = merit.impact === 'Likas na Tao';
+
+                                        return (
+                                            <div key={mIdx} className={`bg-emerald-50/30 dark:bg-emerald-900/10 border ${isHigh ? 'border-emerald-300' : 'border-emerald-100/50'} dark:border-emerald-800/30 p-3 rounded-xl flex gap-3 items-start group hover:translate-x-1 transition-all`}>
+                                                <div className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-800/50 text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                                    {isLikas ? <Icons.UserCheck size={14} /> : <Icons.Award size={14} />}
                                                 </div>
-                                                <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed italic">
-                                                    {merit.explanation}
-                                                </p>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">{merit.label}</span>
+                                                        <span className="text-[9px] font-black bg-emerald-100 dark:bg-emerald-800 text-emerald-600 dark:text-emerald-400 px-1.5 py-0.5 rounded-full uppercase">
+                                                            +{merit.strength}% Human
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-600 dark:text-slate-400 leading-relaxed italic">
+                                                        {merit.explanation}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         )}
@@ -627,7 +627,7 @@ const AnalyticPanel = React.memo(() => {
                                                 <Icons.ChevronDown size={14} className={`text-slate-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                             </div>
                                         </div>
-                                        
+
                                         {!isExpanded && (
                                             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium line-clamp-1 pl-[42px]">
                                                 {dim?.reason || dim?.explanation || "Walang sapat na ebidensya ang natuklasan."}
@@ -637,7 +637,7 @@ const AnalyticPanel = React.memo(() => {
                                         {isExpanded && (
                                             <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                                                 <div>
-                                                    <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Icons.Info size={12} className="text-slate-400"/> Pagsusuri</h5>
+                                                    <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 flex items-center gap-1.5"><Icons.Info size={12} className="text-slate-400" /> Pagsusuri</h5>
                                                     <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium pl-[22px]">
                                                         {dim?.reason || dim?.explanation || "Walang sapat na ebidensya ang natuklasan."}
                                                     </p>
@@ -675,13 +675,13 @@ const AnalyticPanel = React.memo(() => {
 
                 {/* Collapsible Container for Technical Metrics */}
                 <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800/50">
-                    <button 
+                    <button
                         onClick={() => setIsTechOpen(!isTechOpen)}
                         className="w-full flex items-center justify-between group bg-slate-50/50 dark:bg-slate-800/30 p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-500/50 transition-colors"
                     >
                         <div className="flex flex-col text-left">
                             <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-widest group-hover:text-blue-500 transition-colors flex items-center gap-2">
-                                <Icons.Settings size={14}/> Teknikal na Pagsusuri (Opsiyonal)
+                                <Icons.Settings size={14} /> Teknikal na Pagsusuri (Opsiyonal)
                             </h4>
                             <p className="text-[10px] text-slate-500 italic mt-0.5">Mga metrikong teknikal para sa forensics at higit pa</p>
                         </div>
@@ -694,544 +694,544 @@ const AnalyticPanel = React.memo(() => {
                         <div className="mt-6 space-y-8 animate-in fade-in slide-in-from-top-4 duration-500">
                             {/* 2. Forensic Signal Detection */}
                             <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-tip-text-main transition-colors">{t('analytic.forensic_analysis')}</h4>
-                    </div>
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-sm font-bold text-slate-900 dark:text-tip-text-main transition-colors">{t('analytic.forensic_analysis')}</h4>
+                                </div>
 
-                    <div className="grid grid-cols-1 gap-3">
-                        {/* Risk Level Node */}
-                        <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('analytic.risk_assessment')}</span>
-                                <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase transition-colors ${activeFile.forensic_analysis?.risk_level === 'Mataas' || activeFile.forensic_analysis?.risk_level === 'High' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
-                                    {localizeStatus(activeFile.forensic_analysis?.risk_level) || (activeFile.status === 'COMPLETED' ? t('analytic.risk_low') : t('analytic.analyzing'))}
-                                </span>
-                            </div>
-                            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed italic">
-                                {activeFile.forensic_analysis?.risk_explanation || (activeFile.status === 'COMPLETED' ? "Ang dokumentong ito ay lumipas sa inisyal na forensic verification." : "Inaanalisa ang pangkalahatang ethical risk profile ng dokumento...")}
-                            </p>
-                        </div>
-
-                        {/* Metrics Row - Completely Separated */}
-                        <div className="grid grid-cols-2 gap-3 mb-3">
-                            <button
-                                type="button"
-                                onClick={() => setShowPatterns((prev) => !prev)}
-                                className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center transition hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                            >
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('analytic.ai_patterns')}</span>
-                                <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
-                                    {activeFile.forensic_analysis ? (activeFile.forensic_analysis.pattern_hits || 0) : '-'}
-                                </span>
-                                <span className="text-[10px] text-blue-500 mt-1">{showPatterns ? t('analytic.hide_list') : t('analytic.show_list')}</span>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setShowOmissions((prev) => !prev)}
-                                className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center transition hover:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-200"
-                            >
-                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('analytic.omission_flags')}</span>
-                                <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
-                                    {activeFile.forensic_analysis ? (activeFile.forensic_analysis.omission_count || 0) : '-'}
-                                </span>
-                                <span className="text-[10px] text-rose-500 mt-1">{showOmissions ? t('analytic.hide_list') : t('analytic.show_list')}</span>
-                            </button>
-                        </div>
-
-                        {/* Explanations Row - Distinct Cards */}
-                        <div className="space-y-4">
-                            {showPatterns && (
-                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
-                                            <Icons.Cpu size={14} />
-                                            <h5 className="text-[11px] font-bold uppercase tracking-wider">{t('analytic.detailed_patterns')}</h5>
+                                <div className="grid grid-cols-1 gap-3">
+                                    {/* Risk Level Node */}
+                                    <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-4 rounded-xl shadow-sm">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('analytic.risk_assessment')}</span>
+                                            <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase transition-colors ${activeFile.forensic_analysis?.risk_level === 'Mataas' || activeFile.forensic_analysis?.risk_level === 'High' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-blue-50 border-blue-200 text-blue-700'}`}>
+                                                {localizeStatus(activeFile.forensic_analysis?.risk_level) || (activeFile.status === 'COMPLETED' ? t('analytic.risk_low') : t('analytic.analyzing'))}
+                                            </span>
                                         </div>
-                                        <span className="text-[9px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">{t('analytic.found')}: {patternList.length}</span>
+                                        <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed italic">
+                                            {activeFile.forensic_analysis?.risk_explanation || (activeFile.status === 'COMPLETED' ? "Ang dokumentong ito ay lumipas sa inisyal na forensic verification." : "Inaanalisa ang pangkalahatang ethical risk profile ng dokumento...")}
+                                        </p>
                                     </div>
-                                    {patternList.length > 0 ? (
-                                        <div className="grid grid-cols-1 gap-2.5">
-                                            {patternList.map((p, idx) => {
-                                                const impactData = p.impact === 'Critical' || p.impact === 'Smoking Gun' 
-                                                    ? { color: 'text-rose-600 bg-rose-50 border-rose-100', label: 'KRITIKAL' }
-                                                    : p.impact === 'High' ? { color: 'text-rose-500 bg-rose-50 border-rose-100', label: 'MATAAS' }
-                                                    : p.impact === 'Medium' || p.impact === 'Moderate' ? { color: 'text-amber-500 bg-amber-50 border-amber-100', label: 'KATAMTAMAN' }
-                                                    : { color: 'text-blue-500 bg-blue-50 border-blue-100', label: 'MABABA' };
 
-                                                return (
-                                                    <button 
-                                                        key={idx} 
-                                                        onClick={() => handleIssueClick({
-                                                            id: `pattern-${idx}`,
-                                                            label: p.pattern || p.label || t('nav.aiInsights'),
-                                                            explanation: p.explanation || t('analytic.pattern_desc_default'),
-                                                            suggestion: p.suggestion || "Iwasan ang paggamit ng mga generic o overused na mga salita.",
-                                                            revision_prompt: p.revision_prompt || `Baguhin ang pariralang "${p.pattern}" gamit ang sariling pananalita.`,
-                                                            snippet: p.pattern || p.text || (typeof p === 'string' ? p : null),
-                                                            startIndex: p.startIndex,
-                                                            endIndex: p.endIndex
-                                                        })}
-                                                        className="w-full text-left bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 p-3.5 rounded-xl shadow-sm group hover:border-blue-300 hover:translate-x-1 transition-all"
-                                                    >
-                                                        <div className="flex items-start justify-between mb-2">
-                                                            <div className="flex flex-col gap-1">
-                                                                <span className="text-[8px] font-black text-slate-400 tracking-widest uppercase">{t('analytic.marker_forensic')}</span>
-                                                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">"{p.pattern || p.text || (typeof p === 'object' ? p.label : p)}"</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-1.5 pt-1">
-                                                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${impactData.color}`}>
-                                                                    {p.impact || impactData.label}
-                                                                </span>
-                                                                {p.count > 1 && (
-                                                                    <span className="text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">x{p.count || p.hits || 1}</span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                        <div className="bg-slate-50 dark:bg-slate-900/30 p-2.5 rounded-lg border border-slate-100/50 dark:border-slate-800/50 space-y-2">
-                                                            <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed italic line-clamp-2">
-                                                                {p.explanation || t('analytic.pattern_desc_default')}
-                                                            </p>
-                                                            {p.suggestion && (
-                                                                <div className="pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
-                                                                    <div className="flex items-center gap-1.5 mb-1">
-                                                                        <Icons.Zap size={10} className="text-blue-500" />
-                                                                        <span className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">{t('analytic.revision_guide')}</span>
+                                    {/* Metrics Row - Completely Separated */}
+                                    <div className="grid grid-cols-2 gap-3 mb-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPatterns((prev) => !prev)}
+                                            className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center transition hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                        >
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('analytic.ai_patterns')}</span>
+                                            <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
+                                                {activeFile.forensic_analysis ? (activeFile.forensic_analysis.pattern_hits || 0) : '-'}
+                                            </span>
+                                            <span className="text-[10px] text-blue-500 mt-1">{showPatterns ? t('analytic.hide_list') : t('analytic.show_list')}</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowOmissions((prev) => !prev)}
+                                            className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center transition hover:border-rose-300 focus:outline-none focus:ring-2 focus:ring-rose-200"
+                                        >
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('analytic.omission_flags')}</span>
+                                            <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
+                                                {activeFile.forensic_analysis ? (activeFile.forensic_analysis.omission_count || 0) : '-'}
+                                            </span>
+                                            <span className="text-[10px] text-rose-500 mt-1">{showOmissions ? t('analytic.hide_list') : t('analytic.show_list')}</span>
+                                        </button>
+                                    </div>
+
+                                    {/* Explanations Row - Distinct Cards */}
+                                    <div className="space-y-4">
+                                        {showPatterns && (
+                                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
+                                                        <Icons.Cpu size={14} />
+                                                        <h5 className="text-[11px] font-bold uppercase tracking-wider">{t('analytic.detailed_patterns')}</h5>
+                                                    </div>
+                                                    <span className="text-[9px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">{t('analytic.found')}: {patternList.length}</span>
+                                                </div>
+                                                {patternList.length > 0 ? (
+                                                    <div className="grid grid-cols-1 gap-2.5">
+                                                        {patternList.map((p, idx) => {
+                                                            const impactData = p.impact === 'Critical' || p.impact === 'Smoking Gun'
+                                                                ? { color: 'text-rose-600 bg-rose-50 border-rose-100', label: 'KRITIKAL' }
+                                                                : p.impact === 'High' ? { color: 'text-rose-500 bg-rose-50 border-rose-100', label: 'MATAAS' }
+                                                                    : p.impact === 'Medium' || p.impact === 'Moderate' ? { color: 'text-amber-500 bg-amber-50 border-amber-100', label: 'KATAMTAMAN' }
+                                                                        : { color: 'text-blue-500 bg-blue-50 border-blue-100', label: 'MABABA' };
+
+                                                            return (
+                                                                <button
+                                                                    key={idx}
+                                                                    onClick={() => handleIssueClick({
+                                                                        id: `pattern-${idx}`,
+                                                                        label: p.pattern || p.label || t('nav.aiInsights'),
+                                                                        explanation: p.explanation || t('analytic.pattern_desc_default'),
+                                                                        suggestion: p.suggestion || "Iwasan ang paggamit ng mga generic o overused na mga salita.",
+                                                                        revision_prompt: p.revision_prompt || `Baguhin ang pariralang "${p.pattern}" gamit ang sariling pananalita.`,
+                                                                        snippet: p.pattern || p.text || (typeof p === 'string' ? p : null),
+                                                                        startIndex: p.startIndex,
+                                                                        endIndex: p.endIndex
+                                                                    })}
+                                                                    className="w-full text-left bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 p-3.5 rounded-xl shadow-sm group hover:border-blue-300 hover:translate-x-1 transition-all"
+                                                                >
+                                                                    <div className="flex items-start justify-between mb-2">
+                                                                        <div className="flex flex-col gap-1">
+                                                                            <span className="text-[8px] font-black text-slate-400 tracking-widest uppercase">{t('analytic.marker_forensic')}</span>
+                                                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">"{p.pattern || p.text || (typeof p === 'object' ? p.label : p)}"</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1.5 pt-1">
+                                                                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${impactData.color}`}>
+                                                                                {p.impact || impactData.label}
+                                                                            </span>
+                                                                            {p.count > 1 && (
+                                                                                <span className="text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">x{p.count || p.hits || 1}</span>
+                                                                            )}
+                                                                        </div>
                                                                     </div>
-                                                                    <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-snug">
-                                                                        {p.suggestion}
-                                                                    </p>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <div className="text-xs text-slate-400 dark:text-slate-500 italic p-6 bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center">
-                                            <div className="flex flex-col items-center gap-2">
-                                                <Icons.CheckCircle className="text-emerald-500" size={24} />
-                                                <span>{t('analytic.safe_no_patterns')}</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {showOmissions && (
-                                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
-                                            <Icons.AlertTriangle size={14} />
-                                            <h5 className="text-[11px] font-bold uppercase tracking-wider">{t('analytic.omission_flags')}</h5>
-                                        </div>
-                                        <span className="text-[9px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">{t('analytic.found')}: {omissionList.length}</span>
-                                    </div>
-                                    {omissionList.length > 0 ? (
-                                        <div className="grid grid-cols-1 gap-2.5">
-                                            {omissionList.map((o, idx) => {
-                                                const impactData = o.impact === 'Critical' || o.impact === 'High' 
-                                                    ? { color: 'text-rose-600 bg-rose-50 border-rose-100', label: 'MATAAS' }
-                                                    : o.impact === 'Medium' || o.impact === 'Moderate' ? { color: 'text-amber-500 bg-amber-50 border-amber-100', label: 'KATAMTAMAN' }
-                                                    : { color: 'text-blue-500 bg-blue-50 border-blue-100', label: 'MABABA' };
-
-                                                return (
-                                                    <button
-                                                        key={idx}
-                                                        onClick={() => handleIssueClick({
-                                                            id: `omission-${idx}`,
-                                                            label: o.label || o.pattern || t('analytic.omission_context'),
-                                                            explanation: o.explanation || `Ang dokumento ay kulang sa sapat na detalye tungkol sa: ${o.label || o.text || 'pangunahing aspeto'}.`,
-                                                            suggestion: o.suggestion || "Magbigay ng karagdagang ebidensya o paliwanag sa bahaging ito.",
-                                                            revision_prompt: o.revision_prompt || `Paunlarin ang diskusyon tungkol sa ${o.label || o.text}.`,
-                                                            snippet: o.pattern || o.text || (typeof o === 'string' ? o : null),
-                                                            startIndex: o.startIndex,
-                                                            endIndex: o.endIndex
+                                                                    <div className="bg-slate-50 dark:bg-slate-900/30 p-2.5 rounded-lg border border-slate-100/50 dark:border-slate-800/50 space-y-2">
+                                                                        <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed italic line-clamp-2">
+                                                                            {p.explanation || t('analytic.pattern_desc_default')}
+                                                                        </p>
+                                                                        {p.suggestion && (
+                                                                            <div className="pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
+                                                                                <div className="flex items-center gap-1.5 mb-1">
+                                                                                    <Icons.Zap size={10} className="text-blue-500" />
+                                                                                    <span className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-tighter">{t('analytic.revision_guide')}</span>
+                                                                                </div>
+                                                                                <p className="text-[9px] text-slate-500 dark:text-slate-400 leading-snug">
+                                                                                    {p.suggestion}
+                                                                                </p>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </button>
+                                                            );
                                                         })}
-                                                        className="w-full text-left bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 p-3.5 rounded-xl shadow-sm group hover:border-rose-300 hover:translate-x-1 transition-all"
-                                                    >
-                                                        <div className="flex items-start justify-between mb-2">
-                                                            <div className="flex flex-col gap-1">
-                                                                <span className="text-[8px] font-black text-rose-400 tracking-widest uppercase">{t('analytic.marker_ethics')}</span>
-                                                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">{o.label || o.pattern || o.text || t('history.noResults')}</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-1.5 pt-1">
-                                                                <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${impactData.color}`}>
-                                                                    {o.impact || impactData.label}
-                                                                </span>
-                                                                <Icons.ChevronRight size={12} className="text-slate-300 group-hover:text-rose-400 transition-colors" />
-                                                            </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-xs text-slate-400 dark:text-slate-500 italic p-6 bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center">
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <Icons.CheckCircle className="text-emerald-500" size={24} />
+                                                            <span>{t('analytic.safe_no_patterns')}</span>
                                                         </div>
-                                                        <div className="bg-slate-50 dark:bg-slate-900/30 p-2 rounded-lg border border-slate-100/50 dark:border-slate-800/50">
-                                                            <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed italic line-clamp-2">
-                                                                {o.explanation || "Nakitang gaps sa lohikal na daloy o factual support."}
-                                                            </p>
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <div className="text-xs text-slate-400 dark:text-slate-500 italic p-6 bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center">
-                                            <div className="flex flex-col items-center gap-2">
-                                                <Icons.CheckCircle className="text-emerald-500" size={24} />
-                                                <span>{t('analytic.safe_no_omissions')}</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Heuristic Explanations */}
-                            <div className="space-y-3 mt-4">
-                                {activeFile.forensic_analysis?.pattern_explanation && (
-                                    <div className="bg-amber-50/30 dark:bg-amber-900/10 border border-amber-100/50 dark:border-amber-800/30 p-3 rounded-lg relative overflow-hidden">
-                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400/50"></div>
-                                        <h5 className="text-[9px] font-black text-amber-600 dark:text-amber-500 uppercase mb-1 pl-2 tracking-widest flex items-center gap-1.5">
-                                            <Icons.Info size={10} />
-                                            {t('analytic.pattern_interpretation')}
-                                        </h5>
-                                        <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed pl-2 font-medium">
-                                            {activeFile.forensic_analysis.pattern_explanation}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {activeFile.forensic_analysis?.omission_explanation && (
-                                    <div className="bg-rose-50/30 dark:bg-rose-900/10 border border-rose-100/50 dark:border-rose-800/30 p-3 rounded-lg relative overflow-hidden">
-                                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-400/50"></div>
-                                        <h5 className="text-[9px] font-black text-rose-600 dark:text-rose-500 uppercase mb-1 pl-2 tracking-widest flex items-center gap-1.5">
-                                            <Icons.AlertTriangle size={10} />
-                                            {t('analytic.omission_impact')}
-                                        </h5>
-                                        <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed pl-2 font-medium">
-                                            {activeFile.forensic_analysis.omission_explanation}
-                                        </p>
-                                    </div>
-                                )}
-
-                                 {/* Forensic Anomalies - Perfection Penalty */}
-                                {activeFile?.forensic_analysis?.details?.perfection?.perfection_score > 40 && (
-                                    <div className="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-xl relative overflow-hidden group hover:border-rose-300 dark:hover:border-rose-500 transition-all border-l-4 border-l-rose-500 shadow-sm">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <h5 className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest flex items-center gap-1.5">
-                                                <Icons.Zap size={12} className="animate-pulse" />
-                                                {t('analytic.perfection_penalty')}
-                                            </h5>
-                                            <span className="text-[10px] font-black bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-full">RISK: {activeFile.forensic_analysis.details.perfection.perfection_score}%</span>
-                                        </div>
-                                        <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                                            {t('analytic.perfection_desc')}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {/* Forensic Anomalies - Lexical Spin */}
-                                {activeFile?.forensic_analysis?.details?.lexical_spin?.spin_risk_score > 40 && (
-                                    <div className="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-xl relative overflow-hidden group hover:border-indigo-300 dark:hover:border-indigo-500 transition-all border-l-4 border-l-indigo-500 shadow-sm">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <h5 className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
-                                                <Icons.RotateCcw size={12} />
-                                                {t('analytic.lexical_spin')}
-                                            </h5>
-                                            <span className="text-[10px] font-black bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full">EVASION: {activeFile.forensic_analysis.details.lexical_spin.spin_risk_score}%</span>
-                                        </div>
-                                        <div className="space-y-2">
-                                            <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                                                {t('analytic.lexical_spin_desc')}
-                                            </p>
-                                            <div className="flex flex-wrap gap-1.5 mt-1">
-                                                {activeFile.forensic_analysis.details.lexical_spin.detected_spin_words?.slice(0, 6).map((word, i) => (
-                                                    <span key={i} className="text-[9px] font-bold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 px-2 py-1 rounded border border-indigo-100/50 dark:border-indigo-800/30">
-                                                        {word}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-
-                {/* 2.7. Security & Evasion Mechanics (Tampering Threats) */}
-                <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-bold text-rose-600 dark:text-rose-400 font-sans tracking-tight">Security & Evasion Mechanics</h4>
-                    </div>
-                    {(() => {
-                        const forensic = activeFile.forensic_analysis || {};
-                        const hasPromptInjection = !!forensic.prompt_injection_flag;
-                        const hasStego = !!forensic.steganography_detected;
-                        const spinScore = forensic.details?.lexical_spin?.spin_risk_score || 0;
-                        const perfectionScore = forensic.details?.perfection?.perfection_score || 0;
-                        const hasThreats = hasPromptInjection || hasStego || spinScore > 40 || perfectionScore > 40;
-
-                        if (!hasThreats) {
-                            return (
-                                <InsightCard className="border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/20 dark:bg-emerald-900/10">
-                                    <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
-                                        <Icons.Shield size={16} />
-                                        Walang nakitang pagtatangkang AI evasion o system tampering.
-                                    </div>
-                                </InsightCard>
-                            );
-                        }
-
-                        return (
-                            <div className="grid grid-cols-1 gap-3">
-                                {hasPromptInjection && (
-                                    <InsightCard className="border-rose-300 dark:border-rose-900 bg-rose-50 dark:bg-rose-900/20 shadow-md">
-                                        <div className="flex gap-3 items-start">
-                                            <Icons.AlertTriangle className="text-rose-600 shrink-0 mt-0.5 animate-pulse" size={18} />
-                                            <div>
-                                                <h5 className="text-xs font-black text-rose-700 dark:text-rose-400 uppercase tracking-wide">Pagtatangkang Prompt Injection</h5>
-                                                <p className="text-xs text-rose-600 dark:text-rose-300 mt-1 leading-snug font-medium">
-                                                    Ang dokumentong ito ay nagtataglay ng nakatagong utos na sinusubukang impluwensyahan ang AI scoring engine (hal. "ignore previous instructions"). Ito ay isang malubhang integrity violation.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </InsightCard>
-                                )}
-
-                                {hasStego && (
-                                    <InsightCard className="border-orange-300 dark:border-orange-900/60 bg-orange-50 dark:bg-orange-900/10">
-                                        <div className="flex gap-3 items-start">
-                                            <Icons.Lock className="text-orange-600 shrink-0 mt-0.5" size={18} />
-                                            <div>
-                                                <h5 className="text-xs font-black text-orange-700 dark:text-orange-400 uppercase tracking-wide">Zero-Width Steganography</h5>
-                                                <p className="text-xs text-orange-600 dark:text-orange-300 mt-1 leading-snug">
-                                                    Nakatagpas ng mga invisible na karakter na madalas gamitin upang labanan ang mga plagiarism scanners. Kinumpuni at na-strip na ng system ang mga palihim na karakter na ito.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </InsightCard>
-                                )}
-
-                                {spinScore > 40 && (
-                                    <InsightCard className="border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-900/10">
-                                        <div className="flex gap-3 items-start">
-                                            <Icons.Activity className="text-indigo-600 shrink-0 mt-0.5" size={18} />
-                                            <div>
-                                                <div className="flex items-center justify-between">
-                                                    <h5 className="text-xs font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-wide">Lexical Spin / Quillbot Risk</h5>
-                                                    <span className="text-[10px] bg-indigo-200 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200 px-2 py-0.5 rounded-full font-bold">{spinScore}% Risk</span>
-                                                </div>
-                                                <p className="text-xs text-indigo-600 dark:text-indigo-300 mt-1 leading-snug">
-                                                    May hindi pangkaraniwang density ng malalalim na salita (hyper-complexity) na kadalasang senyales ng paggamit ng AI Paraphraser (tulad ng Quillbot/Wordbot) para makaiwas sa AI detection.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </InsightCard>
-                                )}
-
-                                {perfectionScore > 40 && (
-                                    <InsightCard className="border-purple-200 dark:border-purple-900/60 bg-purple-50/50 dark:bg-purple-900/10">
-                                        <div className="flex gap-3 items-start">
-                                            <Icons.Scale className="text-purple-600 shrink-0 mt-0.5" size={18} />
-                                            <div>
-                                                <div className="flex items-center justify-between">
-                                                    <h5 className="text-xs font-black text-purple-700 dark:text-purple-400 uppercase tracking-wide">Structural Perfection Penalty</h5>
-                                                    <span className="text-[10px] bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded-full font-bold">{perfectionScore}% Uniformity</span>
-                                                </div>
-                                                <p className="text-xs text-purple-600 dark:text-purple-300 mt-1 leading-snug">
-                                                    Sobrang pantay at pare-pareho ang haba ng mga pangungusap at talata, isang matibay na senyales ng "raw" na kopya mula sa ChatGPT o katulad na language model.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </InsightCard>
-                                )}
-                            </div>
-                        );
-                    })()}
-                </div>
-
-                {/* 3. Critical Flags (Interactive) */}
-                <div>
-                    <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-tip-text-main transition-colors">{t('analytic.critical_findings')}</h4>
-                        <span className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full transition-colors">{activeFile.flags?.length || 0}</span>
-                    </div>
-
-                    <div className="space-y-3">
-                        {activeFile.flags && activeFile.flags.length > 0 ? (
-                            activeFile.flags.map((flag, i) => {
-                                const flagId = `flag-${i}`;
-                                const isExpanded = expandedFlags.has(flagId);
-                                return (
-                                    <InsightCard
-                                        key={i}
-                                        onClick={() => {
-                                            toggleFlag(flagId);
-                                            if (!isExpanded && flag.associated_snippet) {
-                                                handleIssueClick({
-                                                    id: flagId,
-                                                    label: flag.label || (typeof flag === 'string' ? flag : t('analytic.needs_review')),
-                                                    explanation: flag.explanation || flag.detail,
-                                                    suggestion: flag.suggestion,
-                                                    snippet: flag.associated_snippet
-                                                });
-                                            }
-                                        }}
-                                        className={`group transition-all hover:translate-x-1 cursor-pointer overflow-hidden ${isExpanded ? 'ring-1 ring-rose-300 border-rose-300 shadow-md bg-white dark:bg-slate-800/60' : 'border-rose-100 dark:border-rose-900/30'}`}
-                                    >
-                                        <div className="flex gap-3">
-                                            <div className="mt-0.5 text-rose-500 dark:text-rose-400 shrink-0">
-                                                <Icons.AlertTriangle size={18} />
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase">{flag.type || t('analytic.category_flag')}</span>
-                                                    <Icons.ChevronRight size={14} className={`text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} />
-                                                </div>
-                                                <p className="text-sm text-slate-900 dark:text-slate-200 font-bold mb-1">{flag.label || (typeof flag === 'string' ? flag : t('analytic.needs_review'))}</p>
-                                                
-                                                {/* Always visible brief part */}
-                                                {!isExpanded && (
-                                                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{flag.explanation || flag.detail}</p>
-                                                )}
-
-                                                {/* Expanded Details */}
-                                                {isExpanded && (
-                                                    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                                                        <div>
-                                                            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Paliwanag</h5>
-                                                            <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{flag.explanation || flag.detail}</p>
-                                                        </div>
-                                                        
-                                                        {flag.associated_snippet && (
-                                                            <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                                                                <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                                                    <Icons.Hash size={10} /> {t('analytic.evidence')}
-                                                                </h5>
-                                                                <p className="text-[11px] text-slate-600 dark:text-slate-400 italic leading-relaxed">
-                                                                    "{flag.associated_snippet}"
-                                                                </p>
-                                                            </div>
-                                                        )}
-
-                                                        {flag.suggestion && (
-                                                            <div className="bg-blue-50/50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800/50">
-                                                                <h5 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
-                                                                    <Icons.Zap size={10} /> {t('analytic.suggestion')}
-                                                                </h5>
-                                                                <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
-                                                                    {flag.suggestion}
-                                                                </p>
-                                                            </div>
-                                                        )}
                                                     </div>
                                                 )}
                                             </div>
-                                        </div>
-                                    </InsightCard>
-                                );
-                            })
-                        ) : (
-                            <InsightCard className="border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/50 dark:bg-emerald-900/10">
-                                <div className="flex items-center gap-3 text-emerald-700 dark:text-emerald-400 text-sm font-medium">
-                                    <Icons.CheckCircle size={16} />
-                                    No critical anomalies detected.
-                                </div>
-                            </InsightCard>
-                        )}
-                    </div>
-                </div>
+                                        )}
 
-                {/* 6. Optional Metrics - Plagiarism/Similarity (Demoted) */}
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800/50">
-                    <div className="space-y-4 pt-4">
-                        <div className="flex items-center justify-between">
-                            <h4 className="text-xs font-bold text-slate-800 dark:text-slate-300 transition-colors uppercase tracking-tight">
-                                {t('analytic.plagiarism_analysis')}
-                            </h4>
-                        </div>
-
-                        {activeFile.plagiarism ? (
-                            <div className="grid grid-cols-1 gap-3">
-                                {/* Overall Similarity Score */}
-                                <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-4 rounded-xl shadow-sm">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('analytic.internal_similarity')}</span>
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase transition-colors ${(activeFile.plagiarism.similarity || 0) > 40
-                                            ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400'
-                                            : (activeFile.plagiarism.similarity || 0) > 15
-                                                ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400'
-                                                : 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400'
-                                            }`}>
-                                            {(activeFile.plagiarism.similarity || 0) > 40 ? t('analytic.risk_high') : (activeFile.plagiarism.similarity || 0) > 15 ? t('analytic.risk_moderate') : t('analytic.risk_low')}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-baseline gap-2 mb-2">
-                                        <span className="text-3xl font-bold text-slate-900 dark:text-tip-text-main">{parseFloat(activeFile.plagiarism.similarity || 0).toFixed(1)}</span>
-                                        <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">{t('analytic.similarity_percent')}</span>
-                                    </div>
-                                    <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full rounded-full transition-all duration-700 ${(activeFile.plagiarism.similarity || 0) > 40 ? 'bg-rose-500' :
-                                                (activeFile.plagiarism.similarity || 0) > 15 ? 'bg-amber-500' : 'bg-emerald-500'
-                                                }`}
-                                            style={{ width: `${Math.min(activeFile.plagiarism.similarity || 0, 100)}%` }}
-                                        ></div>
-                                    </div>
-                                </div>
-
-                                {/* Metrics Row */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('analytic.internal_matches')}</span>
-                                        <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
-                                            {activeFile.plagiarism.internal_matches?.length || activeFile.plagiarism.match_count || 0}
-                                        </span>
-                                    </div>
-                                    <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center">
-                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('analytic.external_sources')}</span>
-                                        <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
-                                            {activeFile.plagiarism.external_sources?.length || 0}
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Top Internal Matches */}
-                                {activeFile.plagiarism.internal_matches && activeFile.plagiarism.internal_matches.length > 0 && (
-                                    <div className="bg-tip-surface border border-amber-100 dark:border-amber-900/40 p-3 rounded-lg shadow-sm">
-                                        <div className="flex items-center gap-2 text-amber-600 dark:text-amber-300 mb-2">
-                                            <h5 className="text-[11px] font-bold uppercase tracking-wide">{t('analytic.top_matches')}</h5>
-                                        </div>
-                                        <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                                            {activeFile.plagiarism.internal_matches.slice(0, 5).map((match, idx) => (
-                                                <div key={idx} className="flex items-start justify-between text-xs text-slate-700 dark:text-slate-200 border-b border-slate-50 dark:border-slate-800 pb-1.5 last:border-0">
-                                                    <span className="mr-2 leading-snug truncate flex-1">{match.filename || match.analysis_id || `Document ${idx + 1}`}</span>
-                                                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">{parseFloat(match.similarity || 0).toFixed(1)}%</span>
+                                        {showOmissions && (
+                                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+                                                        <Icons.AlertTriangle size={14} />
+                                                        <h5 className="text-[11px] font-bold uppercase tracking-wider">{t('analytic.omission_flags')}</h5>
+                                                    </div>
+                                                    <span className="text-[9px] font-black text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">{t('analytic.found')}: {omissionList.length}</span>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
+                                                {omissionList.length > 0 ? (
+                                                    <div className="grid grid-cols-1 gap-2.5">
+                                                        {omissionList.map((o, idx) => {
+                                                            const impactData = o.impact === 'Critical' || o.impact === 'High'
+                                                                ? { color: 'text-rose-600 bg-rose-50 border-rose-100', label: 'MATAAS' }
+                                                                : o.impact === 'Medium' || o.impact === 'Moderate' ? { color: 'text-amber-500 bg-amber-50 border-amber-100', label: 'KATAMTAMAN' }
+                                                                    : { color: 'text-blue-500 bg-blue-50 border-blue-100', label: 'MABABA' };
 
-                                {/* Clean Result */}
-                                {(!activeFile.plagiarism.internal_matches || activeFile.plagiarism.internal_matches.length === 0) && (activeFile.plagiarism.similarity || 0) < 15 && (
-                                    <div className="bg-tip-surface border border-emerald-100 dark:border-emerald-900/30 p-3 rounded-lg shadow-sm">
-                                        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
-                                            <Icons.CheckCircle size={14} />
-                                            <span className="text-xs font-medium">{t('analytic.clean_no_similarity')}</span>
+                                                            return (
+                                                                <button
+                                                                    key={idx}
+                                                                    onClick={() => handleIssueClick({
+                                                                        id: `omission-${idx}`,
+                                                                        label: o.label || o.pattern || t('analytic.omission_context'),
+                                                                        explanation: o.explanation || `Ang dokumento ay kulang sa sapat na detalye tungkol sa: ${o.label || o.text || 'pangunahing aspeto'}.`,
+                                                                        suggestion: o.suggestion || "Magbigay ng karagdagang ebidensya o paliwanag sa bahaging ito.",
+                                                                        revision_prompt: o.revision_prompt || `Paunlarin ang diskusyon tungkol sa ${o.label || o.text}.`,
+                                                                        snippet: o.pattern || o.text || (typeof o === 'string' ? o : null),
+                                                                        startIndex: o.startIndex,
+                                                                        endIndex: o.endIndex
+                                                                    })}
+                                                                    className="w-full text-left bg-white dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/50 p-3.5 rounded-xl shadow-sm group hover:border-rose-300 hover:translate-x-1 transition-all"
+                                                                >
+                                                                    <div className="flex items-start justify-between mb-2">
+                                                                        <div className="flex flex-col gap-1">
+                                                                            <span className="text-[8px] font-black text-rose-400 tracking-widest uppercase">{t('analytic.marker_ethics')}</span>
+                                                                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-tight">{o.label || o.pattern || o.text || t('history.noResults')}</span>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-1.5 pt-1">
+                                                                            <span className={`text-[8px] font-black px-2 py-0.5 rounded-full border ${impactData.color}`}>
+                                                                                {o.impact || impactData.label}
+                                                                            </span>
+                                                                            <Icons.ChevronRight size={12} className="text-slate-300 group-hover:text-rose-400 transition-colors" />
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="bg-slate-50 dark:bg-slate-900/30 p-2 rounded-lg border border-slate-100/50 dark:border-slate-800/50">
+                                                                        <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium leading-relaxed italic line-clamp-2">
+                                                                            {o.explanation || "Nakitang gaps sa lohikal na daloy o factual support."}
+                                                                        </p>
+                                                                    </div>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-xs text-slate-400 dark:text-slate-500 italic p-6 bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center">
+                                                        <div className="flex flex-col items-center gap-2">
+                                                            <Icons.CheckCircle className="text-emerald-500" size={24} />
+                                                            <span>{t('analytic.safe_no_omissions')}</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {/* Heuristic Explanations */}
+                                        <div className="space-y-3 mt-4">
+                                            {activeFile.forensic_analysis?.pattern_explanation && (
+                                                <div className="bg-amber-50/30 dark:bg-amber-900/10 border border-amber-100/50 dark:border-amber-800/30 p-3 rounded-lg relative overflow-hidden">
+                                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-400/50"></div>
+                                                    <h5 className="text-[9px] font-black text-amber-600 dark:text-amber-500 uppercase mb-1 pl-2 tracking-widest flex items-center gap-1.5">
+                                                        <Icons.Info size={10} />
+                                                        {t('analytic.pattern_interpretation')}
+                                                    </h5>
+                                                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed pl-2 font-medium">
+                                                        {activeFile.forensic_analysis.pattern_explanation}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {activeFile.forensic_analysis?.omission_explanation && (
+                                                <div className="bg-rose-50/30 dark:bg-rose-900/10 border border-rose-100/50 dark:border-rose-800/30 p-3 rounded-lg relative overflow-hidden">
+                                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-rose-400/50"></div>
+                                                    <h5 className="text-[9px] font-black text-rose-600 dark:text-rose-500 uppercase mb-1 pl-2 tracking-widest flex items-center gap-1.5">
+                                                        <Icons.AlertTriangle size={10} />
+                                                        {t('analytic.omission_impact')}
+                                                    </h5>
+                                                    <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed pl-2 font-medium">
+                                                        {activeFile.forensic_analysis.omission_explanation}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {/* Forensic Anomalies - Perfection Penalty */}
+                                            {activeFile?.forensic_analysis?.details?.perfection?.perfection_score > 40 && (
+                                                <div className="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-xl relative overflow-hidden group hover:border-rose-300 dark:hover:border-rose-500 transition-all border-l-4 border-l-rose-500 shadow-sm">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <h5 className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest flex items-center gap-1.5">
+                                                            <Icons.Zap size={12} className="animate-pulse" />
+                                                            {t('analytic.perfection_penalty')}
+                                                        </h5>
+                                                        <span className="text-[10px] font-black bg-rose-100 dark:bg-rose-900/50 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-full">RISK: {activeFile.forensic_analysis.details.perfection.perfection_score}%</span>
+                                                    </div>
+                                                    <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                                                        {t('analytic.perfection_desc')}
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {/* Forensic Anomalies - Lexical Spin */}
+                                            {activeFile?.forensic_analysis?.details?.lexical_spin?.spin_risk_score > 40 && (
+                                                <div className="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 p-4 rounded-xl relative overflow-hidden group hover:border-indigo-300 dark:hover:border-indigo-500 transition-all border-l-4 border-l-indigo-500 shadow-sm">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <h5 className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest flex items-center gap-1.5">
+                                                            <Icons.RotateCcw size={12} />
+                                                            {t('analytic.lexical_spin')}
+                                                        </h5>
+                                                        <span className="text-[10px] font-black bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-full">EVASION: {activeFile.forensic_analysis.details.lexical_spin.spin_risk_score}%</span>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                                                            {t('analytic.lexical_spin_desc')}
+                                                        </p>
+                                                        <div className="flex flex-wrap gap-1.5 mt-1">
+                                                            {activeFile.forensic_analysis.details.lexical_spin.detected_spin_words?.slice(0, 6).map((word, i) => (
+                                                                <span key={i} className="text-[9px] font-bold bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 dark:text-indigo-400 px-2 py-1 rounded border border-indigo-100/50 dark:border-indigo-800/30">
+                                                                    {word}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
-                                )}
-                            </div>
-                        ) : (
-                            <InsightCard className="border-slate-100 dark:border-slate-800">
-                                <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-sm">
-                                    <Icons.Cpu size={16} className="animate-spin" />
-                                    {activeFile.status === 'COMPLETED' ? t('analytic.no_plagiarism_data') : t('analytic.checking_similarity')}
                                 </div>
-                            </InsightCard>
-                        )}
-                    </div>
-                </div>
+                            </div>
+
+
+
+                            {/* 2.7. Security & Evasion Mechanics (Tampering Threats) */}
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-sm font-bold text-rose-600 dark:text-rose-400 font-sans tracking-tight">Security & Evasion Mechanics</h4>
+                                </div>
+                                {(() => {
+                                    const forensic = activeFile.forensic_analysis || {};
+                                    const hasPromptInjection = !!forensic.prompt_injection_flag;
+                                    const hasStego = !!forensic.steganography_detected;
+                                    const spinScore = forensic.details?.lexical_spin?.spin_risk_score || 0;
+                                    const perfectionScore = forensic.details?.perfection?.perfection_score || 0;
+                                    const hasThreats = hasPromptInjection || hasStego || spinScore > 40 || perfectionScore > 40;
+
+                                    if (!hasThreats) {
+                                        return (
+                                            <InsightCard className="border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/20 dark:bg-emerald-900/10">
+                                                <div className="flex items-center gap-3 text-emerald-600 dark:text-emerald-400 text-sm font-medium">
+                                                    <Icons.Shield size={16} />
+                                                    Walang nakitang pagtatangkang AI evasion o system tampering.
+                                                </div>
+                                            </InsightCard>
+                                        );
+                                    }
+
+                                    return (
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {hasPromptInjection && (
+                                                <InsightCard className="border-rose-300 dark:border-rose-900 bg-rose-50 dark:bg-rose-900/20 shadow-md">
+                                                    <div className="flex gap-3 items-start">
+                                                        <Icons.AlertTriangle className="text-rose-600 shrink-0 mt-0.5 animate-pulse" size={18} />
+                                                        <div>
+                                                            <h5 className="text-xs font-black text-rose-700 dark:text-rose-400 uppercase tracking-wide">Pagtatangkang Prompt Injection</h5>
+                                                            <p className="text-xs text-rose-600 dark:text-rose-300 mt-1 leading-snug font-medium">
+                                                                Ang dokumentong ito ay nagtataglay ng nakatagong utos na sinusubukang impluwensyahan ang AI scoring engine (hal. "ignore previous instructions"). Ito ay isang malubhang integrity violation.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </InsightCard>
+                                            )}
+
+                                            {hasStego && (
+                                                <InsightCard className="border-orange-300 dark:border-orange-900/60 bg-orange-50 dark:bg-orange-900/10">
+                                                    <div className="flex gap-3 items-start">
+                                                        <Icons.Lock className="text-orange-600 shrink-0 mt-0.5" size={18} />
+                                                        <div>
+                                                            <h5 className="text-xs font-black text-orange-700 dark:text-orange-400 uppercase tracking-wide">Zero-Width Steganography</h5>
+                                                            <p className="text-xs text-orange-600 dark:text-orange-300 mt-1 leading-snug">
+                                                                Nakatagpas ng mga invisible na karakter na madalas gamitin upang labanan ang mga plagiarism scanners. Kinumpuni at na-strip na ng system ang mga palihim na karakter na ito.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </InsightCard>
+                                            )}
+
+                                            {spinScore > 40 && (
+                                                <InsightCard className="border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/50 dark:bg-indigo-900/10">
+                                                    <div className="flex gap-3 items-start">
+                                                        <Icons.Activity className="text-indigo-600 shrink-0 mt-0.5" size={18} />
+                                                        <div>
+                                                            <div className="flex items-center justify-between">
+                                                                <h5 className="text-xs font-black text-indigo-700 dark:text-indigo-400 uppercase tracking-wide">Lexical Spin / Quillbot Risk</h5>
+                                                                <span className="text-[10px] bg-indigo-200 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-200 px-2 py-0.5 rounded-full font-bold">{spinScore}% Risk</span>
+                                                            </div>
+                                                            <p className="text-xs text-indigo-600 dark:text-indigo-300 mt-1 leading-snug">
+                                                                May hindi pangkaraniwang density ng malalalim na salita (hyper-complexity) na kadalasang senyales ng paggamit ng AI Paraphraser (tulad ng Quillbot/Wordbot) para makaiwas sa AI detection.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </InsightCard>
+                                            )}
+
+                                            {perfectionScore > 40 && (
+                                                <InsightCard className="border-purple-200 dark:border-purple-900/60 bg-purple-50/50 dark:bg-purple-900/10">
+                                                    <div className="flex gap-3 items-start">
+                                                        <Icons.Scale className="text-purple-600 shrink-0 mt-0.5" size={18} />
+                                                        <div>
+                                                            <div className="flex items-center justify-between">
+                                                                <h5 className="text-xs font-black text-purple-700 dark:text-purple-400 uppercase tracking-wide">Structural Perfection Penalty</h5>
+                                                                <span className="text-[10px] bg-purple-200 dark:bg-purple-800 text-purple-800 dark:text-purple-200 px-2 py-0.5 rounded-full font-bold">{perfectionScore}% Uniformity</span>
+                                                            </div>
+                                                            <p className="text-xs text-purple-600 dark:text-purple-300 mt-1 leading-snug">
+                                                                Sobrang pantay at pare-pareho ang haba ng mga pangungusap at talata, isang matibay na senyales ng "raw" na kopya mula sa ChatGPT o katulad na language model.
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </InsightCard>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+
+                            {/* 3. Critical Flags (Interactive) */}
+                            <div>
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-sm font-bold text-slate-900 dark:text-tip-text-main transition-colors">{t('analytic.critical_findings')}</h4>
+                                    <span className="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full transition-colors">{activeFile.flags?.length || 0}</span>
+                                </div>
+
+                                <div className="space-y-3">
+                                    {activeFile.flags && activeFile.flags.length > 0 ? (
+                                        activeFile.flags.map((flag, i) => {
+                                            const flagId = `flag-${i}`;
+                                            const isExpanded = expandedFlags.has(flagId);
+                                            return (
+                                                <InsightCard
+                                                    key={i}
+                                                    onClick={() => {
+                                                        toggleFlag(flagId);
+                                                        if (!isExpanded && flag.associated_snippet) {
+                                                            handleIssueClick({
+                                                                id: flagId,
+                                                                label: flag.label || (typeof flag === 'string' ? flag : t('analytic.needs_review')),
+                                                                explanation: flag.explanation || flag.detail,
+                                                                suggestion: flag.suggestion,
+                                                                snippet: flag.associated_snippet
+                                                            });
+                                                        }
+                                                    }}
+                                                    className={`group transition-all hover:translate-x-1 cursor-pointer overflow-hidden ${isExpanded ? 'ring-1 ring-rose-300 border-rose-300 shadow-md bg-white dark:bg-slate-800/60' : 'border-rose-100 dark:border-rose-900/30'}`}
+                                                >
+                                                    <div className="flex gap-3">
+                                                        <div className="mt-0.5 text-rose-500 dark:text-rose-400 shrink-0">
+                                                            <Icons.AlertTriangle size={18} />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase">{flag.type || t('analytic.category_flag')}</span>
+                                                                <Icons.ChevronRight size={14} className={`text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-90' : ''}`} />
+                                                            </div>
+                                                            <p className="text-sm text-slate-900 dark:text-slate-200 font-bold mb-1">{flag.label || (typeof flag === 'string' ? flag : t('analytic.needs_review'))}</p>
+
+                                                            {/* Always visible brief part */}
+                                                            {!isExpanded && (
+                                                                <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{flag.explanation || flag.detail}</p>
+                                                            )}
+
+                                                            {/* Expanded Details */}
+                                                            {isExpanded && (
+                                                                <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700 space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                                                                    <div>
+                                                                        <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Paliwanag</h5>
+                                                                        <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">{flag.explanation || flag.detail}</p>
+                                                                    </div>
+
+                                                                    {flag.associated_snippet && (
+                                                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                                                                            <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                                                                <Icons.Hash size={10} /> {t('analytic.evidence')}
+                                                                            </h5>
+                                                                            <p className="text-[11px] text-slate-600 dark:text-slate-400 italic leading-relaxed">
+                                                                                "{flag.associated_snippet}"
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {flag.suggestion && (
+                                                                        <div className="bg-blue-50/50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800/50">
+                                                                            <h5 className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1 flex items-center gap-1.5">
+                                                                                <Icons.Zap size={10} /> {t('analytic.suggestion')}
+                                                                            </h5>
+                                                                            <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+                                                                                {flag.suggestion}
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </InsightCard>
+                                            );
+                                        })
+                                    ) : (
+                                        <InsightCard className="border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/50 dark:bg-emerald-900/10">
+                                            <div className="flex items-center gap-3 text-emerald-700 dark:text-emerald-400 text-sm font-medium">
+                                                <Icons.CheckCircle size={16} />
+                                                No critical anomalies detected.
+                                            </div>
+                                        </InsightCard>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* 6. Optional Metrics - Plagiarism/Similarity (Demoted) */}
+                            <div className="pt-2 border-t border-slate-100 dark:border-slate-800/50">
+                                <div className="space-y-4 pt-4">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="text-xs font-bold text-slate-800 dark:text-slate-300 transition-colors uppercase tracking-tight">
+                                            {t('analytic.plagiarism_analysis')}
+                                        </h4>
+                                    </div>
+
+                                    {activeFile.plagiarism ? (
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {/* Overall Similarity Score */}
+                                            <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-4 rounded-xl shadow-sm">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('analytic.internal_similarity')}</span>
+                                                    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase transition-colors ${(activeFile.plagiarism.similarity || 0) > 40
+                                                        ? 'bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400'
+                                                        : (activeFile.plagiarism.similarity || 0) > 15
+                                                            ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-400'
+                                                            : 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400'
+                                                        }`}>
+                                                        {(activeFile.plagiarism.similarity || 0) > 40 ? t('analytic.risk_high') : (activeFile.plagiarism.similarity || 0) > 15 ? t('analytic.risk_moderate') : t('analytic.risk_low')}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-baseline gap-2 mb-2">
+                                                    <span className="text-3xl font-bold text-slate-900 dark:text-tip-text-main">{parseFloat(activeFile.plagiarism.similarity || 0).toFixed(1)}</span>
+                                                    <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">{t('analytic.similarity_percent')}</span>
+                                                </div>
+                                                <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                    <div
+                                                        className={`h-full rounded-full transition-all duration-700 ${(activeFile.plagiarism.similarity || 0) > 40 ? 'bg-rose-500' :
+                                                            (activeFile.plagiarism.similarity || 0) > 15 ? 'bg-amber-500' : 'bg-emerald-500'
+                                                            }`}
+                                                        style={{ width: `${Math.min(activeFile.plagiarism.similarity || 0, 100)}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+
+                                            {/* Metrics Row */}
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('analytic.internal_matches')}</span>
+                                                    <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
+                                                        {activeFile.plagiarism.internal_matches?.length || activeFile.plagiarism.match_count || 0}
+                                                    </span>
+                                                </div>
+                                                <div className="bg-tip-surface border border-slate-100 dark:border-slate-800 p-3 rounded-lg shadow-sm flex flex-col items-center justify-center text-center">
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{t('analytic.external_sources')}</span>
+                                                    <span className="text-2xl font-black text-slate-900 dark:text-tip-text-main mt-1">
+                                                        {activeFile.plagiarism.external_sources?.length || 0}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* Top Internal Matches */}
+                                            {activeFile.plagiarism.internal_matches && activeFile.plagiarism.internal_matches.length > 0 && (
+                                                <div className="bg-tip-surface border border-amber-100 dark:border-amber-900/40 p-3 rounded-lg shadow-sm">
+                                                    <div className="flex items-center gap-2 text-amber-600 dark:text-amber-300 mb-2">
+                                                        <h5 className="text-[11px] font-bold uppercase tracking-wide">{t('analytic.top_matches')}</h5>
+                                                    </div>
+                                                    <div className="space-y-2 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                                                        {activeFile.plagiarism.internal_matches.slice(0, 5).map((match, idx) => (
+                                                            <div key={idx} className="flex items-start justify-between text-xs text-slate-700 dark:text-slate-200 border-b border-slate-50 dark:border-slate-800 pb-1.5 last:border-0">
+                                                                <span className="mr-2 leading-snug truncate flex-1">{match.filename || match.analysis_id || `Document ${idx + 1}`}</span>
+                                                                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">{parseFloat(match.similarity || 0).toFixed(1)}%</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Clean Result */}
+                                            {(!activeFile.plagiarism.internal_matches || activeFile.plagiarism.internal_matches.length === 0) && (activeFile.plagiarism.similarity || 0) < 15 && (
+                                                <div className="bg-tip-surface border border-emerald-100 dark:border-emerald-900/30 p-3 rounded-lg shadow-sm">
+                                                    <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                                                        <Icons.CheckCircle size={14} />
+                                                        <span className="text-xs font-medium">{t('analytic.clean_no_similarity')}</span>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <InsightCard className="border-slate-100 dark:border-slate-800">
+                                            <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400 text-sm">
+                                                <Icons.Cpu size={16} className="animate-spin" />
+                                                {activeFile.status === 'COMPLETED' ? t('analytic.no_plagiarism_data') : t('analytic.checking_similarity')}
+                                            </div>
+                                        </InsightCard>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
@@ -1262,33 +1262,33 @@ const AnalyticPanel = React.memo(() => {
                     <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-[#C9A227]/30 to-transparent mt-8"></div>
                 </div>
 
-        {/* Solo Comparison Selection Modal */}
-        {isSelectingComparison && (
-            <div className="absolute top-16 right-4 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-2xl p-4 max-h-96 flex flex-col z-[70] animate-in slide-in-from-top-2">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Piliin ang Orihinal Base (Trial 1)</h3>
-                <div className="overflow-y-auto space-y-2 flex-1 custom-scrollbar">
-                    {historyFiles?.filter(hf => hf.id !== activeFile.id).map(hf => (
-                        <button 
-                            key={hf.id} 
-                            onClick={() => runComparison(hf.id)} 
-                            className="w-full text-left p-2.5 rounded-xl border border-slate-100 hover:border-purple-300 dark:border-slate-700 dark:hover:border-purple-500/50 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-all flex flex-col gap-1"
-                        >
-                            <span className="truncate text-xs font-bold text-slate-700 dark:text-slate-300">{hf.filename}</span>
-                            <span className="text-[9px] font-bold text-slate-400 capitalize">{new Date(hf.created_at || Date.now()).toLocaleDateString()}</span>
-                        </button>
-                    ))}
-                    {(!historyFiles || historyFiles.filter(hf => hf.id !== activeFile.id).length === 0) && (
-                        <div className="text-xs text-slate-400 py-4 text-center italic">Walang mahanap na history.</div>
-                    )}
-                </div>
-            </div>
-        )}
+                {/* Solo Comparison Selection Modal */}
+                {isSelectingComparison && (
+                    <div className="absolute top-16 right-4 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-2xl p-4 max-h-96 flex flex-col z-[70] animate-in slide-in-from-top-2">
+                        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Piliin ang Orihinal Base (Trial 1)</h3>
+                        <div className="overflow-y-auto space-y-2 flex-1 custom-scrollbar">
+                            {historyFiles?.filter(hf => hf.id !== activeFile.id).map(hf => (
+                                <button
+                                    key={hf.id}
+                                    onClick={() => runComparison(hf.id)}
+                                    className="w-full text-left p-2.5 rounded-xl border border-slate-100 hover:border-purple-300 dark:border-slate-700 dark:hover:border-purple-500/50 hover:bg-purple-50 dark:hover:bg-purple-900/10 transition-all flex flex-col gap-1"
+                                >
+                                    <span className="truncate text-xs font-bold text-slate-700 dark:text-slate-300">{hf.filename}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 capitalize">{new Date(hf.created_at || Date.now()).toLocaleDateString()}</span>
+                                </button>
+                            ))}
+                            {(!historyFiles || historyFiles.filter(hf => hf.id !== activeFile.id).length === 0) && (
+                                <div className="text-xs text-slate-400 py-4 text-center italic">Walang mahanap na history.</div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
-        <ComparisonModal 
-            result={verificationResult} 
-            onClose={() => { setVerificationResult(null); setRevisionResult(null); }} 
-        />
-        
+                <ComparisonModal
+                    result={verificationResult}
+                    onClose={() => { setVerificationResult(null); setRevisionResult(null); }}
+                />
+
             </div>
         </div>
     );
