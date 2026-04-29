@@ -21,7 +21,7 @@ const computeRiskFromDimensions = (dims) => {
         if (raw === 'mataas' || raw === 'critical' || raw === 'pagnilay' || raw === 'flagged') totalRisk += 16.67;
         else if (raw === 'katamtaman' || raw === 'may obserbasyon' || raw === 'observed' || raw === 'needs improvement') totalRisk += 8.34;
     });
-    return Math.min(100, Math.round(totalRisk * 100) / 100);
+    return Math.min(100, Math.round(totalRisk));
 };
 
 const DocumentCard = React.memo(({ file, openMenuId, toggleMenu, loadFile, handleDeleteClick, handleRevisionClick }) => {

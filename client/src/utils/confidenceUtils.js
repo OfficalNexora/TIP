@@ -7,7 +7,7 @@ export const normalizeConfidence = (rating) => {
 
     // If it's already a number or numeric string
     const numeric = parseFloat(rating);
-    if (!isNaN(numeric)) return numeric;
+    if (!isNaN(numeric)) return Math.round(numeric);
 
     const normalized = rating.toString().toLowerCase().trim();
 

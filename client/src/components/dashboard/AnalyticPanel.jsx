@@ -105,8 +105,8 @@ const AnalyticPanel = React.memo(() => {
             // Mababa / Aligned / Ligtas = 0
         });
 
-        const riskScore = Math.min(100, Math.round(totalRisk * 100) / 100);
-        const integrityScore = Math.max(0, Math.round((100 - riskScore) * 100) / 100);
+        const riskScore = Math.min(100, Math.round(totalRisk));
+        const integrityScore = Math.max(0, Math.round(100 - riskScore));
         return { riskScore, integrityScore };
     };
 

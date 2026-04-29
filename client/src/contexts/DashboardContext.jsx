@@ -152,7 +152,7 @@ export const DashboardProvider = ({ children }) => {
                         if (raw === 'mataas' || raw === 'critical' || raw === 'pagnilay' || raw === 'flagged') total += 16.67;
                         else if (raw === 'katamtaman' || raw === 'may obserbasyon' || raw === 'observed' || raw === 'needs improvement') total += 8.34;
                     });
-                    return Math.min(100, Math.round(total * 100) / 100);
+                    return Math.min(100, Math.round(total));
                 };
 
                 const allFiles = isLoadMore ? [...files, ...historicalFiles] : historicalFiles;
