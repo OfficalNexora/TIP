@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import LandingNav from '../layout/LandingNav';
 import Icons from '../ui/Icons';
+import MiniDemoModal from './MiniDemoModal';
 
 const Landing = ({ videoLoaded, randomText, onStart }) => {
+    const [showDemo, setShowDemo] = useState(false);
 
     useGSAP(() => {
         // Set initial hidden state for animation
@@ -77,7 +79,7 @@ const Landing = ({ videoLoaded, randomText, onStart }) => {
                     </button>
                     
                     <button
-                        onClick={() => window.open('/mockup.html', '_blank')}
+                        onClick={() => setShowDemo(true)}
                         className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all border border-white/10 backdrop-blur-md"
                     >
                         Tignan ang Demo
@@ -96,6 +98,9 @@ const Landing = ({ videoLoaded, randomText, onStart }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Mini Demo Overlay */}
+            {showDemo && <MiniDemoModal onClose={() => setShowDemo(false)} />}
         </div>
     );
 };
