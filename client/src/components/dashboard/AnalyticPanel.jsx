@@ -868,7 +868,7 @@ const AnalyticPanel = React.memo(() => {
                         <h4 className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 transition-colors">{t('analytic.ai_probability')}</h4>
                         <div className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium transition-colors">
                             <Icons.Cpu size={16} className="text-slate-400 dark:text-slate-500" />
-                            <span className="capitalize">{localizeStatus(activeFile.ai_usage) || t('analytic.processing')}</span>
+                            <span className="capitalize">{confidenceScore >= 60 ? t('analytic.high') || 'Mataas' : confidenceScore >= 30 ? t('analytic.medium') || 'Katamtaman' : t('analytic.low') || 'Mababa'}</span>
                         </div>
                     </div>
                 </InsightCard>

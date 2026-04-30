@@ -481,7 +481,7 @@ export const translations = {
     'overview.ethicalDesc': 'Pagsunod sa UNESCO ethics at bias standards.',
     'overview.forensicDesc': 'Detalyadong pattern at linguistic footprint.',
     'overview.useNow': 'Gamitin Ngayon',
-    'overview.avgRisk': 'Average na Risk',
+    'overview.avgRisk': 'Average na Panganib',
 
     // ── Results ─────────────────────────────────────────
     'results.linking': 'Bumubuo ng Link sa Institusyon...',
@@ -497,7 +497,7 @@ export const translations = {
 
     // ── Scan History ────────────────────────────────────
     'history.title': 'Archive ng Audit',
-    'history.subtitle': 'Listahan ng mga nakaraang compliance pagtatasa',
+    'history.subtitle': 'Listahan ng mga nakaraang pagtatasa',
     'history.searchPlaceholder': 'Maghanap ng record...',
     'history.tableDocName': 'Pangalan ng Dokumento',
     'history.tableDate': 'Petsa ng Beripikasyon',
