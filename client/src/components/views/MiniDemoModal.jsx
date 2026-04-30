@@ -24,7 +24,7 @@ const MiniDemoModal = ({ onClose }) => {
         setErrorMsg('');
 
         try {
-            const response = await fetch('/api/demo/analyze', {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/demo/analyze`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: textInput })
@@ -103,7 +103,7 @@ const MiniDemoModal = ({ onClose }) => {
 
                             {status === 'error' && (
                                 <div className="p-3 rounded-lg border border-red-500/20 bg-red-500/10 text-red-400 text-sm flex items-center gap-2">
-                                    <Icons.Alert size={16} />
+                                    <Icons.AlertTriangle size={16} />
                                     {errorMsg}
                                 </div>
                             )}
