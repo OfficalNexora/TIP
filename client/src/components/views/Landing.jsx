@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import LandingNav from '../layout/LandingNav';
 import Icons from '../ui/Icons';
 
 const Landing = ({ videoLoaded, randomText, onStart }) => {
-    const [showDemo, setShowDemo] = useState(false);
 
     useGSAP(() => {
         // Set initial hidden state for animation
@@ -78,7 +77,7 @@ const Landing = ({ videoLoaded, randomText, onStart }) => {
                     </button>
                     
                     <button
-                        onClick={() => setShowDemo(true)}
+                        onClick={() => window.open('/mockup.html', '_blank')}
                         className="px-8 py-4 bg-white/5 hover:bg-white/10 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all border border-white/10 backdrop-blur-md"
                     >
                         Tignan ang Demo
@@ -97,30 +96,6 @@ const Landing = ({ videoLoaded, randomText, onStart }) => {
                     </div>
                 </div>
             </div>
-
-            {/* Demo Modal */}
-            {showDemo && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 md:p-12 animate-in fade-in duration-300">
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowDemo(false)}></div>
-                    <div className="relative w-full max-w-6xl h-[80vh] bg-slate-900 rounded-2xl md:rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-500 flex flex-col">
-                        <div className="absolute top-4 right-4 md:top-6 md:right-6 z-10">
-                            <button 
-                                onClick={() => setShowDemo(false)}
-                                className="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-black/50 text-white hover:bg-rose-500 hover:text-white backdrop-blur-md transition-all border border-white/10"
-                                aria-label="Close demo"
-                            >
-                                <Icons.X size={20} className="md:w-6 md:h-6" />
-                            </button>
-                        </div>
-                        <iframe 
-                            src="/mockup.html" 
-                            className="w-full h-full border-none"
-                            title="Product Demo"
-                            allowFullScreen
-                        ></iframe>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
