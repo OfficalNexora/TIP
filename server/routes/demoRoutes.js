@@ -43,13 +43,14 @@ Output JSON strictly conforming to this schema:
   "short_explanation": "<string max 50 words explaining the score briefly>"
 }`;
 
-        const rawResponse = await llmService.analyzeText(MINI_SYSTEM_PROMPT, text, { response_format: { type: "json_object" } });
+        const llmResponse = await llmService.analyzeText(MINI_SYSTEM_PROMPT, text, { response_format: { type: "json_object" } });
 
         let result;
         try {
-            result = JSON.parse(rawResponse);
+            const rawText = typeof llmResponse === 'string' ? llmResponse : llmResponse.text;
+            result = JSON.parse(rawText);
         } catch (parseError) {
-            console.error('[Demo API] Failed to parse LLM response:', rawResponse);
+            console.error('[Demo API] Failed to parse LLM response:', llmResponse);
             return res.status(500).json({ error: 'Failed to process AI response.' });
         }
 
